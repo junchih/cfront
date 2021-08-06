@@ -1,0 +1,267 @@
+.\" ident	@(#)Time:man/Place.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Place\fP \f3Time(3C++)\fP " "
+.SH NAME
+Place \- timezone information
+.SH SYNOPSIS OF Time.h
+.Bf
+#include <Objection.h>     /* see \f3Objection(3C++)\fP */
+#include <String.h>        /* see \f3String(3C++)\fP */
+
+class Time;                // see \f3Time(.)\fP
+class ostream;             // see \f3iostream(3C++)\fP
+
+class Place{
+public:
+
+//  Constructors, destructor
+
+    Place();
+    Place(const char* tz,int observes_dst = 1);
+    ~Place();
+
+//  Copy and assign
+
+    Place(const Place& p);
+    Place& operator=(const Place& p);
+
+//  Operations that return information about a Place 
+
+    String standard_zone()const;
+    int west()const;
+    int observes()const;
+    String daylight_zone()const;
+    int dst()const;
+    Time spring_ahead(unsigned y)const;
+    Time fall_back(unsigned y)const;
+
+//  Conversion to String(3C++)
+
+    String make_string()const;
+
+//  Standard Places
+
+    static Place greenwich();
+    static Place eastern();
+    static Place central();
+    static Place mountain();
+    static Place pacific();
+    static Place yukon();
+    static Place hawaii();
+
+    static Place here();
+
+//  Stream insertion
+
+    \f2friend\fP ostream& operator<<(ostream& os,const Place& p);
+};
+
+.Be
+.SH DESCRIPTION
+.PP
+A \f4Place\f1 contains six items of timezone 
+information for a given location:
+.RS
+\(bu\ the name of the standard timezone
+.br
+\(bu\ the time difference to be added to 
+Greenwich Mean Time (\f4GMT\f1) 
+to obtain standard time
+.br
+\(bu\ whether daylight savings time is observed
+.br
+\(bu\ the name of the daylight savings timezone
+.br
+\(bu\ the time difference to be added to \f4GMT\f1
+to obtain daylight savings time
+.br
+\(bu\ the interval during which daylight savings time is 
+in effect.
+.RE
+.PP
+Several US Places are pre-defined
+as a convenience to the user.
+The Place \f4Place::here()\f1 is a special case: 
+it contains information about the \f2local timezone\f1.
+Information about the local timezone is obtained
+automatically from the environment variable \f4TZ\f1 
+(see \f3intro(.)\f1 for the complete syntax 
+of the \f4TZ\f1 variable and how to set it).
+For example, in New Jersey you might set 
+.Bf
+
+    TZ="EST5EDT4;117/2:00:00,299/2:00:00"
+
+.Be
+Then \f4Place::here()\f1 would contain the following 
+information:
+.RS
+\(bu\ the name of the standard timezone is \f4EST\f1
+.br
+\(bu\ the standard timezone is \f45h\f1 earlier than \f4GMT\f1
+.br
+\(bu\ daylight savings time \f2is\f1 observed
+.br
+\(bu\ the name of the daylight savings timezone is \f4EDT\f1
+.br
+\(bu\ the daylight savings timezone 
+is \f44h\f1 earlier than \f4GMT\f1, 
+.br
+\(bu\ daylight savings time starts in Julian
+day number 117 at 2 AM and ends on day number 299 at 2 AM
+(both Times are assumed to be daylight savings times).  
+[Note that this example is valid for the year 1986, when
+daylight savings time began on April 27 (Julian day 117) and
+ended on October 26 (Julian day 299).
+Different values for the start and end days for daylight savings
+time would be necessary for different years if this format of
+specifying the time zone is used.
+See the \f3BUGS\f1 section for more information.]
+.RE
+.PP
+If start and end times are omitted, 
+as in the following example,
+.Bf
+
+    TZ=EST5EDT
+
+.Be
+then the statutory start and end times 
+for the United States will be used by
+functions \f4spring_ahead()\f1 and \f4fall_back()\f1
+(these functions encapsulate the United States rules for 
+daylight savings time, including the irregularities 
+in 1974, 1975, and 1987).
+If the start and end day numbers are provided but 
+the times-of-day are not provided, the 
+times-of-day will default to midnight.
+.sp
+.SS "Constructors, destructor"
+.IP "\f4Place();\f1"
+A Place with the same value as \f4Place::here()\f1.
+Raises \f4Time::environment_objection\f1
+(see \f3Time(.)\f1) if the \f4TZ\f1 environment
+variable is not set.
+The recovery action is to behave as if \f4TZ=GMT0\f1 had 
+been specified.
+.IP "\f4Place(const char* tz,int observes_dst = 1);\f1"
+A Place whose timezone information is described in
+\f4tz\f1, which should have the same format as the
+\f4TZ\f1 environment variable, as described
+in \f3intro(.)\f1.
+If \f4observes_dst\f1 is 0, then daylight savings
+time will not be observed at this place, even if \f4tz\f1
+defines a daylight savings timezone (may be 
+useful at certain airports which elect not to observe
+daylight savings time even though located in an area
+which does observe).
+\f3Preconditions\f1:\f4tz\f1 must be nonzero.
+.IP "\f4~Place();\f1"
+Destructor.
+.SS "Copy and assign"
+.IP "\f4Place(const Place& p);\f1"
+.hS
+.IP "\f4Place& operator=(const Place& p);\f1"
+Copying
+or assigning a Place creates a copy of its value.
+.SS "Operations that return information about a Place "
+.IP "\f4String standard_zone()const;\f1"
+The name of the standard zone.
+.IP "\f4int west()const;\f1"
+The number of seconds to be subtracted from GMT to obtain
+standard time.
+.IP "\f4int observes()const;\f1"
+Returns non-zero if 
+this Place observes daylight savings time.
+A Place observes daylight savings time if and only if
+(1) a daylight savings timezone name was present in the
+``tz'' string from which this Place was constructed and
+(2) if the two-parameter constructor was used to
+construct this Place, the second argument was not zero.
+.IP "\f4String daylight_zone()const;\f1"
+The name of the daylight savings timezone.  
+\f3Preconditions\f1: this Place must observe 
+daylight savings time.  
+.IP "\f4int dst()const;\f1"
+The number of seconds to be subtracted from GMT to
+obtain daylight savings time.  
+\f3Preconditions\f1: this Place must observe 
+daylight savings time.  
+.IP "\f4Time spring_ahead(unsigned y)const;\f1"
+Returns the Time (see \f3Time(.)\f1)
+at which clocks are set ahead to begin
+observance of daylight savings time in year \f4y\f1.
+\f3Preconditions\f1: this Place must observe 
+daylight savings time.  
+.IP "\f4Time fall_back(unsigned y)const;\f1"
+Returns the Time (see \f3Time(.)\f1)
+at which clocks are set back to
+end observance of daylight savings time in year \f4y\f1.
+\f3Preconditions\f1: this Place must observe 
+daylight savings time.  
+.SS "Conversion to String(3C++)"
+.IP "\f4String make_string()const;\f1"
+Returns a \f4String(3C++)\f1 having the same format
+as the \f4TZ\f1 environment variable.
+.SS "Stream insertion"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os,const Place& p);\f1"
+\f4os << p\f1 is equivalent to \f4os << p.make_string()\f1.
+.SS "Standard Places"
+.IP "\f4static Place greenwich();\f1"
+.hS
+.IP "\f4static Place eastern()\f1"
+.hS
+.IP "\f4static Place central()\f1"
+.hS
+.IP "\f4static Place mountain()\f1"
+.hS
+.IP "\f4static Place pacific()\f1"
+.hS
+.IP "\f4static Place yukon()\f1"
+.hS
+.IP "\f4static Place hawaii()\f1"
+Pre-defined US Places.
+.IP "\f4static Place here();\f1"
+The Place of the host machine.
+Raises the objection \f4Time::environment_objection\f1
+(see \f3Time(.)\f1) if the \f4TZ\f1 environment
+variable is not set.
+The recovery action is to behave as if \f4TZ=GMT0\f1 had 
+been specified.
+.SH BUGS
+.PP
+Note that the two New Jersey examples are not
+equivalent.  The long example only yields correct results
+for years in which (1) daylight savings time begins on the 
+fourth Sunday of April (2) the fourth Sunday happens to fall
+on Julian day number 117 (3) daylight savings time ends
+on the last Sunday in October and (4) the last Sunday happens
+to fall on Julian day number 299 (1986 is probably the 
+only such year).
+The short example yields correct results in all years,
+with the following exception.
+Prior to 1970, the default daylight savings
+time period is assumed to start on the first Sunday in
+April and end on the last Sunday in October 
+(i.e., the post-1987 rules are used).  
+This is incorrect, but consistent with
+the SVR3 version of \f3ctime(3)\f1, 
+on which this class is based.
+.SH SEE ALSO
+.Bf
+\f3iostream(3C++)\f1
+\f3Objection(3C++)\f1
+\f3String(3C++)\f1
+
+\f3intro(.)\f1
+\f3Time(.)\f1
+.Be

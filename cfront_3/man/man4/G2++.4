@@ -1,0 +1,174 @@
+.\" ident	@(#)G2++:compsrc/man/G2++.4	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3G2++\fP \f34C++\f1 " "
+.SH NAME
+G2++ \- G2++ record format
+.SH DESCRIPTION
+G2++ records are sequences of ASCII
+characters on a byte stream.  They ``look'' like
+tab-indented outlines and contain only printable
+ASCII characters (a formal syntax definition
+will be given at the end of this manual entry).
+These records can be read and written by C++ programs 
+using the facilities described in \f3G2++(3C++)\f1.
+.PP
+Simple records have the form
+.Bf
+
+        \f2name\fP ht \f2value\fP nl
+
+.Be
+where \f4ht\f1 and \f4nl\f1 are the
+ASCII tab and newline characters, respectively.
+For example, the G2++ record
+.Bf
+
+        id        Bob
+
+.Be
+is said to be a record ``of type \f4id\f1''; it
+carries a single field named \f4id\f1 with the value
+\f4Bob\f1.  
+.PP
+Hierarchically-structured values may be created 
+using additional tabs and newlines to represent 
+the hierarchy:
+.Bf
+
+        person
+                id        Bob
+                age        11
+
+.Be
+Here, a record of type \f4person\f1
+contains two fields, named \f4id\f1 and \f4age\f1,
+along with their associated values.
+.PP
+Array-valued fields are also supported.  
+The following example illustrates the syntax 
+for arrays:
+.Bf
+
+        person
+                id        Bob
+                age        11
+                hobbies
+                        0        video games
+                        1        soccer
+                        2        baseball        
+
+.Be
+Here, the field named \f4hobbies\f1 is an array
+with three elements, each consisting of an index
+and a value.  Indices must be non-negative integers.
+.PP
+Record structure is recursive, allowing nesting
+to any level.  For example, array values may have
+their own ``inner structure.''
+.Bf
+
+        person
+                id        Bob
+                age        11
+                hobbies
+                        0        video games
+                        1        soccer
+                        2        baseball        
+                friends
+                        0
+                                id        Fred
+                                age        10
+                        1
+                                id        Jane
+                                age        12
+
+.Be
+.PP
+Field names (like \f4person\f1 and \f4age\f1)
+are formed according to the rules 
+for C identifiers.
+Elementary values (like \f4Bob\f1 and \f4soccer\f1) 
+are formed from the alphabet defined by the 
+ASCII \f4isprint(3C)\f1 function (note in particular
+that elementary values may contain blanks, but not 
+tabs or newlines).
+Tabs are used for indentation (one per level) and also
+to separate names from elementary values.
+.PP
+Comments may be appended to any line of a G2++ record 
+except for the final newline, which must stand alone 
+(see the formal syntax definition below).
+Comments must appear at the end of the line and 
+must be separated from the rightmost field 
+by one or more tabs.
+By convention, comments begin with a sharp (#).
+.PP
+Here is the complete syntax definition for 
+G2++ records 
+(alternatives are listed on separate lines):
+.Bf
+
+    record     => group nl
+
+    group      => name value
+                  name value nl indent group
+    
+    value      => ht string nl
+                  nl indent group
+                  nl indent array
+
+    array      => index value
+                  index value nl indent array
+    
+.Be
+where: 
+.RS
+\(bu \f2ht\f1 is an ASCII tab character (011)
+.br
+\(bu \f2nl\f1 is an ASCII newline character (012)
+.br
+\(bu \f2name\f1 is any valid C identifier
+.br
+\(bu \f2index\f1 is any non-negative integer
+.br
+\(bu \f2string\f1 is any sequence of printable ASCII 
+characters, as defined by the 
+ASCII \f3isprint(3C)\f1 function.
+.br
+\(bu \f2indent\f1 is one or more tabs, the exact number
+depending on the depth of recursion in the definition.
+.RE
+.SH NOTES
+.RS
+\(bu According to the syntax definition,
+two consecutive newlines always terminate 
+a G2++ record. 
+.br
+\(bu The highest level name in a G2++ record is also
+known as the record's \f2type\f1.
+.br
+\(bu Indices do not have to occur
+in any particular order within an array.
+.br
+\(bu The G2++ data language is identical to the G2
+data language.  
+.br
+\(bu \f4.g\f1 files, which are files 
+that define G2++ record types 
+(see \f3g2++comp(1C++)\f1), obey the syntax
+of G2++ records given here, but impose additional
+constraints on form of elementary values.
+.RE
+.SH SEE ALSO
+\f3g2++comp(1C++)\f1
+\f3G2++(3C++)\f1, 
+\f3isprint(3C)\f1

@@ -1,0 +1,123 @@
+.\" ident	@(#)Path:man/ksh_test.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3ksh_test\fP \f3Path(3C++)\fP " "
+.SH NAME
+ksh_test \- Korn shell test predicate
+.SH "SYNOPSIS of ksh_test.h"
+.Bf
+class Ksh_test{
+public:
+    enum unary{ a,r,w,x,f,d,c,b,p,u,g,k,s,L,O,G,S };
+    enum binary{ nt,ot,ef };
+    enum id{ effective,real };
+};
+
+int ksh_test(
+    const char* file,
+    Ksh_test::id id = Ksh_test::effective
+);
+
+int ksh_test(
+    Ksh_test::unary t,
+    const char* file,
+    Ksh_test::id id = Ksh_test::effective
+);
+
+int ksh_test(
+    const char* file1,
+    Ksh_test::binary t, 
+    const char* file2,
+    Ksh_test::id id = Ksh_test::effective
+);
+.Be
+.SH DESCRIPTION
+.PP
+The ksh_test function provides that subset of functionality
+of the Korn shell \f3test(1)\f1 predicate 
+which deals with files and their permissions.  
+ksh_test is more flexible and has slightly 
+different semantics than \f3access(3)\f1 (which is 
+frequently implemented incorrectly anyway), 
+and is at a higher level of abstraction
+than \f3stat(2)\f1.
+.PP
+The behavior of ksh_test matches that of the 
+.I Korn 
+shell
+\f3test\f1(1) predicate (see \f3ksh(1)\f1).
+Notice that the user need not be running 
+\f3ksh(1)\f1
+in order for this to occur; in particular, 
+.I
+even if the user is running another shell, 
+the behavior of ksh_test
+will still match
+\f3ksh(1)\f1.
+.SS "Ksh_test"
+Arguments to \f3ksh_test\fP.
+.IP "\f4enum unary{ a,r,w,x,f,d,c,b,p,u,g,k,s,L,O,G,S };\f1"
+.hS
+.IP "\f4enum binary{ nt,ot,ef };\f1"
+Meanings are the same as for the 
+\f3ksh\f1(1) \f3test(1)\f1 predicate.  Specifically:
+(a) file is ``stattable'' (see \f3stat(2)\f1);
+(r) file is readable;
+(w) file has write bit on;
+(x) file has execute bit on;
+(f) file is regular;
+(d) file is directory;
+(c) file is character special;
+(b) file is block special;
+(p) file is named pipe;
+(u) file has set-user-id bit on;
+(g) file has set-group-id bit on;
+(k) file has sticky bit on;
+(s) file is non-empty;
+(L) file is symbolic link;
+(O) file owner is effective user id;
+(G) file group is effective group id;
+(S) file is socket;
+(nt) p1 is newer than p2;
+(ot) p1 is older than p2;
+(ef) p1 is another name for p2.
+.IP "\f4enum id{ effective,real };\f1"
+Specifies the id against which the tests are to be made.
+.SS "\f4int ksh_test(\f1"
+.SC "\f4    const char* file,\f1" 
+.SC "\f4    Ksh_test::id id = Ksh_test::effective\f1"
+.SC "\f4);\f1"
+Equivalent to \f4ksh_test(Ksh_test::a, file, id)\fP.
+.SS "\f4int ksh_test(\f1"
+.SC "    Ksh_test::unary t," 
+.SC "    const char* file," 
+.SC "    Ksh_test::id id = Ksh_test::effective"
+.SC ");"
+Equivalent to the \f3ksh(1)\f1 expression 
+.IR "test -t file" ,
+where
+\f4id\f1 is the user id against which the test is made.
+.SS "\f4int ksh_test(\f1"
+.SC "\f4    const char* file1,\f1" 
+.SC "\f4    Ksh_test::binary t,\f1" 
+.SC "\f4    const char* file2,\f1" 
+.SC "\f4    Ksh_test::id id = Ksh_test::effective\f1"
+.SC "\f4);\f1"
+Equivalent to the \f3ksh(1)\f1 expression
+.IR "test file1 -t file2" ,
+where
+\f4id\f1 is the user id against which the test is made.
+.SH SEE ALSO
+.Bf
+\f3access(2)\fP
+\f3ksh(1)\fP
+\f3stat(2)\fP
+.Be

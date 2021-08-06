@@ -1,0 +1,181 @@
+.\" ident	@(#)Stopwatch:man/Stopwatch.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Stopwatch\fP \f33C++\fP " "
+.SH NAME
+Stopwatch \- program execution time measurement
+.SH SYNOPSIS OF Stopwatch.h
+.Bf
+
+class Stopwatch{
+public:
+
+//  Constructors, destructor
+
+    Stopwatch();
+    ~Stopwatch();
+
+//  Copy and assign
+
+    Stopwatch(const Stopwatch& s);
+    Stopwatch& operator=(const Stopwatch& s);
+
+//  Status
+
+    int status()const;
+
+//  Setting operations
+
+    void start();
+    void stop();
+    void reset();
+
+//  Reading operations
+
+    double system()const;
+    double user()const;
+    double real()const;
+
+//  Miscellaneous 
+
+    static double resolution();
+};
+.Be
+.SH DESCRIPTION
+.PP
+There are three 
+kinds of \f2execution time\f1 that programmers 
+may be interested in knowing about:
+.RS
+\(bu \f2user time\f1 is the CPU time spent executing user code
+.br
+\(bu \f2system time\f1 is the CPU time spent by the operating system 
+on behalf of user code
+.br
+\(bu \f2real time\f1 is equivalent to "wall clock time"
+.RE
+Stopwatches measure execution times of all three kinds 
+for selected portions of program text.
+The accuracy of Stopwatches is system-dependent.
+.PP
+Think of a Stopwatch as a device with three buttons 
+(labeled \f4start\f1, \f4stop\f1, and \f4reset\f1)
+and three digital displays
+(labeled \f4system\f1, \f4user\f1, and \f4real\f1).
+All three displays initially read zero.
+When \f4start\f1 is pressed,
+measurements begin accumulating in all three displays.
+When \f4stop\f1 is pressed, 
+all three displays cease accumulating.  
+When \f4reset\f1 is pressed, 
+all three displays are
+(almost) instantaneously cleared;
+if the Stopwatch was running when \f4reset\f1 was pressed, 
+the displays resume accumulating
+immediately after resetting.
+Any display may be read at any time, 
+regardless of whether a Stopwatch is running or stopped. 
+.PP
+For purposes of estimating\(emand subsequently eliminating\(emthe 
+bias inherent in a reading due to act of measurement, 
+it can be safely assumed that every 
+Stopwatch operation includes a (user time) overhead on the order 
+of a function call.  Some operations also incur a (system time) 
+overhead on the order of a system call; these are noted below.
+.SS "Constructors, destructor"
+.IP "\f4Stopwatch();\f1"
+A stopped Stopwatch (\f4status()==0\f1) 
+for which \f4system()\f1, \f4user()\f1, and \f4real()\f1 
+all read zero.
+.IP "\f4~Stopwatch();\f1"
+Destructor
+.SS "Copy and assign"
+.IP "\f4Stopwatch(const Stopwatch& s);\f1"
+.hS
+.IP "\f4Stopwatch& operator=(const Stopwatch& s);\f1"
+Copying or assigning a Stopwatch creates a copy of its value.
+.SS "Status"
+.IP "\f4int status()const;\f1"
+Returns 1 if the Stopwatch is running and 0 if it is stopped.
+.SS "Setting operations"
+.IP "\f4void start();\f1"
+If the Stopwatch is already running,
+the call has no effect.  
+If the Stopwatch is stopped,
+it starts running and measurement resumes from
+where it left off.
+Requires a system call if the status changes from 
+stopped to running.
+.IP "\f4void stop();\f1"
+If the Stopwatch is already stopped,
+the call has no effect.
+If the Stopwatch is running, 
+it stops running and measurement
+is halted.
+Requires a system call if the status changes from 
+running to stopped.
+.IP "\f4void reset();\f1"
+Resets \f4system()\f1, \f4user()\f1, and \f4real()\f1 to zero.
+The status is not affected by this call; that is, if
+the Stopwatch is running, it continues running
+uninterrrupted after resetting, and if it is stopped,
+it remains stopped after resetting. 
+Always requires a system call.
+.SS "Reading operations"
+.IP "\f4double system()const;\f1"
+.hS
+.IP "\f4double user()const;\f1"
+.hS
+.IP "\f4double real()const;\f1"
+Returns the system time, user time, and real time, 
+respectively, in units of seconds.
+Requires a system call 
+if the Stopwatch is running.
+.SS "Miscellaneous"
+.IP "\f4static double resolution();\f1"
+Returns the (system-dependent) resolution of Stopwatches 
+in units of seconds.  On a system where 
+\f4resolution()\f1 is 1/60 second (a typical value), 
+Stopwatch readings are accurate only to the 
+nearest 1/60 second.
+.SH NOTES
+Stopwatches encapsulate the facilities of \f3times(2)\f1.
+.SH EXAMPLE
+.PP
+The following program computes the user time
+for a computation of interest.
+Taking an average over \f2N\f1 repetitions decreases 
+the effect of Stopwatch inaccuracy to an acceptable level:
+.Bf
+
+    #include <Stopwatch.h>
+    #include <stream.h>
+
+    const int N = 10000;
+    main(){
+	Stopwatch w;
+	w.start();
+
+	for(int i=0;i<N;i++){
+	    \f2computation of interest\fP
+	}
+	w.stop();
+
+	cout << "user time=" << w.user()/N << "\en";
+    }
+
+.Be
+.SH BUGS
+Under SunOS 3.5, \f3real()\f1 always returns zero.
+.SH SEE ALSO
+.Bf
+\f3times(2)\f1
+.Be

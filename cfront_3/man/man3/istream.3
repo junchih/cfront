@@ -1,0 +1,394 @@
+.  \"ident	"@(#)cls4:man/stream/istream.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any
+.  \"actual or intended publication of such source code.
+.TH ISTREAM  3C++ "C++ Stream Library" " "
+.SH NAME
+istream \- formatted and unformatted input
+.SH SYNOPSIS
+.nf
+.ft B
+.ta1i 2i
+#include <iostream.h>
+
+typedef long streamoff, streampos;
+class ios {
+public:
+	enum	seek_dir { beg, cur, end };
+	enum	open_mode { in, out, ate, app, trunc, nocreate, noreplace } ;
+	/* flags for controlling format */
+	enum	{ skipws=01,
+		  left=02,  right=04, internal=010,
+		  dec=020, oct=040, hex=0100,
+		  showbase=0200, showpoint=0400, uppercase=01000, showpos=02000,
+		  scientific=04000, fixed=010000,
+		  unitbuf=020000, stdio=040000 };
+	// \f2and lots of other stuff, see ios(3C++) ... \fP
+} ;
+
+class istream : public ios {
+public:
+		istream(streambuf*);
+	int	gcount();
+	istream&	get(char* ptr, int len, char delim='\en');
+	istream&	get(unsigned char* ptr,int len, char delim='\en');
+
+	istream&	get(unsigned char&);
+	istream&	get(char&);
+	istream&	get(streambuf& sb, char delim ='\en');
+	int	get();
+	istream&	getline(char* ptr, int len, char delim='\en');
+	istream&	getline(unsigned char* ptr, int len, char delim='\en');
+	istream&	ignore(int len=1,int delim=EOF);
+	int	ipfx(int need=0);
+	int	peek();
+	istream&	putback(char);
+	istream&	read(char* s, int n); 
+	istream&	read(unsigned char* s, int n);
+	istream&	seekg(streampos);
+	istream&	seekg(streamoff, seek_dir);
+	int	sync();
+	streampos	tellg();
+
+	istream&	operator>>(char*);
+	istream&	operator>>(char&);
+	istream&	operator>>(short&);
+	istream&	operator>>(int&);
+	istream&	operator>>(long&);
+	istream&	operator>>(float&);
+	istream&	operator>>(double&);
+	istream&	operator>>(unsigned char*);
+	istream&	operator>>(unsigned char&);
+	istream&	operator>>(unsigned short&);
+	istream&	operator>>(unsigned int&);
+	istream&	operator>>(unsigned long&);
+	istream&	operator>>(streambuf*);
+	istream&	operator>>(istream& (*)(istream&));
+	istream&	operator>>(ios& (*)(ios&));
+};
+
+class istream_withassign : public istream {
+		istream_withassign();
+	istream&	operator=(istream&);
+	istream&	operator=(streambuf*);
+};
+
+extern istream_withassign cin;
+
+istream&	ws(istream&)	;
+ios&	dec(ios&) ; 
+ios&	hex(ios&) ;
+ios&	oct(ios&) ;
+.fi
+.ft R
+.SH DESCRIPTION
+\f(CWistream\f1s support interpretation of characters
+fetched from an associated \f(CWstreambuf\f1.
+These are commonly referred to as input or extraction operations.
+The \f(CWistream\fP member functions and related functions
+are described below.
+.PP
+In the following descriptions assume that
+.br
+\(em \f3ins\f1 is an \f(CWistream\f1.
+.br
+\(em \f3inwa\f1 is an \f(CWistream_withassign\f1.
+.br
+\(em \f3insp\f1 is a \f(CWistream*\f1.
+.br
+\(em \f3c\f1 is a \f(CWchar&\f1
+.br
+\(em \f3delim\f1 is a \f(CWchar\f1.
+.br
+\(em \f3ptr\f1 is a \f(CWchar*\f1 or \f(CWunsigned char*\f1.
+.br
+\(em \f3sb\f1 is a \f(CWstreambuf&\f1.
+.br
+\(em \f3i\f1, \f3n\fP, \f3len\f1, \f3d\f1, and \f3need\f1 are \f(CWint\f1s.
+.br
+\(em \f3pos\f1 is a \f(CWstreampos\f1.
+.br
+\(em \f3off\f1 is a \f(CWstreamoff\f1.
+.br
+\(em \f3dir\f1 is a \f(CWseek_dir\f1.
+.br
+\(em \f3manip\f1 is a function with type \f(CWistream& (*)(istream&)\f1.
+.SS "Constructors and assignment:"
+.RS
+.TP
+\f3istream(sb)\f1
+Initializes \f3ios\f1 state variables and associates
+buffer \f3sb\f1 with the \f(CWistream\fP..
+.TP
+\f3istream_withassign()\f1
+Does no initialization.
+.TP
+\f3inswa=sb\f1
+Associates \f3sb\f1 with \f3inswa\f1 and initializes the entire
+state of \f3inswa\f1.
+.TP
+\f3inswa=ins\f1
+Associates \f3ins->rdbuf()\f1 with \f3inswa\f1 and initializes the entire
+state of \f3inswa\f1.
+.RE
+.SS "Input prefix function:"
+.RS
+.TP
+\f3i = ins.ipfx(need)\f1
+If \f3ins\f1's error state is non-zero, returns zero immediately.
+If necessary (and if it is non-null), any \f(CWios\fP tied to \f3ins\fP
+is flushed (see the description \f3ios::tie()\fP in \f2ios(3C++)\fP).
+Flushing is considered necessary if either \f3need==0\f1 or if there
+are fewer than \f3need\f1 characters immediately available.
+If \f(CWios::skipws\fP is set in \f3ins.flags()\fP
+and \f3need\f1 is zero,
+then leading whitespace characters are
+extracted from \f3ins\f1.
+\f3ipfx()\fP returns zero if an error occurs while skipping whitespace;
+otherwise it returns non-zero.
+.PP
+Formatted input functions call \f3ipfx(0)\fP,
+while unformatted input functions call \f3ipfx(1)\fP;
+see below.
+.RE
+.SS "Formatted input functions (extractors):"
+.RS
+.TP
+\f3ins>>x\f1
+Calls \f3ipfx(0)\f1 and if that returns non-zero,
+extracts characters from \f3ins\f1 and converts them according
+to the type of \f3x\f1.
+It stores the converted value in \f3x\f1.
+Errors are indicated by setting the
+error state of \f3ins\f1.
+\f(CWios::failbit\f1 means that characters
+in \f3ins\f1 were not a representation of the required type.
+\f(CWios::badbit\f1 indicates that attempts to extract characters failed.
+\f3ins\f1 is always returned.
+.RS
+.PP
+The details of conversion depend on the values of \f3ins\f1's format
+state flags and variables (see \f2ios\f1(3C++)) and the
+type of \f3x\f1.
+Except that extractions that use width reset it to 0,
+the extraction operators
+do not change the value
+of \f(CWostream\fP's format state.
+Extractors are defined for the following types,
+with conversion rules as described below.
+.TP
+\f(CWchar*\f1, \f(CWunsigned char*\f1
+Characters are stored in the array pointed at by \f3x\f1
+until a whitespace character is found in \f3ins\f1.
+The terminating whitespace
+is left in \f3ins\f1.
+If \f3ins.width()\f1
+is non-zero it is taken to be the size of the array, and
+no more than \f3ins.width()-1\f1 characters are extracted.
+A terminating
+null character (0) is always stored (even when nothing else is
+done because of \f3ins\f1's error status).
+\f3ins.width()\f1 is reset to 0.
+.TP
+\f(CWchar&\f1, \f(CWunsigned char&\f1
+A character is extracted and stored in \f3x\f1.
+.in -.5i
+.sp
+.nf
+\f(CWshort&\f1, \f(CWunsigned short&\f1,
+\f(CWint&\f1, \f(CWunsigned int&\f1,
+\f(CWlong&\f1, \f(CWunsigned long&\f1
+.fi
+.in
+Characters are extracted and converted to an integral value
+according to the conversion specified in
+\f3ins\f1's format flags.
+Converted characters are stored in \f3x\fP.
+The first character may be a sign (\f(CW+\f1 or \f(CW-\f1).
+After that,
+if \f(CWios::oct\fP, \f(CWios::dec\fP, or \f(CWios::hex\fP
+is set in \f3ins.flags()\fP,
+the conversion is octal, decimal, or hexadecimal respectively.
+Conversion is terminated by the first "non-digit," which is left
+in \f3ins\f1.
+Octal digits are the characters '0' to '7'.
+Decimal digits are the octal digits plus '8' and '9'.
+Hexadecimal digits
+are the decimal digits plus the letters 'a' through 'f' (in either
+upper or lower case).
+If none of the conversion base format flags is set,
+then the number is interpreted according to C++ lexical conventions.
+That is, if the first characters (after the optional
+sign) are \f(CW0x\f1 or \f(CW0X\f1 a hexadecimal conversion
+is performed on following hexadecimal digits.
+Otherwise, if the first character is a \f(CW0\f1,
+an octal conversion is performed,
+and in all other cases a decimal conversion is performed.
+\f(CWios::failbit\f1 is set if there are no
+digits (not counting the \f(CW0\f1 in \f(CW0x\f1 or \f(CW0X\f1) during
+hex conversion) available.
+.TP
+\f(CWfloat&\f1, \f(CWdouble&\f1
+Converts the characters according to C++ syntax for a float or double,
+and stores the result in \f3x\f1.  \f(CWios::failbit\f1 is set if there are no
+digits available in \f3ins\f1 or if it does not begin with a well formed
+floating point number.
+.RE
+.PP
+The type and name (\f(CWoperator>>\f1) of
+the extraction operations are chosen
+to give a convenient syntax for sequences of input operations.
+The operator overloading of C++ permits
+extraction functions to be declared for user-defined classes.
+These operations can then be used with the same syntax as the
+member functions described here.
+.TP
+\f3ins>>sb\fP
+If \f3ios.ipfx(0)\fP returns non-zero,
+extracts characters from \f3ios\fP and inserts them into \f3sb\fP.
+Extraction stops when EOF is reached.
+Always returns \f3ins\fP.
+.SS "Unformatted input functions:"
+These functions call \f3ipfx(1)\f1 and proceed only
+if it returns non-zero:
+.RS
+.TP
+\f3insp=&ins.get(ptr,len,delim)\f1
+Extracts characters and stores them in
+the byte array beginning at \f3ptr\f1
+and extending for \f3len\f1 bytes.
+Extraction stops when \f3delim\f1 is encountered
+(\f3delim\f1 is left in \f3ins\f1 and not stored),
+when \f3ins\f1 has no more characters,
+or when the array has only one byte left.
+\f3get\f1 always stores a terminating null, even if it doesn't extract
+any characters from \f3ins\f1 because of its error status.
+\f(CWios::failbit\f1 is set only if \f3get\f1 encounters
+an end of file before it stores any characters.
+.TP
+\f3insp=&ins.get(c)\f1
+Extracts a single character
+and stores it in \f3c\f1.
+.TP
+\f3insp=&ins.get(sb,delim)\f3
+Extracts characters from \f3ins.rdbuf()\f1 and stores
+them into \f3sb\f1.
+It stops if it encounters end of file or if a store into
+\f3sb\f1
+fails or
+if it encounters \f3delim\f1 (which it leaves in \f3ins\f1). 
+\f(CWios::failbit\f1 is set if it stops because the store into \f3sb\f1 fails.
+.TP
+\f3i=ins.get()\f1.
+Extracts a character and returns it.
+\f3i\f1 is \f(CWEOF\f1 if extraction encounters end of file.
+\f(CWios::failbit\f1 is never set.
+.TP
+\f3insp=&ins.getline(ptr,len,delim)\f1
+Does the same thing as \f3ins.get(ptr,len,delim)\f1 with the exception
+that it extracts a terminating \f3delim\f1 character from \f3ins\f1.
+In case \f3delim\f1 occurs when exactly \f3len\f1 characters
+have been extracted, termination is treated as being due to the
+array being filled, and this \f3delim\f1 is left in \f3ins\f1.
+.TP
+\f3insp=&ins.ignore(n,d)\f1
+Extracts and throws away
+up to \f3n\f1 characters.
+Extraction stops prematurely if 
+\f3d\f1 is extracted or end of file is reached.
+If \f3d\f1 is \f(CWEOF\f1 it can never cause termination.
+.TP
+\f3insp=&ins.read(ptr,n)\f1
+Extracts
+\f3n\f1
+characters and stores them in the array beginning at \f3ptr\f1.
+If end of file is reached before \f3n\f1 characters have been
+extracted, 
+\f3read\f1
+stores whatever it can extract and sets \f(CWios::failbit\f1.
+The number of characters extracted can be determined via \f3ins.gcount()\f1.
+.RE
+.SS "Other members are:"
+.RS
+.TP
+\f3i=ins.gcount()\f1
+Returns the number of characters extracted by the last unformatted
+input function.  Formatted input functions may call unformatted
+input functions and thereby reset this number.
+.TP
+\f3i=ins.peek()\f1
+Begins by calling \f3ins.ipfx(1)\f1.
+If that call returns zero or if \f3ins\f1 is at end of file,
+it returns \f(CWEOF\f1.
+Otherwise it returns the next character without extracting it.
+.TP
+\f3insp=&ins.putback(c)\f1
+Attempts to back up \f3ins.rdbuf()\f1.
+\f3c\f1 must be the character before \f3ins.rdbuf()\f1's get pointer.
+(Unless other activity is modifying \f3ins.rdbuf()\f1 this
+is the last character extracted from \f3ins\f1.)
+If it is not, the effect is undefined.
+\f3putback\f1 may fail (and set the error state).
+Although it is a member of \f(CWistream\f1,
+\f3putback\f1 never extracts characters, so
+it does not call \f3ipfx\f1.  It will, however, return without
+doing anything if the error state is non-zero.
+.TP
+\f3i=&ins.sync()\fP
+Establishes consistency between internal data structures and
+the external source of characters.
+Calls \f3ins.rdbuf()->sync()\fP, which is a virtual function,
+so the details depend on the derived class.
+Returns EOF to indicate errors.
+.TP
+\f3ins>>manip\f1
+Equivalent to \f3manip(ins)\f1.
+Syntactically this looks like an extractor
+operation, but semantically it does an arbitrary operation
+rather than converting a sequence of characters and storing the
+result in \f3manip\f1.
+A predefined manipulator, \f3ws\fP, is described below.
+.RE
+.SS "Member functions related to positioning:"
+.RS
+.TP
+\f3insp=&ins.seekg(off,dir)\f1
+Repositions \f3ins.rdbuf()\f1's get pointer.
+See \f2sbuf.pub\f1(3C++)\f1 for a discussion of positioning.
+.TP
+\f3insp=&ins.seekg(pos)\f1
+Repositions \f3ins.rdbuf()\f1's get pointer.
+See \f2sbuf.pub\f1(3C++)\f1 for a discussion of positioning.
+.TP
+\f3pos=ins.tellg()\f1
+The current position of \f3ios.rdbuf()\f1's get pointer.
+See \f2sbuf.pub\f1(3C++)\f1 for a discussion of positioning.
+.RE
+.SS "Manipulator:"
+.RS
+.TP
+\f3ins>>ws\f1
+Extracts whitespace characters.
+.TP
+\f3ins>>dec\f1
+Sets the conversion base format flag to 10.
+See \f2ios(3C++)\fP.
+.TP
+\f3ins>>hex\f1
+Sets the conversion base format flag to 16.
+See \f2ios(3C++)\fP.
+.TP
+\f3ins>>oct\f1
+Sets the conversion base format flag to 8.
+See \f2ios(3C++)\fP.
+.RE
+.SH CAVEATS
+.PP
+There is no overflow detection on conversion of integers. There should
+be, and overflow should cause the error state to be set.
+.SH SEE ALSO
+ios(3C++),
+sbuf.pub(3C++),
+manip(3C++)

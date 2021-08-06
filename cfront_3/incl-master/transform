@@ -1,0 +1,143 @@
+#!/bin/sh
+#ident	"@(#)cls4:incl-master/transform	1.1"
+###############################################################################
+#
+# C++ source for the C++ Language System, Release 3.0.  This product
+# is a new release of the original cfront developed in the computer
+# science research center of AT&T Bell Laboratories.
+#
+# Copyright (c) 1991 AT&T and UNIX System Laboratories, Inc.
+# Copyright (c) 1984, 1989, 1990 AT&T.  All Rights Reserved.
+#
+# THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE of AT&T and UNIX System
+#	
+# Laboratories, Inc.  The copyright notice above does not evidence
+# any actual or intended publication of such source code.
+#
+###############################################################################
+
+# Transforms proto-header files file1.h ... into real C++ headers for operating system os.
+# The transformed file is printed on stdout.
+
+test $# -gt 2 || { echo "Usage: transform os symboliclinkflag file1.h ..."; exit; }
+
+trap 'exit' 1 2 3 15
+
+OS=$1
+SYMBOLICLINK=$2
+filename=`basename $3 |tr . _`
+shift; shift
+
+for header
+do
+	awk '
+BEGIN		{ 		
+	anyhidden = 0;		
+	hasexpand = 0;
+	printing = 1;		
+	inos = 0;		
+	error = 0;		
+}
+
+$1 == "#usedby" {
+	next;
+}
+
+/^\/\*\*\*\*\*\*\*/,/^\*\*\*\*\*\*\*/	{
+	# strip out the at&t copyright notice
+	next;
+}
+
+$1 == "#os"	{
+	if (inos) {
+		print "Error on line", NR, "!  Cannot nest #os blocks!\n" >"/dev/tty";
+		error = 1;
+		exit;
+	}
+	inos = 1;
+	printing = 0;
+	for (i=2; i<=NF; i++) {
+		if ($i == OS)
+			printing = 1;
+	}
+	next;
+}
+
+$1 == "#endos"	{
+	if (!inos) {
+		print "Error on line", NR, "!  #endos with no corresponding #os!\n" >"/dev/tty";
+		error = 1;
+		exit;
+	}
+	inos = 0;
+	printing = 1;
+	next;
+}
+
+$1 == "#old_hide"	{
+	if (printing) {
+		for (i=2; i<=NF; i++) {
+			printf("#define %s ______%s\n", $i, $i);
+			hide[$i] = 1;
+			anyhidden = 1;
+		}
+	}
+	next;
+}
+
+$1 == "#hide"	{
+	if (printing) {
+		for (i=2; i<=NF; i++) {
+			printf("#define %s ______%s_%s\n", $i, $i, filename);
+			hide[$i] = 1;
+			anyhidden = 1;
+		}
+	}
+	next;
+}
+
+$1 == "#//" {
+	next;
+}
+
+$1 == "#expand"	{
+	if (printing) {
+		hasexpand = 1;
+		print $0, "\n";
+		# Now unhide all the hidden names.
+		if (anyhidden) {
+			for (i in hide)	{
+				printf("#undef %s\n", i);
+			}
+		}
+	}
+	next;
+}
+
+{ 
+	if (printing)
+		print; 
+}
+
+END {
+	if (anyhidden && !hasexpand) {
+		print "Error: proto-header has #hide, but no #expand!\n" >"/dev/tty";
+	}
+	if (inos && !error) {
+		print "Error on line", NR, "!  Unclosed #os block!\n" >"/dev/tty";
+	}
+}' OS=$OS filename=$filename $header | \
+	(if test "$SYMBOLICLINK" = "1"
+	then
+		sed -e 's/expand *\([^ ]*\)/include <cc\/\1>/'
+	else
+		expand
+	fi) 
+done
+
+
+
+
+
+
+

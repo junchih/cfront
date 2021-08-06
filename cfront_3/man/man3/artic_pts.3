@@ -1,0 +1,57 @@
+.\" ident	@(#)Graph_alg:man/artic_pts.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3artic_pts\fP \f3Graph_alg(3C++)\fP " "
+.SH NAME
+artic_pts \- find the articulation points of a connected component of an undirected Graph
+.SH SYNOPSIS OF Graph_alg.h
+.Bf
+
+#include <Set.h>
+
+#define Graph_algdeclare(\f2G\fP,\f2V\fP,\f2E\fP)...
+#define Graph_algimplement(\f2G\fP,\f2V\fP,\f2E\fP)...
+
+\f2Expanding Graph_algdeclare(G,V,E) produces the following text:\fP
+
+    Set_of_p<\f2V\fP> artic_pts(const \f2G\fP& g);
+    Set_of_p<\f2V\fP> artic_pts(const \f2G\fP& g,
+        const Set_of_p<\f2V\fP>& vpset);
+
+.Be
+.SH DESCRIPTION
+.P
+An articulation point is a Vertex which, when removed
+from an undirected Graph,
+causes the connected component containing that Vertex 
+to split into two or more connected components.
+.IP "\f4Set_of_p<\f2V\fP> artic_pts(const \f2G\fP& g);\f1"
+Returns the set of articulation points for all 
+connected components in \f4g\f1.
+.IP "\f4Set_of_p<\f2V\fP> artic_pts(const \f2G\fP& g,\f1"
+.IC "\f4    const Set_of_p<\f2V\fP>& vpset);\f1"
+Returns the set of articulation points for the 
+connected component identified by the Vertices in \f4vpset\f1.
+The function result will be meaningless if \f4vpset\f1
+is not a connected component of \f4g\f1.
+.SH COMPLEXITY
+\f2O(max(v,e))\f1, where \f2v\f1
+is the number of Vertices and
+\f2e\f1 is the number of Edges
+in the connected component.
+.SH NOTES
+The value of \f4vpset\f1 can be computed using \f3comps(.)\f1.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3comps(.)\f1
+\f3Set(3C++)\f1
+.Be

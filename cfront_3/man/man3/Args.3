@@ -1,0 +1,363 @@
+.\" ident	@(#)Args:man/Args.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Args\fP \f33C++\fP  " "
+.SH NAME
+Args \- UNIX command line arguments
+.SH SYNOPSIS of Args.h
+.Bf
+#include <Objection.h>   // see \f3Objection(3C++)\fP
+
+class Args {
+public:
+
+//  Constructor
+
+    enum { intermix = ..., plusoptions = ... };
+    Args(int argc, const char*const* argv,
+        const char* optstr, int bits = 0,
+        const char*const* keyword_options = 0);
+
+//  Test options and get values
+
+    int isset(char opt) const;
+    int isset(const char* key) const;
+    char flag(char opt) const;
+    char flag(const char* key) const;
+    const char* value(char opt) const;
+    const char* value(const char* key) const;
+    const char* subvalue(char opt,
+        const char* name) const;
+    const char* subvalue(const char* key,
+        const char* name) const;
+    const char* arg(int i) const;
+    const char* progname() const;
+    int nargs() const;
+    int error() const;
+
+//  Objections
+
+    static Objection unexpected_opt;
+    static Objection missing_opt;
+    static Objection missing_val;
+    static Objection opt_as_val;
+};
+
+class Opt {
+public:
+    char flag() const;
+    char chr() const;
+    const char* keyword() const;
+    const char* value() const;
+};
+
+class Subopt {
+public:
+    const char* name() const;
+    const char* value() const;
+};
+
+class Optsiter {
+public:
+    Optsiter(const Args& args);
+    int next(const Opt*& opt);
+    const Args* the_args() const;
+};
+
+class Suboptsiter {
+public:
+    Suboptsiter(const Opt& opt);
+    int next(const Subopt*& subopt);
+    const Opt* the_opt() const;
+};
+
+class Argsiter {
+public:
+    Argsiter(const Args& args);
+    int next(const char*& arg);
+    const Args* the_args() const;
+};
+.fi
+.ft R
+.SH DESCRIPTION
+.PP
+A UNIX command is invoked with a series of 
+.I options 
+and non-option 
+.IR arguments .
+An option is a letter (or keyword; see below)
+preceded by a ``\f4-\fP'' (and optionally by a ``\f4+\fP''; see below).
+The ``\f4-\fP'' (and optionally ``\f4+\fP'') character
+is called the option's
+.IR flag .
+An option may be followed by a character string, called its
+.IR value .
+White space between an option and its value is optional.
+.PP
+A collection of options, none of which have values, 
+may be specified in an
+option
+.IR block , 
+for example,
+``\f4-abc\fP''.
+Alternatively, they may be specified individually; for example,
+``\f4-a -b -c\fP''.
+The two forms are equivalent.
+(Of course, if ``\f4+\fP'' is specified as an option flag, 
+then ``\f4+\fP'' and ``\f4-\fP'' 
+options must be specified separately.)
+.PP
+Some option values are further broken up into 
+.I suboptions 
+(see below).
+.PP
+The leftmost command line argument that is neither an option, option block,
+nor option value is an 
+.IR argument .
+All command line arguments to the right of the leftmost argument are
+also arguments, regardless
+of whether they start with a flag.
+However, if intermixing
+of options and arguments is desired, this can be optionally specified.
+In either case, the special option ``\f4--\f1'' can be used to indicate that all
+command line arguments to the right are to be treated as arguments,
+regardless of whether they start with a flag.
+.PP
+The \f4Args\fP class scans the command line and finds all
+of the options, values, suboptions, and arguments.
+These are saved in the \f4Args\fP object and can be subsequently
+examined (but not modified).
+.PP
+.SS Keyword options
+Options consisting of more than a single character are called
+.I keyword options.
+For example, on some machines, in
+.ft CW
+
+    cc -dryrun -c foo.c
+
+.ft P
+``dryrun'' is a keyword option.
+Specifying a string as a keyword option to Args causes
+any command line argument which matches that string (prefixed by a flag)
+to be treated as that keyword option, 
+even if it consists of a sequence of legal
+single-character options.
+.SS Suboptions
+The value of an option specified as having suboptions
+is assumed to be a series
+of one or more strings separated by ``\f4,\fP''s with
+no intervening spaces.
+Each suboption can be either a simple string 
+.I name
+of the suboption),
+or a name followed by an ``\f4=\fP'' followed
+by another string (the
+.I value
+of the suboption).
+.PP
+For example, suppose a program was invoked as follows:
+.ft CW
+
+    foo \-O alpha=tom,beta,gamma=harry
+
+.ft P
+Assuming that option ``\f4O\fP'' was specified as having suboptions,
+the first suboption has name ``\f4alpha\fP'' and value ``\f4tom\fP'',
+the second suboption has name ``\f4beta\fP'' and value ``'' (the null
+string), and the third suboption has name ``\f4gamma\fP'' and value
+``\f4harry\fP''.
+.SH " "
+.SH "Args"
+.SH " "
+.SS "Constructors"
+.IP "\f4enum { intermix = ..., plusoptions = ... };\f1"
+.hS
+.IP "\f4Args(int argc, const char*const* argv,\f1"
+.IC "\f4    const char* optstr, int bits = 0,\f1"
+.IC "\f4    const char*const* keyword_options = 0);\f1"
+The first two arguments are the \f4argc\fP and
+\f4argv\fP arguments with which \f4main\fP is invoked.
+Each non-keyword option acceptable to the program must be contained in
+the string pointed to by 
+\f4optstr\fP.
+If the option is to have a value, the letter must be followed 
+by a ``\f4:\fP''.
+If the option is to have suboptions, the letter must be followed
+by a ``\f4;\fP''.
+If \f4bits\ |\ intermix\f1 is true, then intermixing of options and arguments is allowed.
+If \f4bits\ |\ plusoptions\f1 is true, then ``\f4+\f1'' is treated as an option flag.
+
+The optional \f4keyword_options\fP is a pointer to a NULL-terminated
+list of allowed
+keyword options.  
+If a keyword in this list is to have a value, its
+final character should be a ``\f4:\fP''.
+If a keyword in this list is to have suboptions, its
+final character should be a ``\f4;\fP''.
+(The final ``\f4:\fP'' or ``\f4;\fP'' is not considered part of the keyword.)
+.SS "Test options and get values"
+.IP "\f4int isset(char opt)const;\f1"
+.hS
+.IP "\f4int isset(const char* key)const;\f1"
+Returns nonzero if the (keyword) option appeared on the command line.
+.IP "\f4char flag(char opt)const;\f1"
+.hS
+.IP "\f4char flag(const char* key)const;\f1"
+Returns the flag with which the rightmost occurrence of the
+(keyword) option on the command line was set.
+If the option was not set, the character ``\f4\e0\fP'' is returned.
+.IP "\f4const char* value(char opt)const;\f1"
+.hS
+.IP "\f4const char* value(const char* key)const;\f1"
+Returns a pointer to the value specified with the rightmost occurrence of 
+the (keyword) option
+on the command line.
+If the option was not set or no value was specified,
+the 0 pointer is returned.
+.IP "\f4const char* subvalue(char opt, const char* name)const;\f1"
+.hS
+.IP "\f4const char* subvalue(const char* key,\f1"
+.IC "\f4    const char* name)const;\f1
+.br
+Returns a pointer to the string that was 
+specified as the value of the rightmost occurrence of the suboption with 
+the given \f4name\fP for the rightmost occurrence of
+(keyword) option
+on the command line.
+If the \f4name\fP was given but no value provided,
+the return value will be a pointer to the null string.
+If the option was not specified, or the \f4name\fP was not
+specified in the rightmost occurrence of this option, 
+then the 0 pointer is returned.
+.IP "\f4const char* arg(int i)const;\f1"
+Returns the i'th (non-option) argument, or 0 if there was no such argument. 
+The arguments are numbered starting at zero.
+Note that \f4argv[0]\fP, conventionally the program name,
+is not accessible via this function.
+(See \f4progname\fP.)
+.IP "\f4const char* progname()const;\f1"
+Returns a pointer to the program name, \f4argv[0]\fP.
+.IP "\f4int nargs()const;\f1"
+Returns the number of (non-option) arguments.
+Note that \f4argv[0]\fP, conventionally the program name,
+is not included in this count.
+.IP "\f4int error()const;\f1"
+Returns nonzero if any of the Objections
+\f4unexpected_opt\f1,
+\f4missing_opt\f1, or
+\f4missing_val\f1
+were raised.
+Programs can use this if they wish to exit in response to option errors.
+.SS Objections
+.IP "\f4static Objection unexpected_opt;\f1"
+Raised when an option not specified in the \f4legal_opts\fP
+list is encountered in the input.
+The default and recovery action is to print a message and ignore the 
+unexpected option.
+.IP "\f4static Objection missing_opt;\f1"
+Raised when "\f4-\f1" appears by itself, without any following option letters.
+The default and recovery action is to print a message and ignore the ``\f4-\f1''.
+.IP "\f4static Objection missing_val;\f1"
+Raised when an option specified in the \f4legal_opts\fP
+list as requiring a value (i.e., followed by a ``\f4:\fP'')
+is encountered in the input
+without a value.
+This can occur if the option requiring a value is in an option block,
+or is the last field on the command line.
+
+Note that \f3getopt(3C)\fP does not currently enforce the
+requirement that options taking values cannot be mixed with options that
+do not take values.
+However, it does state the requirement and warns that it may be enforced
+in a future release.
+We enforce it now since failure to do so would conceal important errors.
+
+The default and recovery action is to print a message and ignore the option.
+.IP "\f4static Objection opt_as_val;\f1"
+Raised when the value for an option begins with a flag character.
+This usually means that the value for the option was omitted.
+However, in order to be consistent with UNIX handling of this case,
+the default and recovery actions are to ignore the (probable) error
+and treat the
+string beginning with the flag character as the
+value of the preceding option.
+
+An application can catch this Objection to handle the case differently.
+The argument passed to the user-appointed handler will be the option
+whose value appears to be missing.
+If the user handler returns, the suspicious value will be
+assigned to this option.
+.SS Iterators
+Options, suboptions, and arguments
+are returned in the order in which they appeared on
+the command line.
+.SH " "
+.SH "Opt"
+.SH " "
+Value returned by Optsiter (see below).
+.IP "\f4char flag() const;"
+Returns the flag associated with this option.
+.IP "\f4char chr() const;"
+If this option is a non-keyword option, returns the option, otherwise 
+returns ``\f4\e0\fP''.
+.IP "\f4const char* keyword() const;"
+If this option is a keyword option, returns a pointer to the
+keyword, otherwise returns 0.
+.IP "\f4const char* value() const;\f1"
+Returns a pointer to the value associated with this option, or 0
+if no value was specified.
+.SH " "
+.SH "Subopt"
+.SH " "
+Value returned by Suboptsiter (see below).
+.IP "\f4const char* name() const;\f1"
+Returns a pointer to the name of this suboption.
+.IP "\f4const char* value() const;\f1"
+Returns a pointer to the value of this suboption.
+If no value was provided, 
+the return value will be a pointer to the null string.
+.SH " "
+.SH "Optsiter"
+.SH " "
+.IP "\f4Optsiter(const Args& args);\f1"
+Iterates over all the options.
+.IP "\f4int next(const Opt*& opt);\f1"
+Sets \f4opt\f1 to a pointer to an Opt object
+describing the next option, or 0 if there are no more options.
+Returns nonzero if there was another option.
+.IP "\f4const Args* the_args()const;\f1"
+Returns a pointer to the \f4Args\fP object being iterated over.
+.SH " "
+.SH "Suboptsiter"
+.SH " "
+.IP "\f4Suboptsiter(const Opt& opt);\f1"
+Iterates over all of the suboptions of the given option.
+.IP "\f4int next(const Subopt*& subopt);\f1"
+Sets \f4subopt\f1 to a pointer to a Subopt object
+describing the next suboption, or 0 if there are no more suboptions.
+Returns nonzero if there was another suboption.
+.IP "\f4const Opt* the_opt()const;\f1"
+Returns a pointer to the \f4Opt\fP object being iterated over.
+.SH " "
+.SH "Argsiter"
+.SH " "
+.IP "\f4Argsiter(const Args& args);\f1"
+Iterates over all the (non-option) arguments.
+.IP "\f4int next(const char*& arg);\f1"
+Sets \f4arg\f1 to a pointer to the next (non-option) argument.
+Returns nonzero if there was another argument.
+.IP "\f4const Args* the_args()const;\f1"
+Returns a pointer to the \f4Args\fP object being iterated over.
+.SH SEE ALSO
+.Bf
+\f3Objection(3C++)\fP, \f3getopt(3C)\fP
+.Be

@@ -1,0 +1,142 @@
+.  \"ident	"@(#)cls4:man/stream/ssbuf.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any
+.  \"actual or intended publication of such source code.
+.TH SSBUF 3C++ "C++ Stream Library" " "
+.SH NAME
+strstreambuf \- streambuf specialized to arrays
+.SH SYNOPSIS
+.ta1i 2i 4i
+.ft B
+.nf
+#include <iostream.h>
+#include <strstream.h>
+
+class strstreambuf : public streambuf {
+public:
+		strstreambuf() ;
+		strstreambuf(char*, int, char*);
+		strstreambuf(int);
+		strstreambuf(unsigned char*, int, unsigned char*);
+		strstreambuf(void* (*a)(long), void(*f)(void*));
+
+	void	freeze(int n=1) ;
+	char*	str();
+	streambuf*	setbuf(char*, int)
+};
+.fi
+.ft R
+.SH DESCRIPTION
+A \f(CWstrstreambuf\f1
+is a \f(CWstreambuf\f1 that uses an array of bytes (a string) to hold
+the sequence of characters.
+Given the convention that a \f(CWchar*\f1 should be interpreted as
+pointing just before the \f(CWchar\f1 it really points at, the mapping
+between the abstract get/put pointers (see \f2sbuf.pub(3C++)\fP)
+and \f(CWchar*\f1 pointers is direct.
+Moving the pointers corresponds exactly to incrementing
+and decrementing the \f(CWchar*\f1 values.
+.PP
+To accommodate the need for arbitrary length strings
+\f(CWstrstreambuf\f1
+supports a dynamic mode.
+When a \f(CWstrstreambuf\f1 is in dynamic mode, space for
+the character sequence is
+allocated as needed.
+When the sequence is extended too far, it will be copied
+to a new array.
+.PP
+In the following descriptions assume:
+.br
+\(em \f3ssb\f1 is a \f(CWstrstreambuf*\f1.
+.br
+\(em \f3n\f1 is an \f(CWint\f1.
+.br
+\(em \f3ptr\f1 and \f3pstart\f1 are \f(CWchar*\f1s or \f(CWunsigned char*\f1s.
+.br
+\(em \f3a\f1 is a \f(CWvoid* (*)(long)\f1.
+.br
+\(em \f3f\f1 is a \f(CWvoid* (*)(void*)\f1.
+.SS "Constructors::
+.RS
+.TP
+\f3strstreambuf()\f1
+Constructs an empty \f(CWstrstreambuf\f1 in dynamic mode.
+This means that space will be automatically allocated to accommodate the
+characters that are put into the \f(CWstrstreambuf\f1
+(using operators \f(CWnew\f1
+and \f(CWdelete\f1).
+Because this may require copying the
+original characters, it is recommended that when many characters
+will be inserted, the program should use
+\f3setbuf()\f1 (described below) to
+inform the \f(CWstrstreambuf\f1.
+.TP
+\f3strstreambuf(a, f)\f1
+Constructs an empty \f(CWstrstreambuf\f1 in dynamic mode.
+\f3a\f1 is used as the allocator function in dynamic mode.
+The argument passed to \f3a\fP will be a \f(CWlong\fP
+denoting the number of bytes to be allocated.
+If \f3a\fP is null, \f(CWoperator new\f1 will be used.
+\f3f\f1 is used to free (or delete) areas returned by \f3a\f1.
+The argument to \f3f\fP will be a pointer to the array allocated by \f3a\fP.
+If \f3f\fP is null, \f(CWoperator delete\f1 is used.
+.TP
+\f3strstreambuf(n)\f1
+Constructs an empty \f(CWstrstreambuf\f1 in dynamic mode.
+The initial allocation of space will be at least \f3n\f1 bytes.
+.TP
+\f3strstreambuf(ptr, n, pstart)\f1
+Constructs a \f(CWstrstreambuf\f1 to use the bytes starting at
+\f3ptr\f1.
+The \f(CWstrstreambuf\f1 will be in static mode; it will not grow dynamically.
+If \f3n\f1 is positive, then the \f3n\f1 bytes starting
+at \f3ptr\f1 are used as the \f(CWstrstreambuf\f1.
+If \f3n\f1 is zero, \f3ptr\f1 is assumed
+to point to the beginning of a null terminated string and
+the bytes of that string (not including the terminating null character)
+will constitute the \f(CWstrstreambuf\f1.
+If \f3n\f1 is negative, the \f(CWstrstreambuf\f1 is assumed
+to continue indefinitely.
+The get pointer is initialized to \f3ptr\f1.
+The put pointer is initialized to \f3pstart\f1.
+If \f3pstart\f1 is null, then stores will be treated as errors.
+If \f3pstart\f1 is non-null, then the initial sequence for fetching
+(the get area) consists of the bytes between \f3ptr\f1 and \f3pstart\f1.
+If \f3pstart\f1 is null, then the initial get area
+consists of the entire array.
+.RE
+.SS "Member functions:"
+.RS
+.TP
+\f3ssb->freeze(n)\f1
+Inhibits (when \f3n\f1 is nonzero) or permits (when \f3n\f1 is zero)
+automatic deletion of the current array.
+Deletion normally occurs when more space is needed
+or when \f3ssb\f1 is being destroyed.
+Only space obtained via dynamic allocation is ever freed.
+It is an error (and the effect is undefined) to store characters
+into a \f(CWstrstreambuf\f1 that was in dynamic allocation mode
+and is now frozen.
+It is possible, however, to thaw (unfreeze) such a \f(CWstrstreambuf\f1 and
+resume storing characters.
+.TP
+\f3ptr=ssb->str()\f1
+Returns a pointer to the first \f(CWchar\fP of the current array and freezes
+\f3ssb\f1.
+If \f3ssb\f1 was constructed with an explicit array,
+\f3ptr\f1 will point to that array.
+If \f3ssb\f1 is in dynamic
+allocation mode, but nothing has yet been stored, \f3ptr\f1 may
+be null.
+.TP
+\f3ssb->setbuf(0,n)\f1
+\f3ssb\f1 remembers \f3n\f1 and the next time it does a dynamic
+mode allocation, it makes sure that at least \f3n\f1 bytes
+are allocated.
+.RE
+.SH SEE ALSO
+sbuf.pub(3C++),
+strstream(3C++)

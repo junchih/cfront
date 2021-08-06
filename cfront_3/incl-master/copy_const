@@ -1,0 +1,264 @@
+#!/bin/sh
+#ident	"@(#)cls4:incl-master/build	1.1"
+###############################################################################
+#
+# C++ source for the C++ Language System, Release 3.0.  This product
+# is a new release of the original cfront developed in the computer
+# science research center of AT&T Bell Laboratories.
+#
+# Copyright (c) 1991 AT&T and UNIX System Laboratories, Inc.
+# Copyright (c) 1984, 1989, 1990 AT&T.  All Rights Reserved.
+#
+# THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE of AT&T and UNIX System
+#
+# Laboratories, Inc.  The copyright notice above does not evidence
+# any actual or intended publication of such source code.
+#
+###############################################################################
+
+#
+# If you are using this script you have decided to use the system
+# (/usr/include) headers.  This script just copies in the non-
+# system specific (or const-headers) to your C++ header directory
+#
+test $# -eq 4 || { echo "Usage: copy_const os stdincl verboseflag targetdir"; exit; }
+
+OS=$1
+STDINCL=$2
+VERBOSE=$3
+TARGET=$4
+TEMPTARGET=$4.temp
+ROOT=`pwd`
+PROTOS=$ROOT/proto-headers
+
+PATH=$ROOT:$PATH
+export PATH
+
+# Calculate the full path name of $TARGET.
+#
+cd $ROOT
+if test ! -d $TARGET
+then
+	mkdir $TARGET
+	cd $TARGET
+	CURTARGET=`pwd`
+	cd $ROOT
+	rmdir $TARGET
+else
+	cd $TARGET
+	CURTARGET=`pwd`
+	cd $ROOT
+fi
+
+# Make a new empty temporary target directory.
+#
+cd $ROOT
+rm -rf $TEMPTARGET
+mkdir $TEMPTARGET
+# The common headers can just be copied.
+#
+cd $ROOT
+if test -d const-headers
+then
+	cp const-headers/* $TEMPTARGET
+fi
+
+# Save the current contents of $TARGET.
+#
+cd $ROOT
+if test -d $TARGET
+then
+	if test -d $TARGET.OLD
+	then
+		if test $VERBOSE -eq 1
+		then
+		        echo
+		        echo "Removing directory structure $TARGET.OLD..."
+		fi
+	        /bin/rm -fr $TARGET.OLD
+	fi
+	if test $VERBOSE -eq 1
+	then
+		echo
+		echo "Saving current $TARGET directory structure as $TARGET.OLD."
+	fi
+	mv $TARGET $TARGET.OLD
+
+	# Remove all empty directories.
+	#
+	cd $TARGET.OLD
+	for d in `find . -type d -print`
+	do
+		rmdir $d >/dev/null 2>&1
+	done
+	rm -f cc
+fi
+
+#
+# Some old code expects header files we used to generate, sysent.h,
+# libc.h and osfcn.h, let's getenerate these files and have them
+# point to the system files that now contain the information.
+
+if [ ! -s $TEMPTARGET/sysent.h ]
+then
+	echo "#ifndef __SYSENT_H" > $TEMPTARGET/sysent.h
+	echo "#define __SYSENT_H" >> $TEMPTARGET/sysent.h
+        echo "#include <unistd.h>">> $TEMPTARGET/sysent.h
+	echo "#endif" >> $TEMPTARGET/sysent.h
+fi
+if [ ! -s $TEMPTARGET/libc.h ]
+then
+	echo "#ifndef __LIBC_H" > $TEMPTARGET/libc.h
+	echo "#define __LIBC_H" >> $TEMPTARGET/libc.h
+        echo "#include <stdlib.h>">> $TEMPTARGET/libc.h
+	echo "#endif" >> $TEMPTARGET/libc.h
+fi
+if [ ! -s $TEMPTARGET/osfcn.h ]
+then
+	echo "#ifndef __OSFCN_H" > $TEMPTARGET/osfcn.h
+	echo "#define __OSFCN_H" >> $TEMPTARGET/osfcn.h
+        echo "#include <unistd.h>">> $TEMPTARGET/osfcn.h
+	echo "#endif" >> $TEMPTARGET/osfcn.h
+fi
+if [ ! -s $TEMPTARGET/rand48.h ]
+then
+	echo "#ifndef __RAND48_H" > $TEMPTARGET/rand48.h
+	echo "#define __RAND48_H" >> $TEMPTARGET/rand48.h
+        echo "#include <stdlib.h>">> $TEMPTARGET/rand48.h
+	echo "#endif" >> $TEMPTARGET/rand48.h
+fi
+
+# Copy curses.h for all OS's (except solaris and hp, where the system
+# version will be used), depending on OS we may overwrite it.
+#
+if test "$OS" != "solaris" -a "$OS" != "hpux8.0" -a "$OS" != "dec_alpha"
+then
+	cp $PROTOS/curses.h $TEMPTARGET/curses.h
+	chmod +w $TEMPTARGET/curses.h
+fi
+#
+# We also have a few system specific files that must be copied.
+# Which files are copied is based upon OS.
+#
+if test "$OS" = "solaris"
+then
+	cp $PROTOS/stdarg.sol $TEMPTARGET/stdarg.h
+	cp $PROTOS/setjmp.sol $TEMPTARGET/setjmp.h
+elif test "$OS" = sunos4 -o "$OS" = sunos4.1
+then
+	cp $PROTOS/setjmp.sunos4 $TEMPTARGET/setjmp.h
+elif test "$OS" = "3b2mips"
+then
+	cp $PROTOS/stdarg.3b2mips $TEMPTARGET/stdarg.h
+elif test "$OS" = "sgi-svr4"
+then
+	cp $PROTOS/stdarg.sgi $TEMPTARGET/stdarg.h
+	cp $PROTOS/curses.sgi $TEMPTARGET/curses.h
+elif test "$OS" = "svr2"
+then
+	cp $PROTOS/curses.svr2 $TEMPTARGET/curses.h
+elif test "$OS" = "svr3"
+then
+	cp $PROTOS/curses.svr3 $TEMPTARGET/curses.h
+elif test "$OS" = "svr4" -o "$OS" = "svr4FT"
+then
+	cp $PROTOS/curses.svr4 $TEMPTARGET/curses.h
+elif test "$OS" = "hpux8.0" -o "$OS" = "svr4"
+then
+#
+# The stdarg.h is the same for these 2
+#
+	cp $PROTOS/stdarg.hp $TEMPTARGET/stdarg.h
+elif test "$OS" = "uts"
+then
+	cp $PROTOS/curses.uts $TEMPTARGET/curses.h
+elif test "$OS" = "__linux__"
+then
+	cp -r $PROTOS/float.linux $TEMPTARGET/float.h
+	cp -r $PROTOS/stdarg.linux $TEMPTARGET/stdarg.h
+	cp -r $PROTOS/stddef.linux $TEMPTARGET/stddef.h
+	mkdir $TEMPTARGET/sys
+	cp -r $PROTOS/sys.sem.linux $TEMPTARGET/sys/sem.h
+fi
+
+# provide a definition of sumun, when we build the headers this
+# is in sys/sem.h
+#
+if test "$OS" = "solaris" -o "$OS" = "svr4" -o "$OS" = "hpux8.0" -o "$OS" = "svr4FT" -o "$OS" = "dec_alpha"
+then
+	chmod +w $TEMPTARGET/att_sem.h
+	echo "#ifndef __ATT_SEM_H" > $TEMPTARGET/att_sem.h
+	echo "#define __ATT_SEM_H" >> $TEMPTARGET/att_sem.h
+        echo "union semun {">> $TEMPTARGET/att_sem.h
+        echo "	int val;">> $TEMPTARGET/att_sem.h
+        echo "	struct semid_ds *buf;">> $TEMPTARGET/att_sem.h
+        echo "	ushort *array;">> $TEMPTARGET/att_sem.h
+        echo "};">> $TEMPTARGET/att_sem.h
+	echo "#endif" >> $TEMPTARGET/att_sem.h
+fi
+# Special stuff required for variable arguments on the alpha
+#
+if test "$OS" = "dec_alpha"
+then
+        cp $PROTOS/stdarg.alpha $TEMPTARGET/stdarg.h
+        cp $PROTOS/va_list.alpha $TEMPTARGET/va_list.h
+fi
+# Work around a bug in the FT system headers where they declare a global
+# variable, rather than making it extern.  Copy the headers, then use sed
+# to make the variable extern  The problem is in cmplrs/stsupport.h, but
+# we also need to copy in syms.h to fix the problem
+#
+if test "$OS" = "svr4FT" -o "$OS" = "dec_alpha"
+then
+	cp /usr/include/syms.h $TEMPTARGET/syms.h
+	if test ! -d $TEMPTARGET/cmplrs
+	then
+		mkdir $TEMPTARGET/cmplrs
+	fi
+	cp /usr/include/cmplrs/stsupport.h $TEMPTARGET/cmplrs/stsupport.h
+	chmod +w $TEMPTARGET/cmplrs/stsupport.h
+	sed -e 's/AUXU _auxtemp;/extern AUXU _auxtemp;/' $TEMPTARGET/cmplrs/stsupport.h > $$.tmp
+	mv $$.tmp $TEMPTARGET/cmplrs/stsupport.h
+fi
+
+# On platforms where K&R C code is generated, 'long double' in the C++
+# code is mapped to 'double' in the C code.  To make float.h (if it exists)
+# consistent with this transformation, each LDBL_XXX macro should be mapped
+# to the corresponding DBL_XXX macro.  Filter out systems on which:
+#   1) ANSI C is generated, and
+#   2) float.h does not exist
+
+if [ "$OS" != "dec_alpha" -a "$OS" != "linux" -a "$OS" != "svr4FT" -a -f $STDINCL/float.h ]
+then
+	sed \
+	-e 's/define[ 	]*LDBL_MANT_DIG[ 	].*$/define LDBL_MANT_DIG	DBL_MANT_DIG/' \
+	-e 's/define[ 	]*LDBL_EPSILON[ 	].*$/define LDBL_EPSILON	DBL_EPSILON/' \
+	-e 's/define[ 	]*LDBL_DIG[ 	].*$/define LDBL_DIG	DBL_DIG/' \
+	-e 's/define[ 	]*LDBL_MIN_EXP[ 	].*$/define LDBL_MIN_EXP	DBL_MIN_EXP/' \
+	-e 's/define[ 	]*LDBL_MIN[ 	].*$/define LDBL_MIN	DBL_MIN/' \
+	-e 's/define[ 	]*LDBL_MIN_10_EXP[ 	].*$/define LDBL_MIN_10_EXP	DBL_MIN_10_EXP/' \
+	-e 's/define[ 	]*LDBL_MAX_EXP[ 	].*$/define LDBL_MAX_EXP	DBL_MAX_EXP/' \
+	-e 's/define[ 	]*LDBL_MAX[ 	].*$/define LDBL_MAX	DBL_MAX/' \
+	-e 's/define[ 	]*LDBL_MAX_10_EXP[ 	].*$/define LDBL_MAX_10_EXP	DBL_MAX_10_EXP/' \
+	$STDINCL/float.h >$TEMPTARGET/float.h
+fi
+
+# Move the stuff we built to its final resting place.
+#
+cd $ROOT
+mv $TEMPTARGET $TARGET
+
+# All done.
+#
+if test $VERBOSE -eq 1
+then
+	echo
+	echo "All done.  The following directories now contain the following stuff:"
+	echo
+	echo "	$TARGET -- the newest C++ headers for this machine"
+	echo "	$TARGET.OLD -- (if present) the old versions of any headers which"
+	echo "			have changed"
+	echo
+fi
+
+

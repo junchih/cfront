@@ -1,0 +1,65 @@
+.\" ident	@(#)Array_alg:man/shuffle.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3shuffle\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+shuffle \- shuffle an array in place
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    void shuffle(\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    void shuffle_c(const \*(gt* b1,const \*(gt* e1,\*(gt* b2);
+
+.Be
+.SH ASSUMPTIONS
+.PP
+(1) For the copy version, the output array
+and the input array do not overlap
+.br
+(2) For the copy version, the output array
+has at least as many cells as the input array.
+.br
+(3) \*(gt has \f4operator=\f1
+.SH DESCRIPTION
+.PP
+These functions shuffle (i.e., randomly permute)
+an array in place.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void shuffle(\*(gt* b,\*(gt* e);\f1"
+Performs an in-place shuffle.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void shuffle_c(const \*(gt* b1,const \*(gt* e1,\*(gt* b2);\f1"
+Like \f4shuffle\f1 except that the input array is
+preserved and the result written to a new array
+beginning at location \f4b2\f1.
+.SH COMPLEXITY
+.PP
+If \f2N\f1 is the size of the array, 
+then complexity is \f2O(N)\f1.
+Exactly \f23(N\-1)\f1 assignments are done.
+.SH NOTES
+These functions use \f3drand48(3C)\f1 to obtain
+pseudo-random numbers.
+.PP
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3drand48(3C)\f1
+\f3Block(3C++)\f1
+.Be

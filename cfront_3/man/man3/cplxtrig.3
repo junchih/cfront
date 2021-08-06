@@ -1,0 +1,79 @@
+.  "\ident	"@(#)cls4:man/complex/cplxtrig.3	1.1"
+.TH CPLXTRIG 3C++ "C++ Complex Math Library" " "
+.SH NAME
+cplxtrig \- trigonometric and hyperbolic functions for the C++ complex library
+.SH SYNOPSIS
+.B #include <complex.h>
+.PP
+.nf
+.ta 1i 2.5i
+\f3
+class complex {
+
+public:
+	friend complex	sin(complex);
+	friend complex	cos(complex);
+
+	friend complex	sinh(complex);
+	friend complex	cosh(complex);
+.fi
+.br
+};
+\fP
+.SH DESCRIPTION
+The following trigonometric functions are defined for \f(CWcomplex\fP, where:
+ \(em \f3x\fP and \f3y\fP are of type \f(CWcomplex\fP.
+.TP 15
+\f3y = sin(x)\fP
+Returns the sine of \f3x\fP.
+.P
+.TP 15
+\f3y = cos(x)\fP
+Returns the cosine of \f3x\fP.
+.P
+.TP 15
+\f3y = sinh(x)\fP
+Returns the hyperbolic sine of \f3x\fP.
+.P
+.TP 15
+\f3y = cosh(x)\fP
+Returns the hyperbolic cosine of \f3x\fP.
+.SH SEE ALSO
+CPLX.INTRO(3C++),
+cartpol(3C++),
+cplxerr(3C++),
+cplxops(3C++),
+and
+cplxexp(3C++).
+.SH DIAGNOSTICS
+If the imaginary part of
+.I x
+would cause overflow
+.B sinh\^
+and
+.B cosh\^
+return
+.B "(0, 0)".
+When the real part is large enough to cause overflow,
+.B sinh\^
+and
+.B cosh\^
+return
+.B "(HUGE, HUGE)"
+if the cosine and sine of the imaginary part of x are non-negative,
+.B "(HUGE, \-HUGE)"
+if the cosine is non-negative and the sine is less than 0,
+.B "(\-HUGE, HUGE)"
+if the sine is non-negative and the cosine is less than 0,
+and
+.B "(\-HUGE, \-HUGE)"
+if both sine and cosine are less than 0.
+In all these cases,
+.I errno
+is set to
+.SM
+.BR ERANGE\*S .
+.PP
+These error-handling procedures may be changed with the function
+.B complex_error
+(cplxerr(3C++)).

@@ -1,0 +1,94 @@
+.\" ident	@(#)Array_alg:man/rt_pos.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3rt_pos\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+rt_pos \- find the rightmost element in an array satisfying a given criterion
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    const \*(gt* rt_pos(
+	const \*(gt& val,
+	const \*(gt* b,
+	const \*(gt* e
+    );
+    template <class \*(gt>
+    const \*(gt* rt_pos_p(
+        int (*pred)(const \*(gt*),
+	const \*(gt* b,
+	const \*(gt* e
+    );
+    template <class \*(gt>
+    const \*(gt* rt_pos_r(
+        int (*rel)(const \*(gt*,const \*(gt*),
+	const \*(gt& val,
+	const \*(gt* b,
+	const \*(gt* e
+    );
+.Be
+.SH ASSUMPTIONS
+.PP
+(1) For the plain version, \*(gt\f4::operator==\f1
+defines an equivalence relation on \*(gt
+.br
+(2) For the relational version, \f4rel\f1
+defines an equivalence relation on \*(gt
+.SH DESCRIPTION
+.PP
+These functions return a pointer to the rightmost element
+satisfying some criterion.  If no such element can be
+found, they return \f20\f1.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4const \*(gt* rt_pos(\f1"
+.IC "\f4    const \*(gt& val,\f1"
+.IC "\f4    const \*(gt* b,\f1"
+.IC "\f4    const \*(gt* e\f1"
+.IC "\f4);\f1"
+Uses equality with \f4val\f1 as the criterion,
+with \f4\*(gt::operator==\f1 used for equality.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4const \*(gt* rt_pos_p(\f1"
+.IC "\f4    int (*pred)(const \*(gt),\f1"
+.IC "\f4    const \*(gt* b,\f1"
+.IC "\f4    const \*(gt* e\f1"
+.IC "\f4);\f1"
+Uses the predicate \f4pred\f1 as the criterion.
+That is, if \f4p\f1 is a pointer into the array,
+then \f4*p\f1 satisfies the criterion if \f4pred(p)\f1
+is true.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4const \*(gt* rt_pos_r(\f1"
+.IC "\f4    int (*rel)(const \*(gt*, const \*(gt),\f1"
+.IC "\f4    const \*(gt& val,\f1"
+.IC "\f4    const \*(gt* b,\f1"
+.IC "\f4    const \*(gt* e\f1"
+.IC "\f4);\f1"
+Like \f4rt_pos\f1 except that \f4rel\f1 is used
+for the equality test.  
+.SH COMPLEXITY
+.PP
+If \f2N\f1 is the size of the array,
+then complexity is \f2O(N)\f1.
+At most N equality tests are done.
+.SH NOTES
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3pos(.)\f1
+\f3Block(3C++)\f1
+.Be

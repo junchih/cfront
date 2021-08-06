@@ -1,0 +1,318 @@
+.  \"ident	"@(#)cls4:man/stream/ostream.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any
+.  \"actual or intended publication of such source code.
+.TH OSTREAM 3C++ "C++ Stream Library" " "
+.SH NAME
+ostream \- formatted and unformatted output
+.SH SYNOPSIS
+.ft B
+.ta1i 2i
+.nf
+#include <iostream.h>
+
+typedef long streamoff, streampos;
+class ios {
+public:
+	enum	seek_dir { beg, cur, end };
+	enum	open_mode { in, out, ate, app, trunc, nocreate, noreplace } ;
+	enum	{ skipws=01,
+		  left=02,  right=04, internal=010,
+		  dec=020, oct=040, hex=0100,
+		  showbase=0200, showpoint=0400, uppercase=01000, showpos=02000,
+		  scientific=04000, fixed=010000,
+		  unitbuf=020000, stdio=040000 };
+	// \f2and lots of other stuff, see ios(3C++) ... \fP
+} ;
+
+class ostream : public ios {
+public:
+		ostream(streambuf*);
+	ostream&	flush();
+	int	opfx();
+	ostream&	put(char);
+	ostream&	seekp(streampos);
+	ostream&	seekp(streamoff, seek_dir);
+	streampos	tellp();
+	ostream&	write(const char* ptr, int n);
+	ostream&	write(const unsigned char* ptr, int n);
+	ostream&	operator<<(const char*);
+	ostream&	operator<<(char);
+	ostream&	operator<<(short);
+	ostream&	operator<<(int);
+	ostream&	operator<<(long);
+	ostream&	operator<<(float);
+	ostream&	operator<<(double);
+	ostream&	operator<<(unsigned char);
+	ostream&	operator<<(unsigned short);
+	ostream&	operator<<(unsigned int);
+	ostream&	operator<<(unsigned long);
+	ostream&	operator<<(void*);
+	ostream&	operator<<(streambuf*);
+	ostream&	operator<<(ostream& (*)(ostream&));
+	ostream&	operator<<(ios& (*)(ios&));
+};
+
+class ostream_withassign : public ostream {
+		ostream_withassign();
+	ostream_withassign&	operator=(ostream&);
+	ostream_withassign&	operator=(streambuf*);
+};
+
+extern ostream_withassign cout;
+extern ostream_withassign cerr;
+extern ostream_withassign clog;
+
+ostream&	endl(ostream&) ;
+ostream&	ends(ostream&) ;
+ostream&	flush(ostream&) ;
+ios&	dec(ios&) ; 
+ios&	hex(ios&) ;
+ios&	oct(ios&) ;
+.fi
+.ft R
+.SH DESCRIPTION
+\f(CWostream\f1s support
+insertion (storing) into a \f(CWstreambuf\f1.
+These are commonly referred to as output operations.
+The \f(CWostream\fP member functions and related functions
+are described below.
+.PP
+In the following descriptions, assume:
+.br
+\(em \f3outs\f1 is an \f(CWostream\f1.
+.br
+\(em \f3outswa\f1 is an \f(CWostream_withassign\f1.
+.br
+\(em \f3outsp\f1 is an \f(CWostream*\f1.
+.br
+\(em \f3c\f1 is a \f(CWchar\f1.
+.br
+\(em \f3ptr\f1 is a \f(CWchar*\f1 or \f(CWunsigned char*\f1.
+.br
+\(em \f3sb\f1 is a \f(CWstreambuf*\f1
+.br
+\(em \f3i\f1 and \f3n\f1 are \f(CWint\f1s.
+.br
+\(em \f3pos\f1 is a \f(CWstreampos\f1.
+.br
+\(em \f3off\f1 is a \f(CWstreamoff\f1.
+.br
+\(em \f3dir\f1 is a \f(CWseek_dir\f1.
+.br
+\(em \f3manip\f1 is a function with type \f(CWostream& (*)(ostream&)\f1.
+.SS "Constructors and assignment:"
+.RS
+.TP
+\f3ostream(sb)\f1
+Initializes \f3ios\f1 state variables and associates
+buffer \f3sb\f1 with the \f(CWostream\fP.
+.TP
+\f3ostream_withassign()\f1
+Does no initialization.
+This allows a file static variable of this type
+(\f3cout\f1, for example) to be used before it is constructed,
+provided it is assigned to first.
+.TP
+\f3outswa=sb\f1
+Associates \f3sb\f1 with \f3swa\f1 and initializes the entire
+state of \f3outswa\f1.
+.TP
+\f3inswa=ins\f1
+Associates \f3ins->rdbuf()\f1 with \f3swa\f1 and initializes the entire
+state of \f3outswa\f1.
+.RE
+.SS "Output prefix function:"
+.RS
+.TP
+\f3i=outs.opfx()\f1
+If \f3outs\f1's error state is nonzero, returns immediately.
+If \f3outs.tie()\f1 is non-null, it is flushed.
+Returns non-zero except when \f3outs\f1's error state is nonzero.
+.RE
+.SS "Output suffix function:"
+.RS
+.TP
+\f3osfx()\f1
+Performs ``suffix'' actions before returning from inserters.
+If \f(CWios::unitbuf\fP is set,
+\f3osfx()\fP flushes the \f(CWostream\fP.
+If \f(CWios::stdio\fP is set,
+\f3osfx()\fP flushes \f(CWstdout\fP and \f(CWstderr\fP.
+.P
+\f3osfx()\f1 is called by all predefined inserters,
+and should be called by user-defined inserters as well,
+after any direct manipulation of the \f(CWstreambuf\fP.
+It is not called by the binary output functions.
+.RE
+.SS "Formatted output functions (inserters):"
+.RS
+.TP
+\f3outs<<x\f1
+First calls \f3outs.opfx()\f1 and if that returns 0, does nothing.
+Otherwise inserts a sequence of characters
+representing \f3x\f1 into \f3outs.rdbuf()\f1.
+Errors are indicated by setting
+the error state of \f3outs\f1.
+\f3outs\f1 is always returned.
+.RS
+.PP
+\f3x\f1 is converted into a sequence of characters
+(its representation) according
+to rules that depend on \f3x\f1's type and
+\f3outs\f1's format state flags and variables (see \f2ios\f1(3C++)).
+Inserters are defined for the following types,
+with conversion rules as described below:
+.TP
+\f(CWchar*\f1
+The representation is the sequence of characters up to
+(but not including)
+the terminating null of the string \f3x\f1 points at.
+.TP
+\f2any integral type\f1 except \f(CWchar\fP and \f(CWunsigned char\fP
+If \f3x\f1 is positive
+the representation contains a sequence of
+decimal, octal, or hexadecimal digits with no leading zeros
+according to whether
+\f(CWios::dec\fP, \f(CWios::oct\fP, or \f(CWios::hex\fP, respectively,
+is set in \f3ios\fP's format flags.
+If none of those flags are set, conversion defaults to decimal.
+If \f3x\f1 is zero, the representation is a single
+zero character(\f(CW0\f1).
+If \f3x\f1 is negative, decimal conversion converts it to a minus
+sign (\f(CW-\f1) followed by decimal digits.
+If \f3x\fP is positive and \f(CWios::showpos\fP is set,
+decimal conversion converts it to a plus sign (\f(CW+\fP)
+followed by decimal digits.
+The other conversions treat all values as unsigned.
+If \f(CWios::showbase\fP is set in \f3ios\fP's format flags,
+the hexadecimal representation contains 
+\f(CW0x\f1 before the hexidecimal digits,
+or \f(CW0X\fP if \f(CWios::uppercase\fP is set.
+If \f(CWios::showbase\fP is set,
+the octal representation contains a leading 0.
+.TP
+\f(CWvoid*\f1
+Pointers are converted to integral values and then converted
+to hexadecimal numbers as if \f(CWios::showbase\fP were set.
+.TP
+\f(CWfloat\f1, \f(CWdouble\f1
+The arguments are converted according to the current values
+of \f3outs.precision()\f1, \f3outs.width()\f1 and \f3outs\fP's
+format flags \f(CWios::scientific\fP, \f(CWios::fixed\fP, and 
+\f(CWios::uppercase\fP.
+(See \f2ios(3C++)\fP.)
+The default value for \f3outs.precision()\f1 is 6.
+If neither \f(CWios::scientific\fP nor \f(CWios::fixed\fP is set,
+either fixed or scientific notation is chosen
+for the representation, depending on the value of \f3x\fP.
+.TP
+\f(CWchar\fP, \f(CWunsigned char\fP
+No special conversion is necessary.
+.PP
+After the representation is determined, padding occurs.
+If \f3outs.width()\f1
+is greater than 0
+and the representation contains fewer than \f3outs.width()\f1
+characters, then enough \f3outs.fill()\f1 characters are added
+to bring the total number of characters to \f3ios.width()\f1.
+If \f(CWios::left\fP is set in \f3ios\fP's format flags,
+the sequence is left-adjusted,
+that is, characters are added after the characters determined above.
+If \f(CWios::right\fP is set,
+the padding is added before the characters determined above.
+If \f(CWios::internal\fP is set,
+the padding is added after any leading sign or base indication
+and before the characters that represent the value.
+\f3ios.width()\f1 is reset to 0, but all other format
+variables are unchanged.
+The resulting sequence (padding plus representation)
+is inserted into \f3outs.rdbuf()\f1.
+.RE
+.TP
+\f3outs<<sb\f1
+If \f3outs.opfx()\f1 returns non-zero,
+the sequence of characters that can be fetched from \f3sb\f1
+are inserted into \f3outs.rdbuf()\f1.
+Insertion stops when no more characters can be fetched from \f3sb\f1.
+No padding is performed.
+Always returns \f3outs\f1.
+.RE
+.SS "Unformatted output functions:"
+.RS
+.TP
+\f3outsp=&outs.put(c)\f1
+Inserts \f3c\f1 into \f3outs.rdbuf()\f1.
+Sets the error state if the insertion fails.
+.TP
+\f3outsp=&outs.write(s,n)\f1
+Inserts the
+\f3n\f1
+characters starting at \f3s\f1 into \f3outs.rdbuf()\f1.
+These characters may include zeros (i.e., \f3s\f1 need not be
+a null terminated string).
+.RE
+.SS "Other member functions:"
+.RS
+.TP
+\f3outsp=&outs.flush()\f1
+Storing characters into a streambuf does not always
+cause them to be consumed (e.g., written to the external file)
+immediately.
+\f3flush()\f1
+causes any characters that may have been stored but not yet consumed
+to be consumed by calling \f3outs.rdbuf()->sync\f1.
+.TP
+\f3outs<<manip\f1
+Equivalent to \f3manip(outs)\f1.
+Syntactically this looks like an insertion
+operation, but semantically it does an arbitrary operation
+rather than converting \f3manip\f1 to a sequence of characters as
+do the insertion operators.
+Predefined manipulators are described below.
+.RE
+.SS "Positioning functions:"
+.RS
+.TP
+\f3outsp=&ins.seekp(off,dir)\f1
+Repositions \f3outs.rdbuf()\f1's put pointer.
+See \f2sbuf.pub\f1(3C++)\f1 for a discussion of positioning.
+.TP
+\f3outsp=&outs.seekp(pos)\f1
+Repositions \f3outs.rdbuf()\f1's put pointer.
+See \f2sbuf.pub\f1(3C++)\f1 for a discussion of positioning.
+.TP
+\f3pos=outs.tellp()\f1
+The current position of \f3outs.rdbuf()\f1's put pointer.
+See \f2sbuf.pub\f1(3C++)\f1 for a discussion of positioning.
+.RE
+.SS "Manipulators:"
+.RS
+.TP
+\f3outs<<endl\f1
+Ends a line by inserting a newline character and flushing.
+.TP
+\f3outs<<ends\f1
+Ends a string by inserting a null (0) character.
+.TP
+\f3outs<<flush\f1
+Flushes \f3outs\f1.
+.TP
+\f3outs<<dec\f1
+Sets the conversion base format flag to 10.
+See \f2ios(3C++)\fP.
+.TP
+\f3outs<<hex\f1
+Sets the conversion base format flag to 16.
+See \f2ios(3C++)\fP.
+.TP
+\f3outs<<oct\f1
+Sets the conversion base format flag to 8.
+See \f2ios(3C++)\fP.
+.RE
+.SH SEE ALSO
+ios(3C++),
+sbuf.pub(3C++),
+manip(3C++)

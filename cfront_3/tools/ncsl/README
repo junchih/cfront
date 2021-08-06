@@ -1,0 +1,15 @@
+Comments on the programs for counting Non-Comment Source Lines
+NCSL and NCSLDIFF
+
+NOTICE-NOT TO BE DISCLOSED OUTSIDE AT&T EXCEPT UNDER WRITTEN AGRMT
+
+To compile NCSL and NCSLDIFF, use the command:
+ 
+     make
+
+The time function in ncsl is set for eastern standard time.  NCSL does not
+know about TZ.  If you want to change it change the value for "timezone".
+ 
+	Lois Wolter
+
+This version changed by R. Murray 1/88 to accept C++ style comments.

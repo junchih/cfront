@@ -1,0 +1,76 @@
+/*******************************************************************************
+ 
+C++ source for the C++ Language System, Release 3.0.  This product
+is a new release of the original cfront developed in the computer
+science research center of AT&T Bell Laboratories.
+
+Copyright (c) 1991 AT&T and UNIX System Laboratories, Inc.
+Copyright (c) 1984, 1989, 1990 AT&T.  All Rights Reserved.
+
+THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE of AT&T and UNIX System
+Laboratories, Inc.  The copyright notice above does not evidence
+any actual or intended publication of such source code.
+
+*******************************************************************************/
+/*
+ *	This is a handmade version of setjmp.h
+ *	for the Sun 4 running SunOS 4.0.3.
+ */	
+#ifndef __SETJMP_H
+#define __SETJMP_H
+
+
+#ifdef sparc
+#define	_JBLEN	9
+#else
+#define _JBLEN	58
+#endif
+
+typedef int jmp_buf[_JBLEN];
+typedef	int sigjmp_buf[_JBLEN+1];
+
+extern "C" {
+	int setjmp(jmp_buf);
+	void longjmp(jmp_buf, int);
+#ifndef _setjmp
+	int _setjmp(jmp_buf);
+#endif
+	void _longjmp(jmp_buf, int);
+	int sigsetjmp(sigjmp_buf, int);
+	void siglongjmp(sigjmp_buf, int);
+}
+
+static void setjmp_dummy() {
+	sigjmp_buf sbuf;
+	jmp_buf jbuf;
+	
+	/* 
+	 * The following functions are called in order to
+	 * keep cfront from deleting the definitions of these
+	 * functions.  This keeps the C compiler happy about
+	 * the following #pragma.
+	 */
+	sigsetjmp(sbuf, 0);
+	setjmp(jbuf);
+#ifndef _setjmp
+	_setjmp(jbuf);
+#endif
+	setjmp_dummy();
+}
+
+#ifndef _setjmp
+#pragma unknown_control_flow(sigsetjmp, setjmp, _setjmp)
+#else
+#pragma unknown_control_flow(sigsetjmp, setjmp)
+#endif
+
+#ifndef sparc
+/* the following pragma is necessary only on 68000s */
+#ifndef _setjmp
+#pragma makes_regs_inconsistent(sigsetjmp, setjmp, _setjmp)
+#else
+#pragma makes_regs_inconsistent(sigsetjmp, setjmp)
+#endif
+#endif
+
+#endif

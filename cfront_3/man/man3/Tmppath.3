@@ -1,0 +1,115 @@
+.\" ident	@(#)Path:man/Tmppath.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.tr ~"
+.TH \f3Tmppath\fP \f3Path(3C++)\fP " "
+.SH NAME
+Tmppath \- Temporary path names
+.SH "SYNOPSIS of Tmppath.h"
+.Bf
+#include <Path.h>
+
+class Tmppath : public Path{
+public:
+
+//  Constructors
+
+    Tmppath();
+    Tmppath(const char* pfx,const char* ext = "");
+    Tmppath(const Path& dir);
+    Tmppath(const Path& dir,const char* pfx,
+        const char* ext = "");
+
+//  Implicit arguments
+
+    static void use(const char* pfx);
+    static void use(const Path& dir);
+    static void use(const Path& dir,const char* pfx);
+    static void use();
+};
+.Be
+.SH DESCRIPTION
+A Tmppath is just like a Path (see \f3Path(.)\f1), 
+except it is initialized to a Path corresponding to a 
+file which does not currently exist in the underlying file 
+system.  
+Tmppath should replace \f3mktemp(3)\f1, \f3tempnam(3)\f1 
+and \f3tmpnam(3)\f1 in most C++ applications.
+.SS "Constructors"
+.IP "\f4Tmppath();\f1"
+The dirname of the constructed path is the first
+directory in the following list for which a Path corresponding
+to a non-existent file can be constructed:
+(1) the 
+current 
+value of the environment variable TMPDIR, if TMPDIR is set and is other than the empty string;
+(2) ``/usr/tmp''; 
+(3) ``/tmp''.
+If a Path corresponding to a non-existent file cannot be constructed,
+then Path(".") is constructed.
+
+The dirname of the constructed Path is 
+.I not 
+checked for existence.
+In particular, if TMPDIR does not exist in the underlying file system,
+then TMPDIR will be used, and any attempt to open the resulting Tmppath 
+will fail.
+(Not checking the existence of the directory is done for efficiency
+reasons when constructing many Tmppath's.)
+.IP "\f4Tmppath(const char* pfx,const char* ext = ~~);\f1"
+Same as above, except the basename of the constructed Path
+begins with the prefix \f3pfx\f1, and 
+ends with the suffix \f3ext\f1.
+.IP "\f4Tmppath(const Path& dir);\f1"
+.hS
+.IP "\f4Tmppath(const Path& dir,const char* pfx,\f1"
+.IC "\f4    const char* ext = ~~);\f1"
+Same as the above two constructors respectively, 
+except \f3dir\f1 is used as the dirname of the
+constructed Path.  None of the other directories are tried.
+.SS "Implicit arguments"
+These functions make it possible to specify once and for all
+a default directory and/or prefix to be used in all future Tmppath constructions.
+Individual constructions are still free to override these defaults
+by supplying explicit values for these arguments.
+These functions should not be called during static initialization.
+.IP "\f4static void use(const char* pfx);\f1"
+\f3pfx\f1 is an implicit argument to all future constructions lacking that argument.
+Future calls to other constructors have their original meanings.
+.IP "\f4static void use(const Path& dir);\f1"
+\f3dir\f1 is an implicit argument to all future constructions lacking that argument.
+Future calls to other constructors have their original meanings.
+.IP "\f4static void use(const Path& dir,const char* pfx);\f1"
+\f3dir\f1 and \f3pfx\f1 are implicit arguments to all future constructions lacking 
+either of those arguments.
+.IP "\f4static void use();\f1"
+Future calls to constructors have their original meanings.
+.SH WARNINGS
+It is completely up to the programmer to prevent the
+race between constructing a Tmppath and opening it for writing.
+As usual, the easiest way of guaranteeing no race
+is to use \f3tmpfile(3)\f1.
+.PP
+An attempt to open a Tmppath can fail either if 
+the program has lost the construct/open race, 
+or the directory corresponding to the dirname of the
+Tmppath does not exist in the underlying file system.
+.PP
+The Tmppath constructor is subtly overloaded.  Beware.
+.SH SEE ALSO
+.Bf
+\f3mktemp(3)\fP
+\f3tempnam(3)\fP
+\f3tmpfile(3)\fP
+\f3tmpnam(3)\fP
+\f3Path(.)\fP
+\f3Search_path(.)\fP
+.Be

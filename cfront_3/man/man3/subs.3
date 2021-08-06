@@ -1,0 +1,140 @@
+.\" ident	@(#)Array_alg:man/subs.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3subs\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+subs \- substitute a new value for elements of an array equal to a given value
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    void subs(
+	const \*(gt& val1,
+	const \*(gt& val2,
+	\*(gt* b,
+	\*(gt* e
+    );
+    template <class \*(gt>
+    void subs_c(
+	const \*(gt& val1,
+	const \*(gt& val2,
+	\*(gt* b1,
+	\*(gt* e1,
+	\*(gt* b2
+    );
+    template <class \*(gt>
+    void subs_r(
+        int (*rel)(const \*(gt*,const \*(gt*),
+	const \*(gt& val1,
+	const \*(gt& val2,
+	\*(gt* b,
+	\*(gt* e
+    );
+    template <class \*(gt>
+    void subs_rc(
+        int (*rel)(const \*(gt*,const \*(gt*),
+	const \*(gt& val1,
+	const \*(gt& val2,
+	\*(gt* b1,
+	\*(gt* e1,
+	\*(gt* b2
+    );
+.Be
+.SH ASSUMPTIONS
+.PP
+(1) For the non-relational versions, \f4\*(gt::operator==\f1
+defines an equivalence relation on \*(gt
+.br
+(2) For the relational versions, \f4rel\f1
+defines an equivalence relation on \*(gt
+.br
+(3) For the copy versions, the output array and the
+input array do not overlap
+.br
+(4) For the copy versions, the output array has at least
+as many cells as the input array
+.br
+(5) \*(gt has \f4operator=\f1
+.SH DESCRIPTION
+.PP
+These functions assign the value \f4val2\f1 
+to every cell in the array which currently contains
+an element equal to \f4val1\f1.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void subs(
+.IC "\f4    const \*(gt& val1,\f1"
+.IC "\f4    const \*(gt& val2,\f1"
+.IC "\f4    \*(gt* b,\f1"
+.IC "\f4    \*(gt* e\f1"
+.IC "\f4);\f1"
+Uses \f4\*(gt::operator==\f1 to define equality.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void subs_c(\f1"
+.IC "\f4    const \*(gt& val1,\f1" 
+.IC "\f4    const \*(gt& val2,\f1" 
+.IC "\f4    \*(gt* b1,\f1" 
+.IC "\f4    \*(gt* e1,\f1" 
+.IC "\f4    \*(gt* b2\f1"
+.IC "\f4);\f1"
+Like \f4subs\f1 except that the input array
+is preserved and the result is written to a new
+array beginning at location \f4b2\f1.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void subs_r(\f1"
+.IC "\f4    int (*rel)(const \*(gt*,const \*(gt*),\f1"
+.IC "\f4    const \*(gt& val1,\f1" 
+.IC "\f4    const \*(gt& val2,\f1" 
+.IC "\f4    \*(gt* b,\f1" 
+.IC "\f4    \*(gt* e\f1"
+.IC "\f4);\f1"
+Uses \f4rel\f1 to define equality.  That is,
+if \f4p\f1 is a pointer into the array and
+\f4rel(p,&val)\f1 initially gives zero, then after
+the call to \f4subs\f1 \f4p\f1 will point to
+a cell containing \f4new_val\f1.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void subs_rc(\f1"
+.IC "\f4    int (*rel)(const \*(gt*,const \*(gt*),\f1"
+.IC "\f4    const \*(gt& val1,\f1"
+.IC "\f4    const \*(gt& val2,\f1"
+.IC "\f4    \*(gt* b1,\f1"
+.IC "\f4    \*(gt* e1,\f1"
+.IC "\f4    \*(gt* b2\f1"
+.IC "\f4);\f1"
+Like \f4subs_r\f1 except that the input array
+is preserved and the result is written to a new
+array beginning at location \f4b2\f1.
+.SH COMPLEXITY
+.PP
+If \f2N\f1 is the size of the array, then 
+complexity is \f2O(N)\f1 for all versions.
+More precisely,
+.IP "\f3non-copy versions\f1"
+Exactly \f2N\f1 equality tests
+and at most \f2N\f1 assignments are done.
+.IP "\f3copy versions\f1"
+Exactly \f2N\f1 equality tests
+and exactly \f2N\f1 assignments are done.
+.SH NOTES
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1 
+\f3fill(.)\f1
+\f3for_each(.)\f1 
+\f3generate(.)\f1.
+\f3Block(3C++)\f1
+.Be

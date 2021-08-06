@@ -1,0 +1,676 @@
+.\" ident	@(#)Time:man/Time.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Time\fP \f3Time(3C++)\fP " "
+.SH NAME
+Time \- date and time-of-day
+.SH SYNOPSIS OF Time.h
+.Bf
+#include <Objection.h>       /* see \f3Objection(3C++)\fP */
+#include <String.h>          /* see \f3String(3C++)\fP */
+#include <sys/types.h>
+
+class Duration;              // see \f3Duration(.)\fP
+class Place;                 // see \f3Place(.)\fP
+const Place HERE;            // see \f3Place(.)\fP
+
+class ostream;               // see \f3iostream(3C++)\fP
+
+class Time{
+public:
+
+//  Time constants
+
+    static Time MIN();
+    static Time MAX();
+    static Time REF();
+
+//  Objections
+
+    static Objection environment_objection;
+    static Objection string_objection;
+
+//  Enumerations
+
+    enum Weekday{
+	sunday    = 0, monday    = 1, tuesday   = 2,
+	wednesday = 3, thursday  = 4, friday    = 5,
+	saturday  = 6
+    }; 
+    enum Month{
+	january   = 0, february  = 1, march     = 2,
+	april     = 3, may       = 4, june      = 5,
+	july      = 6, august    = 7, september = 8,
+	october   = 9, november  = 10, december  = 11
+    };
+
+//  Constructors, destructor
+
+    Time();
+    Time(unsigned y, Month m, unsigned d, const Place& p);
+    Time(unsigned y, Month m, unsigned d);
+    ~Time();
+
+//  Copy and assign
+
+    Time(const Time& t);
+    Time& operator=(const Time& t);
+
+//  Julian dates
+
+    unsigned julian_day_no(const Place& p)const;
+    unsigned julian_day_no()const;
+
+//  Component extractors
+
+    unsigned year_part(const Place& p)const;
+    Month month_part(const Place& p)const;
+    unsigned day_part(const Place& p)const;
+    Duration clock_part(const Place& p)const;
+
+    unsigned year_part()const;
+    Month month_part()const;
+    unsigned day_part()const;
+    Duration clock_part();
+
+//  Day-of-week operations
+
+    Weekday week_day(const Place& p)const;
+    Time previous(Weekday w, const Place& p)const;
+    Time next(Weekday w, const Place& p)const;
+
+    Weekday week_day()const;
+    Time previous(Weekday w)const;
+    Time next(Weekday w)const;
+
+//  Relations
+
+    \f2friend\fP int operator==(const Time& t1,const Time& t2);
+    \f2friend\fP int operator!=(const Time& t1,const Time& t2);
+    \f2friend\fP int operator<=(const Time& t1,const Time& t2);
+    \f2friend\fP int operator>(const Time& t1,const Time& t2);
+    \f2friend\fP int operator>=(const Time& t1,const Time& t2);
+    \f2friend\fP int operator<(const Time& t1,const Time& t2);
+
+//  Arithmetic operators
+
+    \f2friend\fP Time operator+(const Time& t,const Duration& d);
+    \f2friend\fP Time operator+(const Duration& d,const Time& t);
+    \f2friend\fP Time operator\(mi(const Time& t,const Duration& d);
+    const Time& operator+=(const Duration& d);
+    const Time& operator\(mi=(const Duration& d);
+
+    \f2friend\fP Duration operator\(mi(const Time& t1,
+        const Time& t2);
+
+//  Conversion to and from strings
+
+    String make_string(const char* fmt,
+        const Place& p)const;
+    String make_string(const Place& p)const;
+    \f2friend\fP Time make_time(const char* str,const Place& p);
+
+    String make_string(const char* fmt)const;
+    String make_string()const;
+    \f2friend\fP Time make_time(const char* str);
+
+    static void set_table(char** tm_form);
+    char** get_table();
+
+//  Conversion to and from time_t 
+
+    \f2friend\fP time_t make_time_t(const Time& t);
+    \f2friend\fP Time make_time(time_t t);
+
+//  Stream insertion
+
+    \f2friend\fP ostream& operator<<(ostream& os,const Time& t);
+
+//  Auxiliary functions
+
+    static unsigned days_in_year(unsigned y);
+    static int is_leap(unsigned y);
+    static unsigned first_day(Month m, unsigned y);
+    static unsigned days_in_month(Month m, unsigned y);
+    static int valid_date(unsigned y, Month m,
+        unsigned d);
+    static Time julian(unsigned y, int n,
+        const Place& p);
+    static Time julian(unsigned y, int n);
+
+//  Miscellaneous
+
+    unsigned hash()const;
+};
+
+.Be
+.SH DESCRIPTION
+.PP
+Time combines the notion of 
+calendar date and time-of-day 
+into a single abstract value denoting a 
+particular epoch in absolute time.  
+Times have a fixed precision of one second and
+a machine-dependent range.  
+For machines with 32-bit longs, 
+this range is approximately 136 years, 
+symmetric about the \f2reference Time\f1, 
+January 1, 1970 at 0h GMT; that is,
+approximately December 14, 1901 to January 18, 2038.
+.PP
+Times specified relative to a particular \f3Place(.)\f1,
+called \f2local times\f1, are converted to an 
+internal representation
+of absolute time based on Greenwich Mean Time (GMT)
+by applying the timezone difference 
+plus daylight savings time 
+correction, if any, for that Place.
+Times may also be \f2viewed\f1 relative to 
+particular Places; this requires a conversion from 
+absolute time back to local time. 
+Note that when working with Times near the
+limits of the range of representable Times,
+these conversions may fail, producing
+undefined results (see the \f3Preconditions\f1 below).
+.PP
+Many functions come in pairs: one with and one 
+without a Place parameter 
+(see \f3BUGS\f1 for why we did this).
+The ones with the Place parameter allow a Time to
+be expressed relative to a particular Place.  Those
+without the Place parameter use \f4Place::here()\f1, a 
+Place initialized with timezone information for
+the host machine location, gotten from the \f4TZ\f1
+environment variable.  See \f3intro(.)\f1 for a discussion 
+of how to set the \f4TZ\f1 variable and related environment 
+issues.
+.sp
+.SS "Time constants"
+.IP "\f4static Time MIN();\f1"
+Returns a machine-dependent Time whose value is the 
+earliest Time that can be computed.  For machines
+with 32-bit longs, \f4Time::MIN()\f1 
+is approximately December 1, 1901.
+.IP "\f4static Time MAX();\f1"
+A machine-dependent constant whose value is the 
+greatest Time that can be computed.  For machines
+with 32-bit longs, \f4Time::MAX()\f1 is 
+approximately January 18, 2038.
+.IP "\f4static Time REF();\f1"
+The reference Time (January 1, 1970 at 0h, GMT).
+.SS "Objections"
+The default action for both Objections 
+is to abort with an error message.
+.IP "\f4static Objection environment_objection;\f1"
+Indicates that the \f4TZ\f1 environment variable
+has not been set (see \f3intro(.)\f1 for
+a discussion of how to set the \f4TZ\f1 variable
+and related environment issues).  
+The recovery action in all cases is to behave 
+as if \f4TZ=GMT0\f1 had been specified.
+.IP "\f4static Objection string_objection;\f1"
+Indicates an error in conversion from string to Time.
+The default action is to abort with an error message.
+.SS "Enumerations"
+The following enumeration types have been provided
+for convenience in naming the days of the week and
+the months of the year.  Since these definitions are
+nested inside class Time, you must refer to both
+the typenames and the enumeration constants using
+qualification (see below).
+.IP "\f4enum Weekday\f1"
+The days of the week.  
+Refer to the typename as \f4Time::Weekday\f1
+and the enumeration constants as \f4Time::sunday\f1
+and so on.
+.IP "\f4enum Month\f1"
+The months of the year.
+Refer to the typename as \f4Time::Month\f1
+and the enumeration constants as \f4Time::january\f1
+and so on.
+.SS "Constructors, destructor"
+.IP "\f4Time();\f1"
+A Time equal to \f4Time::REF()\f1.
+.IP "\f4Time(unsigned y, Month m, unsigned d, const Place& p);\f1"
+A Time of \f40h\f1 on the date specified by \f4y\f1, 
+\f4m\f1, and \f4d\f1 at Place \f4p\f1.  
+\f3Preconditions\f1: (1) the first three arguments
+must describe a valid date (for example,
+February 29, 1988 would be valid, while February 29, 1987 
+would be invalid because 1987 was not a leap year);
+(2) the parameters must represent a Time in the
+range \f4[Time::MIN(),Time::MAX()]\f1.  
+Note that you can test a date for validity 
+using function \f4valid_date()\f1.
+.IP "\f4Time(unsigned y, Month m, unsigned d);\f1"
+Similar to the above except that \f4Place::here()\f1
+is used.  Raises \f4Time::environment_objection\f1 if
+the \f4TZ\f1 environment variable is not set.
+.IP "\f4~Time();\f1"
+Destructor.
+.SS "Copy and assign"
+.IP "\f4Time(const Time& t);\f1"
+.hS
+.IP "\f4Time& operator=(const Time& t);\f1"
+Copying
+or assigning a Time creates a copy of its value.
+.SS "Julian dates"
+.IP "\f4unsigned julian_day_no(const Place& p)const;\f1"
+Returns an integer in \f4[1,366]\f1 representing the 
+Julian day number of this Time at Place \f4p\f1.
+\f3Preconditions\f1: 
+the result of conversion to local Time must lie
+inside the range \f4[Time::MIN(),Time::MAX()]\f1.
+.IP "\f4unsigned julian_day_no()const;\f1"
+Similar to the above except that \f4Place::here()\f1
+is used.  Raises \f4Time::environment_objection\f1 if
+the \f4TZ\f1 environment variable is not set.
+.SS "Component extractors"
+The \f2normalized components\f1 of a Time are
+a 4-tuple \f2<y,m,d,c>\f1 satisfying the
+the following invariant:
+(1) \f2y\f1, \f2m\f1, and \f2d\f1 represent
+a legal year-month-day combination
+(that is, \f4valid_date(y,m,d)\f1 returns non-zero).
+(2) \f2c\f1 is a time-of-day (that is, a 
+nonnegative Duration strictly less than 24h).
+.sp
+All operations have the
+following \f3Preconditions\f1: 
+the result of conversion to local Time must lie
+in the range \f4[Time::MIN(),Time::MAX()]\f1.
+.IP "\f4unsigned year_part(const Place& p)const;\f1"
+.hS
+.IP "\f4Month month_part(const Place& p)const;\f1"
+.hS
+.IP "\f4unsigned day_part(const Place& p)const;\f1"
+.hS
+.IP "\f4Duration clock_part(const Place& p)const;\f1"
+The normalized components of a Time at Place \f4p\f1.
+.IP "\f4unsigned year_part()const;\f1"
+.hS
+.IP "\f4Month month_part()const;\f1"
+.hS
+.IP "\f4unsigned day_part()const;\f1"
+.hS
+.IP "\f4Duration clock_part();\f1"
+Similar to the above except that \f4Place::here()\f1
+is used.  Raises \f4Time::environment_objection\f1 if
+the \f4TZ\f1 environment variable is not set.
+.SS "Day-of-week operations"
+The following operations recognize Time as a 
+repeating cycle of seven-day weeks.  
+All operations have the following
+\f3Preconditions\f1: 
+the result of conversion to local Time must lie
+in the range \f4[Time::MIN(),Time::MAX()]\f1.
+.IP "\f4Weekday week_day(const Place& p)const;\f1"
+The Weekday on which this Time falls at 
+Place \f4p\f1.
+.IP "\f4Time previous(Weekday w, const Place& p)const;\f1"
+A Time at Place \f4p\f1
+whose date is that of the most recent weekday 
+(relative to this Time)
+specified by \f4w\f1 and with the same
+time-of-day as this Time.
+.IP "\f4Time next(Weekday w, const Place& p)const;\f1"
+A Time at Place \f4p\f1
+whose date is that of the next weekday 
+(relative to this Time)
+specified by \f4w\f1 and with the same time-of-day
+as this Time.
+.IP "\f4Weekday week_day()const;\f1"
+.hS
+.IP "\f4Time previous(Weekday w)const;\f1"
+.hS
+.IP "\f4Time next(Weekday w)const;\f1"
+Similar to the above except that \f4Place::here()\f1
+is used.  Raises \f4Time::environment_objection\f1 if
+the \f4TZ\f1 environment variable is not set.
+.SS "Relations"
+.IP "\f4\f2friend\fP int operator==(const Time& t1, const Time& t2);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator!=(const Time& t1, const Time& t2);\f1"
+Equality and inequality relations.
+.IP "\f4\f2friend\fP int operator<=(const Time& t1, const Time& t2);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator>(const Time& t1, const Time& t2);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator>=(const Time& t1, const Time& t2);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator<(const Time& t1, const Time& t2);\f1"
+The usual (total) ordering relations.
+.SS "Arithmetic operators"
+.IP "\f4\f2friend\fP Time operator+(const Time& t, const Duration& d);\f1"
+.hS
+.IP "\f4\f2friend\fP Time operator+(const Duration& d, const Time& t);\f1"
+.hS
+.IP "\f4\f2friend\fP Time operator\(mi(const Time& t, const Duration& d);\f1"
+A new Time obtained by adding (subtracting) a Duration
+to (from) a Time.  
+\f3Preconditions\f1: the result must
+lie in the range \f4[Time::MIN(),Time::MAX()]\f1.
+.IP "\f4const Time& operator+=(const Duration& d);\f1"
+.hS
+.IP "\f4const Time& operator\(mi=(const Duration& d);\f1"
+Assignment versions of the above.
+.IP "\f4\f2friend\fP Duration operator\(mi(const Time& t1, const Time& t2);\f1"
+The algebraic difference between \f4t1\f1 and \f4t2\f1.
+\f3Preconditions\f1: the resulting Duration must
+lie in the range \f4[\-Duration::MAX()\-1, Duration::MAX()]\f1
+(see \f3Duration(.)\f1).
+.SS "Conversion to and from strings"
+.IP "\f4String make_string(const char* fmt, const Place& p)const;\f1"
+Constructs a String representation of this 
+Time at Place \f4p\f1
+under control of the \f3printf(3C)\f1-style
+control string \f4fmt\f1.
+Raises \f4Time::environment_objection\f1 if
+the \f4TZ\f1 environment variable is not set.
+Fields of the control string have the 
+form \f2%field\f1, where
+.RS
+.TP
+.PD 0
+.B %
+.B %
+character.
+.TP
+.B a
+Abbreviated weekday name.
+.TP
+.B B
+Full month name.
+.TP
+.B A
+Full weekday name.
+.TP
+.B b
+Abbreviated month name.
+.TP
+.B c
+.BR ctime(3)
+style date without the trailing
+.BR newline .
+.TP
+.B C
+.BR date(1)
+style date.
+.TP
+.B d
+Day of month number.
+.TP
+.B D
+Date as
+.IR mm / dd / yy .
+.TP
+.B e
+Blank-padded day of month number.
+.TP
+.B E
+Unpadded day of month number.
+.TP
+.B h
+Abbreviated month name.
+.TP
+.B H
+24-hour clock hour.
+.TP
+.B i
+International
+.BR date(1) date.
+.TP
+.B I
+12-hour clock hour.
+.TP
+.B j
+1-offset Julian date.
+.TP
+.B J
+0-offset Julian date.
+.TP
+.B l
+.BR ls(1)
+.B \-l
+date that lists recent dates with
+.IR yy : mm
+and distant dates with
+.IR yyyy .
+.TP
+.B m
+Month number.
+.TP
+.B M
+Minutes.
+.TP
+.B n
+.B newline
+character.
+.TP
+.B p
+Meridian (e.g.,
+.B AM
+or
+.BR PM ).
+.TP
+.B r
+12-hour time as
+.IR hh : mm : ss
+.IR meridian .
+.TP
+.B R
+24-hour time as
+.IR hh : mm .
+.TP
+.B S
+Seconds.
+.TP
+.B t
+.B tab
+character.
+.TP
+.B T
+24-hour time as
+.IR hh : mm : ss .
+.TP
+.B U
+Week number with Sunday as the first day.
+.TP
+.B w
+Weekday number.
+.TP
+.B W
+Week number with Monday as the first day.
+.TP
+.B x
+Local date style, using index 39 of the string table
+that includes the month, day and year.
+.TP
+.B X
+Local time style, using index 38 of the string table
+that includes the hours and minutes.
+.TP
+.B y
+2-digit year.
+.TP
+.B Y
+4-digit year.
+.TP
+.B Z
+Timezone name.
+.PD
+.RE
+.IP "\f4String make_string(const Place& p)const;\f1"
+Equivalent to \f4make_string("%x %X",p)\f1
+.IP "\f4\f2friend\fP Time make_time(const char* str, const Place& p);\f1"
+Parses string \f4str\f1 representing a date and
+time-of-day and creates a Time, taking timezone 
+information from \f4p\f1 
+(it ignores any timezone names embedded in the string).
+Raises \f4string_objection\f1 if the string cannot
+be parsed.  The recovery action is to return \f4Time::REF()\f1.
+The function is not perfect (see \f3BUGS\f1), 
+but it does recognize 
+most forms that can be produced by \f4make_string()\f1, 
+plus a few others, including strings expressing
+relative times (e.g., \f4"now"\f1, \f4"today"\f1, 
+\f4"3 hours ago"\f1, etc.).
+See \f3intro(.)\f1 for a description of the table.
+.IP "\f4String make_string(const char* fmt)const;\f1"
+.hS
+.IP "\f4String make_string()const;\f1"
+.hS
+.IP "\f4\f2friend\fP Time make_time(const char* str);\f1"
+Similar to the above except that \f4Place::here()\f1
+is used.
+Raises \f4Time::environment_objection\f1 if
+the \f4TZ\f1 environment variable is not set.
+.IP "\f4static void set_table(char** tm_form);\f1"
+Redefines the string table used 
+by \f4Time::make_time()\f1 
+and \f4Duration::make_time()\f1 for string-to-Time 
+and string-to-Duration conversion, respectively.  
+See \f3intro(.)\f1 for a description of the table.
+.IP "\f4char** get_table();\f1"
+Returns a pointer to the current string table.
+.SS "Conversion to and from time_t"
+Times can be converted to and from \f4time_t\f1 values, 
+where \f4time_t\f1 is a type 
+(defined in \f4sys/types.h\f1)
+representing the number of seconds elapsed 
+since \f4Time::REF()\f1.
+These conversions provide an escape-hatch to UNIX system 
+time facilities.
+.IP "\f4\f2friend\fP time_t make_time_t(const Time& t);\f1"
+Computes a \f4time_t\f1 value from \f4t\f1.
+.IP "\f4\f2friend\fP Time make_time(time_t t);\f1"
+The inverse of the above transformation.
+.SS "Stream insertion"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os,const Time& t);\f1"
+Displays a local time in the standard format.  That is,
+\f4os << t\f1 is equivalent to \f4os << t.make_string()\f1.
+.SS "Auxiliary functions"
+These functions have been declared as static to avoid 
+polluting the global namespace.
+.IP "\f4static unsigned days_in_year(unsigned y);\f1"
+The number of days in year \f4y\f1.
+.IP "\f4static int is_leap(unsigned y);\f1"
+Returns non-zero if year \f4y\f1 is a leap year.
+.IP "\f4static unsigned first_day(Month m, unsigned y);\f1"
+Returns the Julian day number of the first day of 
+Month \f4m\f1 in year \f4y\f1.
+.IP "\f4static unsigned days_in_month(Month m, unsigned y);\f1"
+Returns the number of days in Month \f4m\f1 
+in year \f4y\f1.
+.IP "\f4static int valid_date(unsigned y, Month m, unsigned d);\f1"
+Returns non-zero  if \f4y\f1, \f4m\f1, and \f4d\f1
+represent a legal year-month-day combination.
+.IP "\f4static Time julian(unsigned y, int n, const Place& p);\f1"
+Returns a Time corresponding to \f40h\f1 
+on \f2Julian day number\f1 \f4n\f1 
+of year \f4y\f1 at Place \f4p\f1, 
+where January 1 is Julian day number 1 and 
+December 31 is Julian day number 365 (366 in a leap year).
+If \f4n\f1 lies outside \f4[1,365]\f1 (366 in a leap year), 
+the date will be adjusted accordingly.
+For example, day numbers 0 and \(mi1 correspond to 
+December 31 and December 30 (respectively)
+of the previous year,
+and day number 367 corresponds to January 1 (or 2) 
+of the following year (depending on whether
+the current year is a leap year).
+\f3Preconditions\f1:
+the parameters must represent a Time inside the 
+range \f4[Time::MIN(),Time::MAX()]\f1.
+.IP "\f4static Time julian(unsigned y, int n);\f1"
+Similar to the above except that \f4Place::here()\f1 is used.
+Raises \f4Time::environment_objection\f1 if
+the \f4TZ\f1 environment variable is not set.
+.SS "Miscellaneous"
+.IP "\f4unsigned hash()const;\f1"
+Returns a number suitable for use as a hash table probe.
+.SH BUGS
+The string version of \f4make_time()\f1 gives incorrect
+answers for strings of the following form:
+.RS
+.TP
+.PD 0
+Strings representing Times prior to 1970.  
+.TP
+Strings of the form \f2n/n/n\f1 followed by
+modifiers, e.g., \f4"12/1/88 at midnight"\f1.  Placing
+the modifier first, e.g., \f4"midnight on 12/1/88"\f1,
+gives the correct result.
+.TP
+Strings that omit a time-of-day specifier.
+Such strings do not yield a time of midnight on
+the specified date (as might be expected), but
+rather some arbitrary time-of-day on the same date.
+Always specify time-of-day unless 
+you don't care, e.g., \f4"0:00:00 on 12/1/88"\f1.
+.TP
+Strings containing timezone names (the timezone names
+are ignored).  Use the second parameter to pass timezone
+information.
+.RE
+.sp
+.PP
+Instead of pairs of functions like
+.Bf
+
+    Time(unsigned y,Month m,unsigned d,const Place& p);
+    Time(unsigned y,Month m,unsigned d);
+
+.Be
+we would have preferred to provide a single function
+with a default:
+.Bf
+
+    Time(unsigned y,Month m,unsigned d,
+        const Place& p=Place::here());
+
+.Be
+However the initializer is too complicated
+for \f3CC(1C++)\f1 to handle at the present time.
+.SH NOTES
+As described above, certain operations have preconditions
+requiring that their results lie in the range of 
+representable Times.  For example, 
+.Bf
+
+    Time::MAX() + seconds(1)
+
+.Be
+violates the precondition of the addition operator and
+.Bf
+
+    Time::MIN() - seconds(1)
+
+.Be
+violates the precondition of the subtraction operator.
+Although preconditions are never checked for and
+the result is technically undefined when preconditions
+are not satisfied, the usual effect of such
+operations is that Times in the future become 
+Times in the past, and vice-versa.
+.SH SEE ALSO
+.Bf
+\f3CC(1C++)\f1
+\f3printf(3C)\f1
+\f3iostream(3C++)\f1
+\f3Objection(3C++)\f1
+\f3String(3C++)\f1
+\f3time(2)\f1
+
+\f3Duration(.)\f1
+\f3intro(.)\f1
+\f3Place(.)\f1
+.Be

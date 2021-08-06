@@ -1,0 +1,58 @@
+.\" ident	@(#)Array_alg:man/copy.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3copy\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+copy \- copy an array to a new location
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*gt>
+    void copy(\*(gt* b1,\*(gt* e1,\*(gt* b2);
+
+.Be
+.SH ASSUMPTIONS
+.PP
+(1) The output array has at least as many cells as the 
+input array.
+.br
+(2) \*(gt has \f4operator=\f1.
+.SH DESCRIPTION
+.PP
+Moves the contents of every cell in the
+array starting at \f4b1\f1 into the array starting
+at \f4b2\f1.
+.SH COMPLEXITY
+.PP
+If \f2N\f1 is the size of the array,
+then complexity is \f2O(N)\f1.
+Exactly \f2N\f1 assignments are done unless \f4b1\f1 
+is equal to \f4b2\f1, in which case no assignments
+are done.
+.SH NOTES
+\f4copy\f1 is the only function that allows
+input and output arrays to overlap; in 
+particular, none of the "copy versions" (functions
+with their \f4c\f1 suffix) allows overlap.  
+Since \f4copy\f1 allows the input array to be changed,
+the parameters \f4b1\f1 and \f4e1\f1 have 
+type \f4\*(gt*\f1, rather than \f4const \*(gt*\f1.
+.SH NOTES
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3Block(3C++)\f1
+.Be

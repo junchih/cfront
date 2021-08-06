@@ -1,0 +1,85 @@
+.\" ident	@(#)Array_alg:man/unique.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3unique\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+unique \- remove repeated elements from a sorted array
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    \*(gt* unique(\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    \*(gt* unique_c(\*(gt* b1,\*(gt* e1,\*(gt* b2);
+    template <class \*(gt>
+    \*(gt* unique_r(int (*rel)(const \*(gt*,const \*(gt*),
+		    \*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    \*(gt* unique_rc(int (*rel)(const \*(gt*,const \*(gt*),
+		     \*(gt* b1,\*(gt* e1,\*(gt* b2);
+
+.Be
+.SH ASSUMPTIONS
+.PP
+(1) For the non-relational versions, \*(gt\f4::operator==\f1
+defines an equivalence relation on \*(gt
+.br
+(2) For the relational versions, \f4rel\f1
+defines an equivalence relation on \*(gt
+.br
+(3) For the copy versions, the output array does not
+overlap the input array
+.br
+(4) For the copy versions, the output array has enough
+cells to hold the result
+.br
+(5) \*(gt has \f4operator=\f1
+.SH DESCRIPTION
+.PP
+These functions remove all but the first element from 
+every consecutive group of equal elements in an array.
+They return a pointer to the location after the 
+last unique element.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* unique(\*(gt* b,\*(gt* e);\f1"
+Uses \f4\*(gt::operator==\f1 to define equality.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* unique_c(\*(gt* b1,\*(gt* e1,\*(gt* b2);\f1"
+Like \f4unique\f1 except that the input array is preserved
+and the result written to a new array beginning at 
+location \f4b2\f1.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* unique_r(int (*rel)(const \*(gt*,const \*(gt*),\*(gt* b,\*(gt* e);\f1"
+Uses \f4rel\f1 to define equality.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* unique_rc(int (*rel)(const \*(gt*,const \*(gt*),\*(gt* b1,\*(gt* e1,\*(gt* b2);\f1"
+Like \f4unique_r\f1 except that the input array is 
+preserved and the result written to a new 
+array beginning at location \f4b2\f1.
+.SH COMPLEXITY
+.PP
+If \f2N\f1 is the size of the array,
+then complexity is \f2O(N)\f1 for all versions.
+Exactly \f2N\-1\f1 equality tests and at most \f2N\-2\f1 
+assignments are done.
+.SH NOTES
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3rem_dup(.)\f1
+\f3Block(3C++)\f1
+.Be

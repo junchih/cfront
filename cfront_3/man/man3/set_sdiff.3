@@ -1,0 +1,122 @@
+.\" ident	@(#)Array_alg:man/set_sdiff.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3set_sdiff\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+set_sdiff \- treating arrays as sets, take the symmetric difference
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    \*(gt* set_sdiff(
+	const \*(gt* b1, 
+	const \*(gt* e1, 
+	const \*(gt* b2, 
+	const \*(gt* e2, 
+	\*(gt* b3
+    );
+    template <class \*(gt>
+    \*(gt* set_sdiff_r(
+        int (*rel)(const \*(gt*,const \*(gt*),
+	const \*(gt* b1, 
+	const \*(gt* e1, 
+	const \*(gt* b2, 
+	const \*(gt* e2, 
+	\*(gt* b3
+    );
+.Be
+.SH ASSUMPTIONS
+.PP
+(1) For the plain version, \*(gt\f4::operator<\f1
+defines a total ordering relation on \*(gt and both 
+input arrays are sorted w.r.t. that relation.
+.br
+(2) For the relational version, \f4rel\f1 defines 
+a total ordering relation on \*(gt and both input arrays 
+are sorted w.r.t. that relation.
+.br
+(3) Neither input array has any repetitions
+.br
+(3) The output array does not overlap either of the 
+input arrays
+.br
+(4) The output array has enough cells to hold the result
+.br
+(5) \*(gt has \f4operator=\f1
+.SH DESCRIPTION
+.PP
+These functions put elements from two sorted arrays with no
+repetitions into a new sorted array with no repetitions 
+such that every element which is in only in one of the 
+original arrays will be placed into the new array.
+The pointer after the last element of the new array 
+is returned.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* set_sdiff(\f1"
+.IC "\f4    const \*(gt* b1,\f1"
+.IC "\f4    const \*(gt* e1,\f1" 
+.IC "\f4    const \*(gt* b2,\f1"
+.IC "\f4    const \*(gt* e2,\f1" 
+.IC "\f4    \*(gt* b3\f1"
+.IC "\f4);\f1"
+Uses \f4\*(gt::operator<\f1 for comparing elements.
+That is, if \f4p\f1 and \f4q\f1 are pointers into 
+the first and second array, then \f4*p\f1 will not
+appear in the second array if 
+\f4!(*p<*q)\f1 and \f4!(*q<*p)\f1
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* set_sdiff_r(\f1"
+.IC "\f4    int (*rel)(const \*(gt*,const \*(gt*),\f1"
+.IC "\f4    const \*(gt* b1,\f1"
+.IC "\f4    const \*(gt* e1,\f1" 
+.IC "\f4    const \*(gt* b2,\f1"
+.IC "\f4    const \*(gt* e2,\f1" 
+.IC "\f4    \*(gt* b3\f1"
+.IC "\f4);\f1"
+Uses \f4rel\f1 for comparing elements.
+That is, if \f4p\f1 and \f4q\f1 are pointers into 
+the first and second array, then \f4*p\f1 will not
+appear in the second array if \f4rel(p,q)==0\f1.
+.SH COMPLEXITY
+.PP
+If \f2N\f1 and \f2M\f1 are the sizes of the arrays,
+then complexity is \f2O(N+M)\f1.
+At most \f2N+M\-1\f1 equality tests and \f2max(N, M)\f1 
+assignments are done.
+.SH NOTES
+All functions whose names begin with \f3set_\f1
+treat arrays as sets (they share assumptions 1\-3).
+These all have linear time complexity, which may 
+unacceptable for large sets.
+As an alternative, consider using \f3Set(3C++)\f1 
+or \f3Bits(3C++)\f1
+(if \*(gt is \f4int\f1).
+.PP
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+
+\f3intro(.)\f1 
+\f3set_diff(.)\f1 
+\f3set_insert(.)\f1 
+\f3set_inter(.)\f1 
+\f3set_remove(.)\f1
+\f3set_union(.)\f1.
+
+\f3Bits(3C++)\f1 
+\f3Block(3C++)\f1
+\f3Set(3C++)\f1
+.Be

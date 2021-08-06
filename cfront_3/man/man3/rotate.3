@@ -1,0 +1,75 @@
+.\" ident	@(#)Array_alg:man/rotate.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3rotate\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+rotate \- circularly rotate the elements of an array
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+#include <stddef.h>
+
+    template <class \*(gt>
+    void rotate(ptrdiff_t n,\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    void rotate_c(ptrdiff_t n,\*(gt* b1,\*(gt* e1,\*(gt* b2);
+
+.Be
+.SH ASSUMPTIONS
+.PP
+(1) For the copy version, the output array does not
+overlap the input array
+.br
+(2) For the copy version, the output array has at
+least as many cells as the input array.
+.br
+(3) \*(gt has \f4operator=\f1
+.SH DESCRIPTION
+.PP
+These functions circularly rotate the elements of an array.
+If \f4n\f1 is positive, the elements are rotated 
+\f4n\f1 places to the right; if \f4n\f1 is negative,
+the elements are rotated \f4\(min\f1 places to the left.
+That is, for every integer \f4i\f1 between \f20\f1
+and \f4e\-b-1\f1
+the value at location \f4b+i\f1 after rotation
+will equal the value at
+location \f4b+(i+n)*(e%b)\f1 before rotation.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void rotate(ptrdiff_t n,\*(gt* b,\*(gt* e);\f1"
+Rotates the array in place.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void rotate_c(ptrdiff_t n,\*(gt* b1,\*(gt* e1,\*(gt* b2);\f1"
+Like \f4rotate\f1 except that the input array
+is preserved and the result is written to a new
+array beginning at location \f4b2\f1.
+.SH COMPLEXITY
+.PP
+If \f2N\f1 is the size of the array,
+then complexity is \f2O(N)\f1.
+More precisely,
+.IP "\f3plain version\f1"
+Approximately \f23N\f1 assignments 
+are done.
+.IP "\f3copy version\f1"
+Exactly \f2N\f1 assignments are done.
+.SH NOTES
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3stddef(3S)\f1
+\f3Block(3C++)\f1
+.Be

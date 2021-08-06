@@ -1,0 +1,61 @@
+#!/bin/sh
+#ident	"@(#)cls4:incl-master/stddef	1.2"
+###############################################################################
+#
+# C++ source for the C++ Language System, Release 3.0.  This product
+# is a new release of the original cfront developed in the computer
+# science research center of AT&T Bell Laboratories.
+#
+# Copyright (c) 1991 AT&T and UNIX System Laboratories, Inc.
+# Copyright (c) 1984, 1989, 1990 AT&T.  All Rights Reserved.
+#
+# THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE of AT&T and UNIX System
+#	
+# Laboratories, Inc.  The copyright notice above does not evidence
+# any actual or intended publication of such source code.
+#
+###############################################################################
+
+# This shell script prints out what stddef.h should like like on this machine.  
+# (Actually, only the subset of stddef.h consisting of NULL, size_t and ptrdiff_t.)
+
+
+echo "#ifndef __STDDEF_H"
+echo "#define __STDDEF_H"
+echo
+
+# ptrdiff_t
+#
+stddef2 -p
+
+# no more 
+# # if there's a /usr/include/sys/types.h, and there's a typedef of size_t 
+# # in it, then use that one, otherwise figure it out for myself.
+# #
+echo
+#stdcat sys/types.h 2>/dev/null | grep "typedef.*[ 	]size_t" 2>/dev/null >$$.tmp 
+#if test $? -eq 0
+#then
+#	echo "/* The following typedef of size_t is taken from /usr/include/sys/types.h"
+#	echo "*/"
+#	cat $$.tmp
+#	/bin/rm -f $$.tmp
+#else	
+	stddef2 -s
+#fi
+
+echo
+echo "#ifndef NULL"
+echo "#define NULL 0"
+#stdcat stdio.h | egrep "^#[ 	]*define[ 	][ 	]*NULL"
+echo "#endif"
+#echo "#ifndef NUL"
+#echo "#define NUL '\0'
+#echo "#endif"
+
+echo
+echo "#define offsetof(ty,mem) ((size_t)&(((ty*)0)->mem))"
+
+echo
+echo "#endif"
+

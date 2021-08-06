@@ -1,0 +1,48 @@
+.\" ident	@(#)Array_alg:man/random.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3random\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+random \- generate a random location in an array
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    const \*(gt* random(const \*(gt* b,const \*(gt* e);
+
+.Be
+.SH ASSUMPTIONS
+None.
+.SH DESCRIPTION
+.PP
+Returns a uniformly distributed 
+random pointer into the array.
+If \f4b>=e\f1, the function
+returns \f20\f1.
+.SH COMPLEXITY
+.PP
+\f2O(1)\f1.
+.SH NOTES
+.PP
+Uses \f3drand48(3C)\f1 to obtain a 
+pseudo-random number.
+.SH NOTES
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3drand48(3C)\f1
+\f3Block(3C++)\f1
+.Be

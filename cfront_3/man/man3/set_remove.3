@@ -1,0 +1,102 @@
+.\" ident	@(#)Array_alg:man/set_remove.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3set_remove\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+set_remove \- treating arrays as sets, remove an element
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    \*(gt* set_remove(
+	const \*(gt& val, 
+	\*(gt* b, 
+	\*(gt* e
+    );
+    template <class \*(gt>
+    \*(gt* set_remove_r(
+        int (*rel)(const \*(gt*,const \*(gt*),
+	const \*(gt& val, 
+	\*(gt* b, 
+	\*(gt* e
+    );
+.Be
+.SH ASSUMPTIONS
+.PP
+.br
+(1) For the plain version, \f4\*(gt::operator<\f1
+defines a total ordering relation on \*(gt and the 
+array is sorted w.r.t. that relation.
+.br
+(2) For the relational version, \f4rel\f1 defines 
+a total ordering relation on \*(gt and the array is
+sorted w.r.t. that relation.
+.br
+(3) The input array does not contain any repetitions.
+.br
+(4) \*(gt has \f4operator=\f1
+.SH DESCRIPTION
+.PP
+If a sorted array with no repetitions contains an element 
+equal to \f4val\f1, these functions remove it in such a 
+way that the array remains sorted.  
+They return a pointer to the cell just beyond the cell 
+containing the last remaining element.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* set_remove(\f1"
+.IC "\f4    const \*(gt& val,\f1" 
+.IC "\f4    \*(gt* b,\f1" 
+.IC "\f4    \*(gt* e\f1"
+.IC "\f4);\f1"
+Uses \f4\*(gt::operator<\f1 to find the element.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* set_remove_r(\f1"
+.IC "\f4    int (*rel)(const \*(gt*,const \*(gt*),\f1"
+.IC "\f4    const \*(gt& val,\f1" 
+.IC "\f4    \*(gt* b,\f1" 
+.IC "\f4    \*(gt* e\f1"
+.IC "\f4);\f1"
+Uses \f4rel\f1 to find the element.
+.SH COMPLEXITY
+.PP
+If \f2N\f1 is the size of the array,
+then complexity is \f2O(N)\f1.
+At most \f2N\f1 assignments and at most \f2lgN\f1 tests of
+the ordering relation are done.
+.SH NOTES
+All functions whose names begin with \f3set_\f1
+treat arrays as sets (they share assumptions 1\-3).
+These all have linear time complexity, which may 
+unacceptable for large sets.
+As an alternative, consider using \f3Set(3C++)\f1 
+or \f3Bits(3C++)\f1
+(if \*(gt is \f4int\f1).
+.PP
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+
+\f3intro(.)\f1
+\f3insert(.)\f1
+\f3set_diff(.)\f1
+\f3set_inter(.)\f1
+\f3set_union(.)\f1
+\f3set_sdiff(.)\f1
+
+\f3Bits(3C++)\f1
+\f3Block(3C++)\f1
+\f3Set(3C++)\f1
+.Be

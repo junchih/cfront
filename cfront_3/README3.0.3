@@ -1,0 +1,2051 @@
+README for C++ Release 3.0.3
+May 1994
+
+
+This is the AT&T C++ Language System, Release 3.0.3.  This README describes
+the changes made since release 3.0.2.
+
+If you are a new user of release 3.0, you should read the release 3.0, 3.0.1,
+and 3.0.2 README files before continuing with this README.  Those README
+files are named README3.0, README3.0.1, and README3.0.2, respectively.
+
+
+3.0.3 HIGHLIGHTS
+----------------
+
+Compiler (cfront) changes:
+--------------------------
+
+    +  Rework of Operator ++/--
+
+	These operators have been completely reworked to fix some major 
+	problems.  As part of this change, the usage:
+
+            struct A {
+                void operator++();
+            };
+            void f()
+            {
+                A a;
+                a++;
+            }
+
+	will elicit a hard warning, and at some future point an error.  This 
+	usage is now illegal, but in 2.1 was legal because there was no postfix
+	operator defined in the language.  In this example, the prefix operator
+	will be called.
+
+    +  Return Types of Virtual Functions Liberalized
+
+	Restrictions on the return types of virtual functions have been 
+	liberalized, so that the return type of a virtual function in a 
+	derived class can be a pointer or reference to a class publicly 
+	derived from the base class.  For example, this program is now legal:
+
+            struct A {
+                virtual A* f();
+            };
+            struct B : public A {
+                virtual B* f();
+            };
+
+    +  New Keywords
+
+	The identifier names "mutable", "namespace", and "using" will now 
+	trigger a warning when they are used as identifiers.  For example:
+
+	    int namespace = 37;
+
+	This is because they are future keywords for the ANSI C++ language
+	namespace feature.
+
+    +  Internal Cfront Cleanup
+
+	Some cfront internal cleanup has been done for this release.  Included
+	are items such as the following:
+
+            replace 'malloc' with 'new char[]'
+
+            add explicit 'int' specifiers
+
+            change 'friend X' to 'friend class X'
+
+            elide unused local variables
+
+            put an internal error call at the end of functions that might
+            not return anything
+
+            elide static inlines
+
+            elide unused functions
+
+            eliminate duplicate vtbls
+
+            make some global variables static
+
+            change 'delete[e]' to 'delete[]'
+
+            fix some warnings with unsigned arithmetic and comparisons
+
+Standard Component Libraries changes:
+-------------------------------------
+
+    + Clean up all known memory leaks and uninitialized memory reads.
+      We have "Purified" all of the libraries.  Memory leaks were
+      cleaned up in the following classes:
+
+	+ Args
+	+ Map
+	+ Path
+	+ String
+	+ Symbol
+
+    + Rework Standard Component Libraries to reduce the occurrence
+      of inline functions being layed down out-of-line (which will
+      reduce object file size)
+
+    + Add a reset function to the Mapiter class.  This function will 
+      reposition the iterator to the Map element with the lowest key.
+
+	void reset();
+
+    + Add const versions of operator+(List<T>&) and operator+(const T&) to
+      the List class.  The non-const versions are still provided.
+
+	List<T>  operator+(const List<T>& ll) const;
+	List<T>  operator+(const T& t) const;
+
+    + Add a copy constructor for the Args class.  Make the Args assignment
+      operator a private member to prevent the user from calling it.
+
+	Args(const Args&);
+
+    + Add find_next and find_prev functions that take a const T*& argument
+      to the Const_list_of_piter class.  The functions that take a T*& are
+      still provided.
+
+	int find_next(const T*& t);
+        int find_prev(const T*& t);
+
+    + Add a const version of operator void*() to the List and List_of_p
+      classes. The non-const versions are still provided.
+
+	operator void*() const;
+
+    + The String::shrink() and String::pad() function have been changed
+      to call the String::uniq() function before they shrink (pad)
+      the String.  This will fix the following problem:
+
+	String s1, s2;
+
+	s1 = "STRING";
+	s2 = s1;
+	cout << "After assignment" << endl;
+	cout << "s1 = " << s1 << endl;
+	cout << "s2 = " << s2 << endl;
+	s2.shrink(s2.length() - 2);
+	cout << "After shrinking" << endl;
+	cout << "s1 = " << s1 << endl;
+	cout << "s2 = " << s2 << endl;
+
+      Would produce:
+
+	After assignment
+	s1 = STRING
+	s2 = STRING
+	After shrinking
+	s1 = STRI
+	s2 = STRI
+
+      Will now produce:
+
+	After assignment
+	s1 = STRING
+	s2 = STRING
+	After shrinking
+	s1 = STRING
+	s2 = STRI
+
+    + Add lub() and glb() functions to the Map class:
+
+      Mapiter<T, V>    lub(const T& t) const;
+	The iterator refers to the element whose key is the lub (least
+	upper bound) of t.  That is, the smallest key which is greater
+	than or equal to t.  If no such element exists, the iterator will
+	test as vacuous.
+
+      Mapiter<T, V>    glb(const T& t) const;
+	The iterator refers to the element whose key is the glb (greatest
+	lower bound) of t.  That is, the largest key which is less than or
+	equal to t.  If no such element exists, the iterator will test as
+	vacuous.
+
+    + Add cachewd function to the Path class for increased efficiency.
+      Many of the underlying functions in Path are calling getwd(3)
+      repeatedly to get the working directory.  If you call this
+      function at the beginning of your program getwd(3) will be called
+      once and the value will be cached. 
+
+	void Path::cachewd(int on);
+
+DETAILS OF 3.0.3 CHANGES
+
+========================= CC =========================
+
+1.  A -w was added to the c++filt call (see DEMANGLER section).
+
+2.  Instances of 'mv src dest 2> /dev/null' were changed to avert a hang
+    in case mv prompted.
+
+3.  NOLOAD is never set to either ".c" or "-c", so tests comparing $NOLOAD
+    with these two strings were commented out.
+
+4.  Embedded spaces between -I and pathname are allowed now.
+
+5.  Observance of PTOPTS was moved from the calls to ptcomp/ptlink to the
+    main CC parse loop.  This fixed a bug with observing repository settings
+    via -ptr.
+
+6.  Munch versions will no longer issue "warning: empty translation unit"
+    for compilations that have no static constructor or destructor calls.
+
+7.  Superfluous profiling options are no longer passed to munch.
+
+8.  Add comments on how to use CC with Purify, to see how 'grep purify CC'.
+
+9. Add comments on how to use CC with the 3D File System (3DFS), to see how
+    'grep 3D CC'.
+
+10. Change CC to treat .a files like .o files.  'CC -omya.out mylib.a'
+    will now work.
+
+========================= CFRONT MISCELLANEOUS =========================
+
+1.  Issue a diagnostic for an overflow in an enumeration initializer:
+
+        enum E { e = 0x80000000 };
+
+Note that there is a related case involving INT_MIN, where this
+program:
+
+	enum E {e = -2147483647-1};
+
+is now illegal on a typical 32-bit machine.  This is a "feature"
+because cfront does not know what the value of INT_MIN is, and uses
+-INT_MAX for this.  This is correct on some architectures and
+incorrect on others.
+
+2.  Fix a case where 3.0.2 goes into infinite recursion:
+
+        class TV {
+        public:
+                TV(TV &);
+        };
+        class TA : public TV {
+        public:
+                void foo(const TA &) const;
+        };
+        void TA::foo(const TA &a) const {
+                (const TV)(*this);    // error in 3.0.3
+        }
+
+
+3.  Fix a lookahead bug which causes a spurious "syntax error" in 3.0.2:
+
+        class CORBA {
+        public:
+                class any {};
+        };
+        typedef short (T1)[3];
+        typedef CORBA::any (T2)[3];    // error in 3.0.2
+        main() {}
+
+4.  Fix a case where 3.0.2 gives a runtime coredump:
+
+        struct Terminal {
+                virtual void ComputeCurrents(void);
+                virtual void what(void);
+        };
+        struct PowerSource: virtual public Terminal {};
+        struct Charger : public PowerSource {
+                void ComputeCurrents(void);
+        };
+        void Charger::ComputeCurrents() {
+                what();
+        }
+        void Terminal::ComputeCurrents() {}
+        void Terminal::what() {}
+        int main() {
+                Charger c;
+                PowerSource *t=&c;
+                t->ComputeCurrents();
+                return 0;
+        }
+
+5.  Fix a regression with cfront crashing:
+
+        struct X {
+                X();
+                ~X();
+        };
+        X *p;
+        typedef X T;
+        void foo() {
+                p->T::~T();
+        }
+
+6.  Fix a warning which lacked a line #:
+
+        int phillies();
+        main () {
+                int i = phillies();
+        }
+        int phillies() {
+                return (1);;    // warning here
+        }
+
+7.  Fix a lookahead parsing bug peculiar to little-endian machines (test case
+too large to include).
+
+8.  Fix bad C produced by 3.0.2:
+
+        class B {};
+        struct D : public B {};
+        struct S : public virtual D {};
+        struct T : public virtual D {};
+        struct ST : public T, public S {};
+        struct V : public virtual D {};
+        struct VST : public ST, public V {
+                D* foo() const;
+        };
+        D* VST::foo() const {
+                return new VST(*this);    // bad C in 3.0.2
+        }
+
+9.  Fix a regression with cfront crashing:
+
+        int i;
+        void f(int i) {
+                i > ::i;
+        }
+
+10.  Fix bad C produced by 3.0.2:
+
+        main() {
+                register int i;
+                int j;
+                j = (int&)i;    // bad C in 3.0.2
+        }
+
+11.  Fix bad C produced by 3.0.2:
+
+        enum field_type { NONE = 'N' };
+        class attr {
+                void load(field_type ft);
+        public:
+                attr(field_type ft) { load(ft); }
+        };
+        void f() {
+                static attr pr_at[] = { attr(NONE) };    // bad C in 3.0.2
+        }
+
+12.  Fix mangling of local class member function name:
+
+        void foo() {
+                typedef enum {} YY;
+                struct AA {
+                        void bar(YY) {}
+                } aa;
+                YY y;
+                aa.bar(y);
+        }
+
+13.  Fix a cfront crash:
+
+        class String {
+        public:
+                operator char *(void);
+                operator char *(void) const;
+        };
+        class ostream {
+        public:
+                ostream& operator<<(const char*);
+                ostream& operator<<(void*);
+        };
+        void operator<<(ostream& o, String *str) {
+                o << *str;
+        }
+
+14.  Eliminate temporary and fix incorrect C code produced by 3.0.2:
+
+        struct X {
+                int xdummy[10];
+                X();
+                X(const X &x);
+        };
+        struct Y {
+                int ydummy[20];
+                class X yx;
+                Y(int);
+                Y::Y(const Y &y) : yx(y.yx) {}
+        };
+        void foo() {
+                class Y y1(5);
+                class Y y2(y1);    // incorrect C code in 3.0.2
+        }
+
+15.  Fix case where 3.0.2 rejected legal explicit destructor calls:
+
+        unsigned int *p;
+        void foo() {
+                p->unsigned::~unsigned();    // error in 3.0.2
+        }
+
+16.  Issue diagnostic for illegal use of ellipsis:
+
+        class A {
+        public:
+                ~A(...);                       // error in 3.0.3
+                operator unsigned char(...);   // error in 3.0.3
+        };
+
+17.  Fix bug where wrong 'operator new' was called by 3.0.2:
+
+        typedef unsigned int size_t;
+        struct complex {
+                complex() {}
+                void *operator new(size_t sz);
+                void operator delete(void* p, size_t);
+        };
+        complex z;
+        complex* p = new complex(z);    // 3.0.2 calls ::new
+
+18.  Fix incorrect C code produced by 3.0.2:
+
+        struct P {};
+        struct D {
+                P _p;
+                D *operator->();
+                P p();
+        };
+        struct Q : public P {
+                Q(D);
+        };
+        Q::Q(D d) : P(d->p()) {}    // incorrect C code in 3.0.2
+
+19.  Eliminate +w warning for occurrences of '__' in identifiers:
+
+        int __i;
+
+20.  Fix incorrect C code produced by 3.0.2:
+
+        struct Foo {
+                Foo(short);
+        };
+        struct B {
+                int b[4];
+                operator Foo();
+        };
+        struct D : public virtual B {
+                int d1[4];
+                void bad();
+        };
+        void D::bad() {
+                Foo foo = *this;    // incorrect C code in 3.0.2
+        }
+
+21.  Fix bad C produced by 3.0.2:
+
+        struct C {
+                C();
+                void f(int);
+                void f(int, double);
+                void (C::*const p)(int, double);
+        };
+        C::C() : p(C::f) {}    // bad C in 3.0.2
+
+22.  Allow derived class virtual functions to differ in return type:
+
+        struct A {
+                virtual A* f();
+        };
+        struct B : public A {
+                virtual B* f();    // illegal in 3.0.2; okay in 3.0.3
+        };
+
+23.  Fix case where 3.0.2 rejected a legal friend declaration:
+
+        class A {};    // error here in 3.0.2
+        union B {
+                friend class A;
+        };
+
+24.  Add '(char*)' casts to the first argument of calls to '__vec_new'
+(casts are '(void*)' under +a1):
+
+        struct A {
+                A();
+        };
+        main() {
+                A* p;
+                p = new A[10];
+        }
+
+25.  Fix a cfront crash after an error is issued:
+
+        struct Foo {
+                Foo();
+                ~Foo();
+                void member_func();
+        };
+        struct Bar {
+                Bar();
+                ~Bar();
+        };
+        void Foo::member_func() {
+                this->Bar::~Bar();    // here
+        }
+
+26.  Fix a cfront crash:
+
+        class A {
+                A();
+                ~A();
+        };
+        typedef int INT;
+        void foo(A *pa) {
+                pa->INT::~INT();
+        }
+
+27.  Fix a reference to deleted memory:
+
+        struct U {
+                U() {}
+                ~U() {}
+        };
+        void f(U* u6) {
+                u6->U::~U();
+        }
+
+28.  Diagnose invalid explicit destructor calls that 3.0.2 let through:
+
+        struct Foo {
+                Foo();
+                ~Foo();
+                void member_func();
+        };
+        struct Bar {
+                Bar();
+                ~Bar();
+        };
+        void Foo::member_func() {
+                Foo::~Foo();    // error in 3.0.3
+                this->~Bar();   // error in 3.0.3
+        }
+
+29.  Fix the third argument of calls to '__vec_delete'; 3.0.2 did not
+correctly destroy the elements of an array:
+
+        struct A {
+                A();
+                ~A();
+        };
+        main() {
+                A (*p)[4][3][2][1] = new A[5][4][3][2][1];
+                delete [] p;
+        }
+
+30.  Fix a case where the #line directive on '__ptbl_vec' was wrong:
+
+        # 1 "x.c"
+        # 1 "x.h" 1
+        struct Pt {
+                int x;
+                Pt();
+        };
+        struct Rect {
+                Pt pt;
+                Rect();
+        };
+        # 2 "x.c" 2
+        void foo() {
+                Rect r();
+        }
+
+31.  Fix a case where a #line directive was wrong under +d:
+
+        struct A {
+                A() {}
+                A(int) {}
+                A(double) {}
+        };
+
+32.  Fix a case where the #line directive on a '__F' temporary was wrong:
+
+        struct A {
+                A();
+        };
+        void f() {
+                static A a;
+        }
+
+33.  Fix a cfront crash:
+
+        struct ByteVal {
+                ByteVal& operator=(char);
+        };
+        struct String {
+                String& operator=(const String&);
+        };
+        class InstructionT_Operator_Operand {
+                String sEncoded;
+        };
+        struct Instruction_sim : private InstructionT_Operator_Operand {
+                ByteVal fImmVal;
+                Instruction_sim();
+        };
+        struct Block_Instruction_sim_ATTLC {
+                Instruction_sim* p;
+                Instruction_sim& operator[](int i) { return p[i]; }
+        };
+        void AcuDataState () {
+                Block_Instruction_sim_ATTLC fWcs;
+                fWcs[0] = Instruction_sim();
+        }
+
+34.  Fix the call to '__vec_delete' in a case where 3.0.2 gives a
+runtime coredump:
+
+        class A {
+        public:
+                A(){};
+                virtual ~A(){};
+        };
+        int main() {
+                A * aArray = new A [33];
+                delete [] aArray;
+                A * zilch = 0;
+                delete [] zilch;
+                return 0;
+        }
+
+35.  Fix incorrect C code produced by 3.0.2:
+
+        struct I {
+                int i;
+        };
+        struct A {
+                int a;
+                I *operator->();
+        };
+        struct B {
+                int b;
+        };
+        struct D : public B, public A {};
+        D d;
+        int baz() {
+                return d->i;    // incorrect C code in 3.0.2
+        }
+
+36.  Fix a case where 3.0.2 allowed an illegal redeclaration:
+
+        struct A {
+                A();
+        };
+        main() {
+                for (A i;;)
+                        for (A j;;)
+                                for (A k;;)
+                                        ;
+                for (A k;;)    // error in 3.0.3
+                        ;
+        }
+
+37.  Fix incorrect C code produced by 3.0.2:
+
+        struct X {
+                int a, b;
+        };
+        inline void assigni(X& x, int p, int q) {
+                x.a = p, x.b = q;
+        }
+        main() {
+                X x;
+                assigni(x, x.b, x.a);    // incorrect C code in 3.0.2
+        }
+
+38.  Fix cases where 3.0.2 rejected legal accesses to static members
+in a base class:
+
+        struct B {
+                static int i;
+                static int f();
+        };
+        int B::i;
+        struct D1 : B {};
+        struct D2 : B {};
+        struct D3 : D1, D2 {};
+        void foo(D3 *p) {
+                p->i = p->f();          // error in 3.0.2
+                p->B::i = p->B::f();    // error in 3.0.2
+        }
+
+39.  Fix a case where 3.0.2 rejected a legal call to 'new':
+
+        typedef unsigned int size_t;
+        struct Foo {
+                void *operator new(size_t sz);
+                void *operator new(size_t sz, void *place);
+                void operator delete(void *);
+                struct Bar {
+                        int j;
+                        Bar(int i);
+                };
+        };
+        Foo::Bar *b = new Foo::Bar(17);    // error in 3.0.2
+
+40.  Fix bad C produced by 3.0.2:
+
+        struct A {
+                A() {}
+                A(const A&);
+        };
+        void operator<<(A, const A&);
+        struct B {
+                operator A();
+        };
+        inline B::operator A() {
+                return A();
+        }
+        struct C {
+                B b;
+        };
+        struct D {
+                C* cp;
+        };
+        main() {
+                A a;
+                B b[1];
+                C c;
+                C* cp;
+                D d;
+                a << b[0];    // bad C in 3.0.2
+                a << c.b;     //  "
+                a << cp->b;   //  "
+                a << d.cp->b;
+        }
+
+41.  Issue a diagnostic for passing an object of unknown size as an argument:
+
+        class Object;
+        extern const Object OBJECT;
+        class Another_Object {
+        public:
+                Another_Object () {};
+                int Do (const Object);
+        };
+        main () {
+                int n;
+                n = Another_Object().Do(OBJECT);    // error in 3.0.3
+                return 0;
+        }
+
+42.  Issue a diagnostic for calling a pure virtual function from a destructor:
+
+        struct A {
+                virtual void f() = 0;
+                ~A() {
+                        f();    // error in 3.0.3
+                }
+        };
+
+43.  Issue a diagnostic for using an abstract class as an argument or
+return type:
+
+        struct A {
+                A f1();      // error in 3.0.3
+                void f2(A);  // error in 3.0.3
+                virtual void f3() = 0;
+        };
+
+44.  Remove "mdot" from diagnostics:
+
+        struct A {};
+        void operator->*(A*, int) {}  // 3.0.2: error: operator mdot() ...
+                                      // 3.0.3: error: operator .* or ->*() ...
+
+45.  Issue a diagnostic for invalid overloaded operators:
+
+        class A {
+        public:
+                int j;
+                static int i;
+                int operator<() { return (j < i); }     // error in 3.0.3
+        };
+
+46.  Fix a cfront crash:
+
+        typedef unsigned int size_t;
+        class A {
+        public:
+                void *operator new(size_t s);
+        };
+        class B {};
+        class C {
+        public:
+                void *operator new(size_t s);
+        };
+        class BC: public B, public C {};
+        class A_BC : public A, public BC {
+                void * operator new(size_t s) { return BC::operator new(s); }
+        };
+
+47.  Fix a cfront crash:
+
+        struct A {
+                A(const char *);
+                ~A();
+                void foo(int);
+        };
+        typedef void (A::*pmf)(int);
+        struct some_class {
+                const pmf uses_string(const A&);
+                void foo();
+        };
+        void some_class::foo() {
+                if (uses_string("some string"))
+                        return;
+        }
+
+48.  Fix a cfront crash:
+
+        struct S { int i; } *pS;
+        int S::*pm;
+        void f() {
+                int i = sizeof pS->*pm;    // now error
+        }
+
+49.  Fix a cfront crash:
+
+        int x;
+        inline void f() {
+        xxx:
+                if (x)
+                        goto xxx;
+                x++;
+                ;
+        }
+        inline void g() {
+        y:
+                f();
+                if (x)
+                        goto y;
+                f();
+                if (x)
+                        goto y;
+                f();
+                if (x)
+                        goto y;
+                ;
+                return;
+        }
+        main() {
+                g();
+                f();
+                g();
+                f();
+                g();
+                f();
+        }
+
+50.  Fix a case where 3.0.2 rejected a legal access by a friend:
+
+        class Y;
+        class X {
+                friend class Y;
+        private:
+                X();
+        };
+        class Y {
+                static X x;
+                X *make_X();
+        };
+        X *Y::make_X() {
+                return (new X);
+        }
+        X Y::x;    // error in 3.0.2
+
+51.  Fix cases where 3.0.2 wrongly allowed access to private destructors:
+
+        class A;
+        class B {
+        public:
+                B();
+                ~B();
+                void foo(A const&);
+        };
+        class A {
+        private:
+                ~A();
+        public:
+                A(B);
+        };
+        main() {
+                B b;
+                b.foo(b);
+                A(b);         // error in 3.0.3
+                b.foo(A(b));  // error in 3.0.3
+        }
+
+52.  Fix bad C produced by 3.0.2:
+
+        struct A {
+                int n;
+                A(int i) {n = i;}
+                operator int() {return n;}
+        };
+        int x;
+        A glob(47);
+        inline A f() {
+                if (!x)
+                        return A(37);
+                else
+                        return glob;
+        }
+        main() {
+                if (f() != 37)    // bad C in 3.0.2
+                        return(1);
+                x = 1;
+                if (f() != 47)    // bad C in 3.0.2
+                        return(2);
+                return 0;
+        }
+
+53.  Fix bad C produced by 3.0.2:
+
+        class C {
+        public:
+                C();
+                void Insert(int* e);
+                void Insert(int ix, int* e);
+        protected:
+                void IndexError(const char* op, int ix) const;
+                int** base;
+                int curlen;
+        };
+        inline void C::Insert(int ix, int* e) {
+                if (ix >= 0 && ix <= curlen) {
+                        base[ix] = e;
+                }
+                else
+                        IndexError("Insert", ix);
+        }
+        inline void C::Insert(int* e) {
+                Insert(0, e);
+        }
+        int bar = 5;
+        void bogus_function() {
+                C foo;
+                foo.Insert(&bar);    // bad C in 3.0.2
+        }
+
+54.  Fix typing of '>>' and '<<' expressions:
+
+        void foo(int);
+        void foo(unsigned int);
+        void foo(long);
+        void foo(unsigned long);
+        int i;
+        unsigned int ui;
+        long int li;
+        unsigned long int uli;
+        void bar() {
+                foo(0<<ui);    // 3.0.2 calls foo(unsigned)
+                foo(0>>li);    // 3.0.2 calls foo(long)
+                foo(i<<ui);    // 3.0.2 calls foo(unsigned)
+                foo(i>>uli);   // 3.0.2 calls foo(unsigned)
+        }
+
+55.  Fix a case where 3.0.2 gives wrong runtime results because global
+temporaries were not declared static:
+
+        // x1.c
+        extern "C" int printf(const char*, ...);
+        const int& r1 = 1;
+        extern const int& r2;
+        main() {
+                printf("%d %d\n", r1, r2);    // 3.0.2 prints "1 1"
+                return 0;
+        }
+        // x2.c
+        const int& r2 = 2;
+
+56.  Issue "sorry" for using an incomplete class type as an argument type
+or return type in a typedef to a function (otherwise, bad C results):
+
+        struct complex;
+        typedef struct complex (*PF1)(int);    // sorry
+        typedef void (*PF2)(struct complex);   // sorry
+        struct complex {
+                virtual void func();
+        };
+        PF1 pf1;
+        PF2 pf2;
+        void foo() {
+                complex c = (*pf1)(4);    // bad C otherwise
+                (*pf2)(c);                //  "
+        }
+
+57.  Fix legal calls to overloaded operator++/-- that were rejected by 3.0.2:
+
+        struct A {
+                void operator++(int);
+        };
+        void f() {
+                A a;
+                a++;    // error in 3.0.2
+        }
+
+58.  Issue "sorry" for 'asm()' in value-returning inline functions:
+
+        int glob;
+        struct A {
+                void foo();
+                int bar();
+        };
+        inline void foo() {
+                glob = 2;
+                asm("foo");    // okay
+        }
+        inline int bar() {
+                glob = 1;
+                asm("bar");    // sorry
+                return 88;
+        }
+
+59.  Expand non-virtual function calls inline:
+
+        struct X {
+                int i;
+                virtual void incr() { i++; }
+        };
+        void f(X ox) {
+                X b;
+                b.incr();    // inlined in 3.0.2
+                ox.incr();   // now inlined in 3.0.3
+        }
+
+60.  Fix cases combining conversion functions and '^' which were rejected
+by 3.0.2:
+
+        struct X {
+                operator int();
+                operator double();
+        } x;
+        struct Y {
+                operator int();
+                operator char*();
+        } y;
+        enum E { a, b, c } e;
+        void foo(int i) {
+                x ^ i;    // all cases get error in 3.0.2
+                i ^ x;
+                x ^ 0;
+                0 ^ x;
+                x ^ e;
+                e ^ x;
+                y ^ 0;
+        }
+
+61.  Eliminate a bogus error issued by 3.0.2:
+
+        typedef void T;
+        struct A {
+                T operator delete(void*);    // error in 3.0.2
+        };
+
+62.  Fix a case where 3.0.2 rejected a valid assignment:
+
+        struct First {
+                virtual void dummy();
+                int var1;
+        };
+        struct Second {
+                First var2;
+        };
+        struct Third {
+                First var3;
+        };
+        struct Fourth {
+                Third var4;
+        };
+        void func1(Fourth* const param) {
+                Second *var5 = new Second;
+                param->var4.var3 = var5->var2;    // error in 3.0.2
+        }
+
+63.  Fix incorrect C code produced by 3.0.2:
+
+        struct _0 {
+                int i;
+                virtual void dummy();
+        };
+        struct _1 {
+                _0 o0;
+                _0 *const cp0;
+                _1();
+        };
+        struct _2 {
+                _1 o1;
+                const _1 *const cpc1;
+                _2();
+        };
+        _0 o0;
+        void f417(_2 *p2) {
+                *(p2->cpc1->cp0)=o0;    // incorrect C code in 3.0.2
+        }
+        void f418(_2 *const cp2) {
+                cp2->o1.o0=o0;    // incorrect C code in 3.0.2
+        }
+
+64.  Destroy temporaries created in the test expression of a 'for' statement:
+
+        int ctdt = 0;
+        struct A {
+                A(int) { ctdt++; }
+                A(const A&) { ctdt++; }
+                ~A() { ctdt--; }
+                operator int() { return 97; }
+        };
+        void f() {
+                for (;A(3);)    // 3.0.2 did not destroy temporary
+                        break;
+        }
+        main() {
+                f();
+                if (ctdt)
+                        return 1;
+                return 0;
+        }
+
+65.  Eliminate bogus errors issued by 3.0.2 about ambiguous calls to
+new or delete:
+
+        typedef unsigned int size_t;
+        struct A {
+                void *operator new(size_t);
+                void operator delete(void*);
+        };
+        struct B {
+                void *operator new(size_t);
+                void operator delete(void*);
+        };
+        struct C : public A, public B {    // errors here in 3.0.2
+                C();
+                ~C();
+        };
+        C c;
+
+66.  Eliminate extra destructor call on a temporary that was created for
+the left operand of '||':
+
+        int ctor = 0;
+        int dtor = 0;
+        struct A {
+                A(int) { ctor++; }
+                operator int() { return 97; }
+                ~A() { dtor++; }
+        };
+        struct B {
+                B(int = 57) {}
+                virtual ~B() {}
+        };
+        void f() {}
+        void g() {
+                B b;
+                A(57) || (f(), 0);
+                B bb = b;
+        }
+        main() {
+                g();
+                if (!ctor || ctor != dtor)
+                        return 1;
+                return 0;
+        }
+
+67.  Fix bad C produced by 3.0.2 under +d:
+
+        class B {
+        public:
+                int n;
+                class C {
+                        int foo() { return b->n; }    // bad C in 3.0.2
+                        class B *b;
+                };
+        };
+
+68.  Fix a bad '__vtbl' offset produced by 3.0.2 which leads to a runtime
+coredump:
+
+        struct base {
+                virtual int g() const =0;
+                virtual int f() const =0;
+        };
+        struct lchild : public virtual base {};
+        struct rchild : public virtual base {
+                int f() const { return g();};
+        };
+        struct rchild_helper: public rchild {
+                int g() const { return 23;};
+        };
+        struct grandchild : public lchild, public rchild_helper {};
+        main() {
+                grandchild *gptr = new grandchild;
+                lchild *lptr = gptr;
+                if (gptr->f()!=lptr->f() || lptr->f()!=23)
+                        return 1;
+                return 0;
+        }
+
+69.  Fix a regression where incorrect C code was generated:
+
+        int i = int(1.9+0.9);    // 3.0.2 turns '0.9' into '0'
+
+70.  Fix a cfront crash:
+
+        typedef unsigned int size_t;
+        class Base {
+        public:
+                virtual ~Base() {}
+        };
+        class Derived : public Base {
+        public:
+                ~Derived() {}
+                void* operator new(size_t);
+        };
+        void* Derived::operator new(size_t) {
+                Derived* ptr = ::new Derived();
+                return ptr;
+        }
+
+71.  Fix an imbalance of '__vec_new' and '__vec_delete' calls:
+
+        struct A {
+                A();
+        //      ~A();
+        };
+        main() {
+                A* p;
+                p = new A[5];
+                delete [] p;
+        }
+
+72.  Fix a lookahead bug which causes a spurious error in 3.0.2:
+
+        enum bar { CLAUS, CHRISTOPH };
+        enum foo { OTTO, HUGO };
+        struct ANYCLASS {
+                int n;
+                int foo(int);
+                enum bar foo(void);
+        };
+        enum bar ANYCLASS::foo(void) {
+                this->n = 3;    // error in 3.0.2
+                return CLAUS;
+        }
+
+73.  Issue an unconditional warning for the use of new keywords (mutable,
+namespace, using) as identifiers:
+
+        int mutable;
+        struct namespace { int i; };
+        int using() {
+                namespace n;
+                return n.i = mutable;
+        }
+        void foo() {
+                mutable = using();
+        }
+
+74.  Fix incorrect C code produced by 3.0.2 when a comma expression is
+used as the function designator in a function call:
+
+        void f(int);
+        void f(long);
+        main() {
+                int i;
+                (i = 37, f)(47);    // incorrect C code in 3.0.2
+                (i = 57, f)(67L);   //     "
+        }
+
+75.  Fix a case where a legal access was disallowed by 3.0.2:
+
+        class A {
+        public:
+                virtual void f();
+        };
+        class B : virtual private A {};
+        class C : virtual private A {};
+        class D : public B, public C, virtual public A {};
+        void A::f() {}
+        int main() {
+                D *d = new D;
+                d->f();    // error in 3.0.2
+                return 0;
+        }
+
+76.  Fix incorrect C code produced by 3.0.2:
+
+        struct X {};
+        struct Y {};
+        struct A : public X, public Y {};
+        A *p;
+        Y *const &r = p;    // incorrect C code in 3.0.2
+
+77.   Fix a cfront crash:
+
+        struct B;
+        struct A {
+                A() {}
+                A& operator=(const A&) { return *this; }
+        };
+        struct B : public A {
+                B() {}
+                virtual B* operator=(const B*) { return this; }
+        };
+        struct C : public B {
+                C();
+        };
+        main() {
+                C c;
+                c = c;
+        }
+
+78.  Increase maximum block nesting depth (test case too large to include).
+
+========================= CFRONT TEMPLATE =========================
+
+1.  Fix a directed mode bug:
+
+        // Assume +T file of:
+        //   @data
+        //   __ct
+
+        # 1 "r/Array__pt__9_7segment.c"
+        # 1 "./A.h" 1
+        template <class T> struct Array {
+                T *data;
+                Array(unsigned i=16);
+        };
+        # 4 "r/Array__pt__9_7segment.c" 2
+        # 1 "./A.c" 1
+        template <class T> Array<T>::Array(unsigned) {}
+        # 5 "r/Array__pt__9_7segment.c" 2
+        # 1 "./a.c" 1
+        # 1 "./A.h" 1
+        # 9 "./A.h"
+        # 2 "./a.c" 2
+        class segment{};
+        Array<segment>  s[1];
+        void main(){}
+        # 6 "r/Array__pt__9_7segment.c" 2
+        typedef Array<segment> _dummy_;
+
+2.  Fix a case where 3.0.2 wrongly rejected default arguments:
+
+        template <class T> class X {
+                friend void f(const X<T>&);
+        public:
+                X(int = 0);    // error in 3.0.2
+        };
+        X<char> x;
+
+3.  Fix incorrect C code produced by 3.0.2:
+
+        template <class T> struct A {
+                static int foo();
+                static int bar();
+        };
+        template <unsigned int sz> struct B {
+                static int gah() { return sz; }
+        };
+        template <class T> int A<T>::foo() {
+                return B<sizeof(T)>::gah();
+        }
+        template <class T> int A<T>::bar() {
+                return B<sizeof(T)>::gah();
+        }
+        main() {
+                return A<int>::foo() == A<int>::bar() ? 0 : 1;  // here
+        }
+
+4.  Fix a case where 3.0.2 rejected a function-style cast:
+
+        template <class T> struct A {
+                void f(const int&);
+        };
+        struct X0 {
+                X0(const int&);
+        };
+        struct X1 {
+                X1(const int&);
+        };
+        template <class T> void A<T>::f(const int& s) {
+                (T)s;        // okay
+                (T(s));      // error in 3.0.2
+        }
+        A<X0> a_X0;
+        A<X1> a_X1;
+
+5.  Fix a cfront crash:
+
+        struct S {
+                static void nu() {}
+        };
+        struct String {
+                String(const char*) { S::nu(); };
+        };
+        struct Unit {
+                enum utype {};
+                String db(Unit::utype);
+        };
+        inline String Unit::db(Unit::utype) {
+                return "";
+        }
+        template <class T> struct Quantity {
+                Quantity(Unit::utype);
+        };
+        struct Qval {
+                Qval(Quantity<long>*);
+        };
+
+6.  Fix a +s directed mode cfront crash:
+
+        // Assume +T file of:
+        //   @none
+
+        template <class T> class IA_BDI;
+        template <class T> struct IA_DI{
+                IA_DI(IA_BDI<T>*);
+        };
+        template <class T> struct IA_ADI: public virtual IA_DI<T> {
+                IA_DI<T> operator+(const IA_DI<T>&);
+        };
+        template <class T> IA_DI<T> IA_ADI<T>::operator+(const IA_DI<T>& ia) {
+                IA_DI<T> result = this;
+                return result += ia;
+        }
+        typedef IA_ADI<int> _dummy_;
+
+7.  Fix a +s directed mode cfront crash:
+
+        // Assume +T file of:
+        //   @none
+
+        template <class T> struct MR {
+                int count;
+        };
+        template <class T> struct M {
+                MR<T> *rep;
+                void clone();
+        };
+        template <class T> struct SM : public M<T> {};
+        template <class T> void M<T>::clone() {
+                if (--ref->count <= 0)
+                        delete rep;
+        }
+        SM<int> sm;
+
+8.  Fix a cfront crash:
+
+        template <class T> void f(const T&) {}
+        void g() {
+                f("abc");
+                f("wxyz");
+        }
+
+9.  Fix a cfront crash:
+
+        struct A {
+                void fA() {}
+        };
+        struct B {
+                void fB() {}
+        };
+        template <class T> void max(void (T::*)(),void (T::*)());
+        void bar() {
+                max(&A::fA, &A::fA);    // okay
+        }
+        void foo() {
+                max(&A::fA, &B::fB);    // error
+        }
+
+10.  Fix a case where a class template with a parameter of function type
+was botched by 3.0.2:
+
+        template <class FT> struct A {
+                A();
+                FT* fp;
+        };
+        typedef void FUNCT();
+        void f() {
+                A<FUNCT> a;
+                a.fp();    // error in 3.0.2
+        }
+
+11.  Fix a template function matching bug:
+
+        template <class T> struct X {
+                T t;
+        };
+        template <class T> T F(const X<T>& x) {
+                return x.t;
+        }
+        int (*p)(const X<int>&) = F;    // error in 3.0.2
+
+12.  Fix a template function matching bug:
+
+        template <class T> void f(T*&) {}
+        int *ip;
+        void foo() {
+                f(ip);    // error in 3.0.2
+        }
+
+13.  Clean up error messages:
+
+        template <class T> T foo(T t) {
+                if (t == 0)
+                        foo((T*)0);
+                return 0;
+        }
+        main() {
+                foo(37);
+        }
+
+14.  Fix bad C produced by 3.0.2:
+
+        template <class T> struct X {
+                X();
+                X(const X&);
+        };
+        template <class T> X<T> inline f(const X<T>& m) {
+                X<T> r = m;
+                return r;
+        }
+        template <class T> int operator<<(int, const X<T>&);
+        void h() {
+                X<int> l;
+                0 << f(l) << f(l);    // bad C in 3.0.2
+        }
+
+15.  Eliminate "sorry" on use of nested class as class template parameter:
+
+        template <class T> class A {};
+        struct X {
+                struct Y {};
+        };
+        A<X::Y> a;    // sorry in 3.0.2
+
+16.  Allow 'operator new' to be a function template:
+
+        template <class T> struct Tracker {
+                Tracker() : t(0) {}
+                ~Tracker() { delete t; }
+                void remember(T *v) { t = v; }
+                T *t;
+        };
+        template <class T> void *operator new(unsigned int s, Tracker<T> &t) {
+                void *ret = operator new(s);
+                t.remember((T*)ret);
+                return ret;
+        }    // error in 3.0.2
+        Tracker<int> tr;
+        int *p = new(tr) int;
+
+17.  Fix error message:
+
+        template <union T> struct X {
+                T t;
+        }
+
+18.  Fix a cfront crash:
+
+        template <class T> union {};
+        template <class T> struct {};
+
+19.  Fix a directed mode cfront crash:
+
+        // Assume +T file of:
+        //   @none
+
+        template <int size> struct S {
+                void foo();
+        };
+        S<96> s_96;
+        double f();
+        template <int size> void S<size>::foo() {
+                static double x = f();
+        }
+
+20.  Eliminate "sorry" on postfix operator++/-- function templates:
+
+        template <class T> int operator++(T t, int i) {
+                return t.i++ - i;
+        }    // sorry in 3.0.2
+        struct S {
+                int i;
+        };
+        void foo(S &s) {
+                s++;
+                operator++(s,55);
+        }
+
+21.  Fix a regression where 3.0.2 gave a bogus error:
+
+        struct R {
+                struct N;
+                typedef N *TD;
+                typedef void (*PF)(TD);
+        };
+        struct B1 {
+                static void foo(R::TD);
+        };
+        struct D1 : public B1 {};
+        struct X {
+                X(R::PF);
+        };
+        template <class T> struct B2 {
+                static void foo(R::TD);
+        };
+        struct D2 : public B2<D2> {};
+        X x1(D1::foo);
+        X x2(D2::foo);    // error in 3.0.2
+
+22.  Fix a regression which caused a cfront crash:
+
+        struct AFOS_PSM {
+                struct TypeError {};
+                static char* ex_AccessDenied;
+                struct AccessDenied {};
+                static char* ex_Truncation;
+                struct Truncation {};
+                static char* ex_NotFound;
+                struct NotFound {};
+                static char* ex_NoResource;
+                struct NoResource {};
+                static char* ex_IDNotFound;
+                struct IDNotFound {};
+                static char* ex_Initialized;
+                struct Initialized {};
+                struct Environment {};
+        };
+        template <class T> struct AFOS_PSM_Sequence {
+                void resize(AFOS_PSM::Environment);
+        };
+        AFOS_PSM_Sequence<int> x;
+
+23.  Fix directed mode bug where 'EEEE' got constructed twice:
+
+        // CC -ptn ...
+        int count=0;
+        template <class T> class A {
+        private:
+                static int n;
+        public:
+                A() { ++count; }
+        };
+        template <class T> int A<T>::n;
+        class B : public A<B> {};
+        B EEEE;
+        int main() {
+                if (count != 1)
+                        return 1;
+                return 0;
+        }
+
+24.  Fix explicit destructor calls that are parameterized:
+
+        struct A {
+                A();
+                ~A();
+                void foo();
+        };
+        template <class T> struct X {
+                void bar();
+                T *p;
+                T o;
+        };
+        template <class T> void X<T>::bar() {
+                p->~T();      // error in 3.0.2
+                p->T::~T();   //   "
+                p->T::foo();  //   "
+                o.T::foo();   //   "
+        }
+        X<A> x;
+
+25.  Fix bad name mangling and eliminate bogus error issued by 3.0.2:
+
+        template <class U> struct M {
+                U y;
+        };
+        template <class T> struct KM {
+                M<int T::*> m;
+                int T::*p;
+                void f() { p = m.y; }    // error here in 3.0.2
+        };
+        class A {};
+        class B {};
+        KM<A> *km1;
+        KM<B> *km2;
+
+26.  Fix incorrect initialization of static data member:
+
+        extern "C" int printf(const char *, ...);
+        template <class T> struct Q {
+                static const int s;
+        };
+        template <class T> const int Q<T>::s = 1;
+        Q<int> a;
+        main() {
+                printf("1 %d\n", a.s);
+        }
+
+27.  Fix a directed mode bug where an external reference to an inline
+function did not cause it to be laid down as a static:
+
+        // Assume +T file of:
+        //   @data
+
+        class String {
+                void f() const;
+        public:
+                String();
+                String(const String&) { f(); }
+                ~String() { f(); }
+        };
+        template <class K, class V> class GHashTable {
+        public:
+                V& insert_non_present_key(K, V);
+        };
+        class X;
+        class Alf2 {
+        public:
+                X* rep;
+        };
+        class Alfphash {
+        public:
+                Alfphash(const Alf2& a) { f(a.rep); }
+        private:
+                void f(X* r);
+        };
+        template <class K, class V> class AlfMap {
+        public:
+                AlfMap();
+                inline void insert_non_present_key(const K&, const V&);
+        private:
+                GHashTable<Alfphash,V> rep;
+        };
+        template <class K, class V> inline void
+        AlfMap<K,V>::insert_non_present_key(const K& k, const V& v) {
+                rep.insert_non_present_key(k, v);
+        }
+        void test(AlfMap<Alf2,String>& m) {
+                Alf2 g;
+                String s;
+                m.insert_non_present_key(g, s);
+        }
+
+28.  Fix a lookahead bug which causes a spurious "syntax error" in 3.0.2:
+
+        template <class T> struct First {
+                int first;
+                First(int) {}
+        };
+        struct Second {
+                Second(char const*, int) {}
+        };
+        struct Browser : public First<int>, public Second {
+                Browser(char const*);
+        };
+        Browser::Browser(char const *name) : First<int>(37),
+                Second(name, First<int>::first)    // error in 3.0.2
+        {
+        }
+        Browser b("howdy");
+
+29.  Fix a lookahead bug which causes a spurious "syntax error" in 3.0.2:
+
+        typedef void void_t;
+        template <class T> struct KM {
+                void_t (T::*GetOp())();
+        };
+        template <class T> void_t (T::*KM<T>::GetOp())() {    // error in 3.0.2
+                return 0;
+        }
+
+========================= CFRONT +A1 =========================
+
+1.  Fix bad ANSI C produced by 3.0.2:
+
+        inline int f(int x) {
+                x++;    // bad C in 3.0.2
+                return x + 37;
+        }
+        extern int f(int y);
+        main() {
+                int i;
+                i = f(53) + f(62);
+        }
+
+2.  Fix bad ANSI C produced by 3.0.2:
+
+        class String {
+        public:
+                String(const char *);
+                ~String();
+        };
+        class some_class {
+        public:
+                const int uses_string(const String &);
+                void foo();
+        };
+        void some_class::foo() {
+                if (uses_string("some string"))    // bad C in 3.0.2
+                        return;
+        }
+
+3.  Fix bad ANSI C produced by 3.0.2:
+
+        class some_object {};
+        class list : public virtual some_object {
+        public:
+                int cmp(const some_object &obj) const;
+        };
+        class foo : public virtual some_object {
+        public:
+                static const foo & cd(const some_object &);
+                int cmp(const some_object &obj) const;
+        private:
+                list *d_args;
+        };
+        int foo::cmp(const some_object &obj) const {
+                return d_args->cmp(*((cd(obj)).d_args));    // bad C in 3.0.2
+        }
+
+4.  Fix bad ANSI C produced by 3.0.2:
+
+        void f();
+        void g();
+        main() {
+                if (f < g)    // bad C in 3.0.2
+                        ;
+        }
+
+5.  Fix bad ANSI C produced by 3.0.2:
+
+        struct A {
+                void f();
+        };
+        main() {
+                register A a;
+                a.f();    // bad C in 3.0.2
+        }
+
+6.  Fix bad ANSI C produced by 3.0.2:
+
+        struct X {
+                X *data;
+                operator int();
+        };
+        struct Y {
+                Y (const int &i) { dynAppend (i); }
+                void dynAppend (const int &d) {}    // bad C in 3.0.2
+        };
+        void foo(X x) {
+                Y *data;
+                data->dynAppend(*x.data);
+        }
+
+7.  Fix bad ANSI C produced by 3.0.2:
+
+        struct X {
+                void prepend() {headLink();}
+                void* headLink() const {return 0;}    // bad C in 3.0.2
+        };
+        struct Y {
+                void foo();
+                X* container();
+        };
+        void Y::foo() {
+                container()->headLink();
+        }
+
+8.  Fix bad ANSI C produced by 3.0.2:
+
+        inline void bar() {
+                int* t = 0;
+                if (t)
+                        t = 0;
+                else
+                        if (t)
+                                t = 0;
+                        else 42;
+        }
+        int main() {
+                bar();    // bad C in 3.0.2
+                return 0;
+        }
+
+========================= DEMANGLER =========================
+
+1.  c++filt was changed so that an identifier will be demangled regardless
+of what characters delimit it.  The old strategy was to demangle an
+identifier only if it was delimited by whitespace.  A new option, -w,
+recovers the old behavior.  For example:
+
+        /* mangled.c */
+        char __dt__10A__pt__2_iFv();
+        struct A__pt__2_i *__ct__10A__pt__2_iFv ();
+
+        'cat mangled.c | c++filt' produces:
+                char A<int>::_dt(void)();
+                struct A<int> *A<int>::_ct(void) ();
+
+        'cat mangled.c | c++filt -w' produces:
+                char __dt__10A__pt__2_iFv();
+                struct A<int> *__ct__10A__pt__2_iFv ();
+
+========================= STREAM I/O =========================
+
+1.  The filebuf::seekoff() function was changed so that seekg() adjusts
+to a correct file buffer position when it is called with a negative offset.
+
+        #include <stdio.h>
+        #include <fcntl.h>
+        #include <sysent.h>
+        #include <fstream.h>
+        main() {
+                char *fname = tmpnam((char*)0);
+                int from = open(fname,O_CREAT|O_TRUNC|O_RDWR,0666);
+                char buf[1050];
+                memset(buf,'a',1050);
+                write(from, buf, 1050);
+                close(from);
+                streamoff pos=-2;
+                ifstream ifs(fname);
+                ifs.read(buf,1021);
+                ifs.seekg(-pos,ios::cur);
+                cout << "seekg cur+" << -pos << " = " << ifs.tellg() << endl;
+                ifs.seekg(pos+pos,ios::cur);
+                cout << "seekg cur" << pos+pos << " = " << ifs.tellg() << endl;
+                unlink(fname);
+                return 0;
+        }
+
+2.  The strstream::overflow() function was fixed so that it no longer
+falls off the end and returns garbage.  The behavior is system dependent,
+so no test case is provided.
+
+3.  The strstreambuf::init() function was changed so that the "end get
+pointer", x_egptr, gets set properly when pstart is non-NULL and outside
+the range of the stream buffer.
+
+        #include <strstream.h>
+        #include <stream.h>
+        int main() {
+                strstream s("abc", -1, ios::in);
+                s.seekp(10);
+                cout << s.rdbuf()->sgetc() << "\n97" << endl;
+                s.seekg(10);
+                cout << s.rdbuf()->sgetc() << "\n0" << endl;
+                return 0;
+        }
+
+4.  When a char value of 0xff got promoted to an int (internally) it was
+wrongly interpreted to be an EOF (==0xffffffff).  This was corrected by
+changing the strstreambuf::underflow() function.
+
+        #include <strstream.h>
+        int main() {
+                char c = 0xff;
+                strstream s;
+                s.write(&c,1);
+                s.read(&c,1);
+                return ((s.eof() != 0) || (s.gcount() != 1));
+        }
+
+5.  seekg() gave incorrect results for strstreams that had some nonzero
+multiple of 64 characters stuffed into them.
+
+        #include <string.h>
+        #include <iostream.h>
+        #include <strstream.h>
+        main() {
+                char *dataBuffer = new char[80];
+                strstream *stream = new strstream;
+                strcpy(dataBuffer, "123456789012345678901234567890123456789012345678901234567890123");
+                *stream << dataBuffer;
+                *stream << '\0' ;
+                streampos pos1 = (*stream).tellg();
+                (*stream).seekg(0, ios::end);
+                streampos pos2 = (*stream).tellg();
+                return int(pos2)-int(pos1) != 64;
+        }
+
+6.  The strstreambuf::str() function was changed to properly reflect that
+'strstream' buffers are not null-terminated by default.
+
+        #include <strstream.h>
+        int main() {
+                char cp[5];
+                ostrstream oss(cp, 5);
+                oss.write("123", 3);
+                oss.str();
+                return oss.pcount()!=3;    // oss.pcount()==4 in 3.0.2
+        }
+
+========================= TASK LIBRARY =========================
+
+1.  Definitions for registers r0 through r15 were added to the assembly
+code for Amdahl machines.  These are not predefined when the assembler
+is invoked by the C compiler with 'as -C' on behalf of swap.s.uts.
+
+2.  On an Amdahl, the load instruction has an RX format and the optimizer
+expects a displacement to be specified even if it is zero.  For each of
+the set_rx() functions, the "l x,(x)" instructions were changed to "l x,0(x)".
+
+3.  The interrupt_alerter's s_time was not updated when it was scheduled
+as a priority task.  A function to schedule priority tasks was added,
+sched::set_priority_sched(), which takes care of the s_time.
+
+4.  The task library is no longer dependent on proto-headers/sys/signal.h.
+Task had used some typedefs defined in that proto-header which caused
+problems for users who wished to use their native signal.h.
+
+5.  Several static class data members were provided with explicit
+definitions.  This allows the task library to be used under +p.
+
+6.  Make the task class destructor in the Task library virtual.
+
+========================= PTLINK =========================
+
+1.  An object given on the link line is not added to the link simulation
+that ptlink does if doing so would cause conflicts.  A warning was added
+to 'okobj()' that displays the names of the object and archive which
+contain the duplicate symbol(s).
+
+2.  'ibm6000' was changed to '_IBMR2' in a '#ifdef' to conform to the
+standard environment variable for the RS6000.
+
+3.  A change was made in support of the Andrew File System which doesn't
+understand the link/unlink paradigm for mv-ing files.  The new strategy
+is to first attempt a link/unlink; if it fails, a cp/unlink is done instead.
+
+4.  Additional debugging information was added for the -ptv option.
+
+========================= MISCELLANEOUS =========================
+
+1.  Change BI_IN_WORD from 32 to 16 for HP 9000 200/300 (68K).
+
+2.  Delete redundant calls to 'instantiation_string' (template.c) which
+caused memory leaks.

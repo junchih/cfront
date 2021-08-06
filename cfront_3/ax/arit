@@ -1,0 +1,27 @@
+#!/bin/ksh
+
+if [ $# -lt 2 ]
+then
+	echo "usage: $0 library-key file.o ..."
+	exit 1
+fi
+
+libkey=$1
+shift
+OBJS=$@
+pid=$$
+integer seq=0
+
+if [ -d Templates.DB ]
+then
+	for obj in Templates.DB/*.o
+	do
+		seq=$seq+1
+		cp $obj ${libkey}${pid}_${seq}.o
+	done
+fi
+
+ar cr lib${libkey}.a $OBJS ${libkey}${pid}_*.o
+/bin/rm -f ${libkey}${pid}_*.o
+
+exit 0

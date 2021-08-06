@@ -1,0 +1,299 @@
+Subject: C++ 3.0.3 source installation letter
+
+Dear 3.0.3 C++ Customer-
+
+   These are instructions on how to install C++ release 3.0.3.  These
+instructions will cover the mechanics of building and installing the
+translator on your machine.  Please read the following instructions
+carefully.  In addition, if you would prefer to save the effort
+required to build the translator yourself, we do distribute binary
+versions available for 3B2 (both mau and no mau), 6386 (SVR3 and SVR4), 
+hp9000 (HP-UX 7.0 and 8.0), pyramid, tandem, vax (paging), uts (amdahl),
+sun3, sun4, solaris and SGI. 
+
+DOCUMENTATION
+-------------
+   We will be sending four documents on C++ 3.0.  If you would
+like additional copies of the C++ 3.0 product documentation, feel
+free to xerox the books or contact us at 908-582-7009 to order
+more copies.
+
+Order the documents by the following titles:
+
+C++ Language System Release 3.0.3 Release Notes
+C++ Language System Release 3.0.2 Selected Readings
+C++ Language System Release 3.0.2 Library Manual         
+C++ Language System Release 3.0 Product Reference Manual
+
+The "C++ Standard Components, Release 3" manual set may be ordered
+by calling (201) 582-5880, AT&T Software & Documentation Services. 
+This is a set of three books containing the manuals and tutorials on
+the C++ Standard Components.
+
+Provide them with the following information:
+
+        Document number - B24B
+        Title of Book - "C++ Standard Components, Release 3"
+        
+        Your Name, mailing address and WPN*
+                        
+* If you DO NOT have a WPN, you will be instructed on what to do.
+
+   If you are a system administrator and are installing C++ for a
+developer, please forward the READMEs, the known.problems, the man 
+pages, and the paper documentation to your C++ users.
+
+SHIPPING LIST
+-------------
+   You should have received (or will be receiving shortly) the
+following cpio files in /usr/spool/uucppublic/username/C++/3.0/source
+on your machine:
+
+(Be aware that this is ~10 megabytes of stuff, so be prepared!)
+
+1: top.cpio, the top-level files, including makefiles and README's
+2: man.cpio - the man pages
+3: incl.cpio - The C++ include files 
+4: lib.cpio - The source files needed to create libC.a, libcomplex.a,
+              and libtask.a 
+5: libSC0.cpio - The source files needed to create lib++.a, libfs.a,
+	  	 libGA.a, libGraph.a, libg2++.a and L5 tools.
+6: libSC1.cpio - More source files for libraries and tools.
+7: MP.cpio - The files needed to create patch and munch 
+8: scratch.cpio - Files needed to create a scratch copy of cfront.
+9: src0.cpio - The files needed to create a good copy of cfront.
+10: src1.cpio - More files for making a good copy of cfront.
+11: demo.cpio - Files to use to run tests on cfront and task library.
+12: tools.cpio - Files needed to make the Liberty Corner tools.
+
+NOTE:
+To save on space, the scratch files (scratch.cpio) may have been left out
+of the source distribution.  These files are only needed if you are
+porting cfront to a platform for the first time (there is no C++
+compiler there now).  If you need the scratch files contact us at
+mozart!c++.
+
+If you didn't receive all of these, please let me know and I'll re-uucp
+them.  All the files are in cpio format.  You will need to uncpio all of
+them.  To do this, you can use the command:
+
+cd workingdirectory (Whatever directory you want to put the stuff in)
+cpio -icvd < /usr/spool/uucppublic/username/C++/3.0.3/source/top.cpio
+cpio -icvd < /usr/spool/uucppublic/username/C++/3.0.3/source/man.cpio
+etc.
+
+Or, to make things faster and easier you can use:
+
+cd workingdirectory (Whatever directory you want to put the stuff in)
+for i in top man incl lib libSC0 libSC1 MP scratch src0 src1 demo tools 
+do
+   cpio -icvd </usr/spool/uucppublic/username/C++/3.0.3/source/${i}.cpio
+done
+
+
+BUILD PROCEDURES FOR RELEASE 3.0.3
+----------------------------------
+The procedures for building the 3.0.3 release are similar to the 
+procedures for building C++ 3.0.  To build the translator, you
+should only need to edit the makefile variables at the top of the
+top-level makefile; there are comments describing the purpose of each
+and a comment denoting the end of the user-definable variables.  The
+makefile will edit the variables in the CC command; you will no longer
+have to do this.
+
+Here is a summary of the steps to build release 3.0.3 from an existing
+translator.  If you are building from scratch (no CC is available on your
+machine) see below.
+
+	1. Edit the top-level makefile, changing variables at the top
+	   as needed.  Be sure to set CC = to the name of the CC command
+	   you are using for the bootstrap.
+
+	1a. Edit the libSC/aoutdem/makefile and set OS for your machine.
+	   This is needed to build an a.out demangler for your system.
+
+	2. Run either:	make
+			make patch
+		     or make munch (same as make)
+	   This will build everything: cfront, munch or patch, libC.a, 
+	   c++filt, lib++.a, etc..  It will also generate header files 
+	   for the incl directory; see below for more on header files.
+
+	   NOTE:  The makefile will use the CC you specify (in the makefile
+	   or on the make command line) to build cfront, but it will use
+	   the newly built cfront and the new header files to build libC.a
+	   and the L5 libraries/tools.
+
+	3. Build the other libraries, if desired.  Either set CC=
+	   on the make command line as in step 4, or edit the CC variable
+	   in the makefile to pick up the new CC, then run:
+		make libtask.a (if you are on sun3, vax, 3b, or 6386) 
+		make libcomplex.a
+
+	4. Run:
+	   Before you run the demos, make sure the location of the
+	   C++ executables ($CCROOTDIR) is on your PATH.  Some of the
+	   demos execute commands which are in this directory.
+
+		make CC=<full-path-of-CC> demos 
+
+	   If you would like to test the new translator and the L5 libraries.
+	   Run "make CC=<full-path-of-CC> democomplex" to run the complex
+	   library demos and "make CC=<full-path-of-CC> demotask" to run
+	   the task library demos.
+
+           If any of the demos fail, then something either went wrong in 
+	   the building of the library or with the demo itself (though
+	   we have tried to make the demos as generic as possible, problems
+	   do occur on some architectures).  Demo failure is indicated by 
+	   printing a ``FAILED'' message to the terminal, and writing a 
+	   demo.r file to the directory containing the demo.  Executing
+ 
+               $ diff demo.V demo.r
+
+           will display the difference between the ``expected output''
+           (demo.V) and actual output (demo.r) of the demo.  If the
+           difference is obviously due to a system idiosyncrasy rather
+           than actual program failure, the ``failure'' can be ignored.
+   
+           Any apparent error during the execution of a demo, such as a
+           core dump, that is not accompanied by a ``FAILED'' message,
+           indicates a successful demo.  The set of demos, if any, that
+           failed, can be listed by saying:
+
+               $ ls src/*/demos/*.r
+	
+	5. Run:  make install
+	   This will install the executables, libraries, and header files
+	   built in the previous steps AND it will modify the CC command 
+           to pick up the new executables from their new locations.  You 
+           should no longer need to edit the CC command.  Before you use the 
+	   'install' target you must edit the top-level makefile and set the 
+	   following variables:
+
+	   # command used to copy a directory tree of newly built header files
+	   # from the incl-master directory to the top level
+	   CPIO    = cpio -pdlm
+
+	   # these directories are used for installation via "make install"
+	   INSTALL         = cp
+	   INSTALL_BIN     = /usr/bin
+	   INSTALL_LIB     = /usr/lib
+	   INSTALL_INC     = /usr/include/CC
+
+	6. Run:  make clean
+	   if desired, to delete unneeded object files created by the make.
+
+To make cfront from scratch is a bit more complicated.  The makefile
+is already set up to make the translator (cfront), and the library
+(libC.a), as well a secondary pass of the translator (munch or patch).
+Here's basically all you need to do:
+
+1:  Edit the top-level makefile, changing variables at the top as needed.
+
+2:  Type:  make scratch
+    This will make a scratch copy of the cfront translator.  When
+    building a good copy of the translator (step 2 above), the translator 
+    itself is used.  This step is used on machines that do not have an 
+    old copy of the c++ translator.  Note: This will only build a good
+    scratch version of the translator if your sizes and alignments are
+    equivalent to 3B's (for SYSV) or a Sun-3's (for BSD).  If you are 
+    building on a brand new system, you may have to do a "make fillscratch".
+    See the Release Notes for further information.
+
+3:  Follow the procedures outline in steps 2-6 above, EXCEPT type
+    make CC=`pwd`/CC patch OR  make CC=`pwd`/CC in Step 2.
+    This will make everything else (cfront, munch or patch, libC.a,
+    lib++., and c++filt).  When you do this step, the scratch copy 
+    of the C++ translator that was created in step 1 is used.
+    This will take some time, so be prepared for this to run for 
+    a while.  You should expect to see some warning messages when 
+    compiling y.tab.c.  These should not concern you.
+
+Note:  For a list of the known build problems refer to the known.problems
+file you received in this distribution.
+
+Note: The next section of this letter describes what the
+"make install" target does.  If you already executed this, you do not
+need to follow these instructions.
+
+   After you make everything you should do the following:
+
+**** Please note that these files replace any files you may have
+received with earlier C++ distributions; therefore you should clean up
+all your C++ directories before you start installing the new files.
+
+1.  Put CC, cfront, patch (or munch), c++filt, dem, demangle, hier
+    incl.sh, publik, fscpp, ncsl, ncsldiff, g2++comp, ptcomp, 
+    and ptlink where they can be found when you try to execute them
+    - typically /usr/bin, or if you have it, /usr/lbin or /usr/local/bin.
+
+    Note: incl.sh, hier and publik are shell scripts which run the
+    C++ tools incl2, hier2 and publik2.  You may need to edit
+    them to set certain variables specific to your environment.
+
+2.  Put libC.a, libcomplex.a, lib++.a, libGraph.a, libGA.a, libg2++.a, 
+    libfs.a, libtask.a (if you built it), fsipp, incl2, hier2 and publik2
+    where CC can find them (typically /usr/local/lib, /lib or /usr/lib).
+    If you are on a Sun and are running SunOS, you will have to ranlib
+    the libraries after you move them (ranlib libname).
+
+3.  Put the include files in their own subdirectory where CC can find them,
+    say /usr/local/include/CC.  Therefore, just recursively copy all of the
+    include files to /usr/local/include/CC.
+    
+4.  Put the man files in   /usr/man   or   /usr/catman   
+    (or wherever is best on your system).
+
+5.  The source code files and the makefile can be put anywhere on your
+    system (or delete them if you want).
+
+You will then need to edit the CC shell script to set the locations of
+all these files.  If you look at lines 13-15, you will see the default
+locations.  If you are putting them in a different place, you
+will need to change these variables (CCROOTDIR, CCLIBDIR, and I).
+
+For example, if you put the include files in /usr/local/include/CC, 
+the libraries in /usr/local/lib,  and the binaries (cfront, patch or
+munch, and c++filt) in /usr/local/bin, you should set the following 
+variables:
+
+CCROOTDIR=${CCROOTDIR-/usr/local/bin}
+CCLIBDIR=${CCLIBDIR-/usr/local/lib} 
+I=${I-/usr/local/include/CC}
+
+You may want to keep your last version of CC and call this one nCC 
+(for new CC) or some other name.  To do this, copy CC to its new name 
+(nCC) in someplace where it can be found in your PATH, and edit the 
+shell script nCC so that it can find the the correct locations of the 
+variables discussed above.
+
+C++ LIBRARIES
+-------------
+   You will also receive the L5 C++ library package.  This release
+contains the following libraries: Pool, String, List, Objection, Array_alg,
+Block, Map, Time, Strstream, ipc (not available for all machines), Bits, Path
+Fsm, Set, Graph, Graph Algorithms, Regex, Symbol and G2++.  For this release, 
+the binary files for the libraries are divided between several different 
+archives (lib++.a, libGraph.a, libGA.a, and libg2++), but they can be
+accessed on a compile line with just "-l++".
+
+The README.SC that comes with the package contains more detailed
+information on the libraries.  Please read the README.SC before doing 
+anything else to get an overall picture of the current state of the 
+library package.
+
+The L5 libraries have the same functionality as the L4 libraries, but they
+have been rewritten to take advantage of Templates.  Applications that used the
+L4 libraries will NOT work with the C++ release 3.0 and the L5 libraries.
+We have provided you with the source for a program, L4-5convert.c, that will
+convert your applications that used the L4 libraries to use the L5 format.
+The README.convert will tell you how to build this conversion application.
+The file L4toL5 explains what has changed between the L4 and L5 library releases.
+
+If you have any problems or questions, please don't hesitate to call
+or send e-mail.
+
+   STC Common Support Hotline
+   mozart!c++
+   (908) 582-7009

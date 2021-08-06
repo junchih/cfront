@@ -1,0 +1,186 @@
+.\" ident	@(#)Array_alg:man/rem.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3rem\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+rem \- remove elements of an array that satisfy a given criterion
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    \*(gt* rem(const \*(gt& val,\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    \*(gt* rem_c(const \*(gt& val,\*(gt* b1,\*(gt* e1,\*(gt* b2);
+    template <class \*(gt>
+    \*(gt* rem_p(int (*\*(gt)(const \*(gt*),\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    \*(gt* rem_pc(int (*\*(gt)(const \*(gt*),\*(gt* b1,\*(gt* e1,\*(gt* b2);
+    template <class \*(gt>
+    \*(gt* rem_ps(int (*\*(gt)(const \*(gt*),\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    \*(gt* rem_psc(int (*\*(gt)(const \*(gt*),\*(gt* b1,\*(gt* e1,\*(gt* b2);
+    template <class \*(gt>
+    \*(gt* rem_r(int (*rel)(const \*(gt*,const \*(gt*),const \*(gt& val,\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    \*(gt* rem_rc(
+	int (*rel)(const \*(gt*,const \*(gt*),
+	const \*(gt& val,
+	\*(gt* b,
+	\*(gt* e,
+	\*(gt* b2
+    );
+    template <class \*(gt>
+    \*(gt* rem_rs(int (*rel)(const \*(gt*,const \*(gt*),const \*(gt& val,\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    \*(gt* rem_rsc(
+	int (*rel)(const \*(gt*,const \*(gt*),
+	const \*(gt& val,
+	\*(gt* b1,
+	\*(gt* e1,
+	\*(gt* b2
+    );
+    template <class \*(gt>
+    \*(gt* rem_s(const \*(gt& val,\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    \*(gt* rem_sc(const \*(gt& val,\*(gt* b1,\*(gt* e1,\*(gt* b2);
+
+.Be
+.SH ASSUMPTIONS
+.PP
+(1) For the non-relational and non-predicate versions,
+\*(gt\f4::operator==\f1 defines an equivalence relation
+on \*(gt
+.br
+(2) For the relational versions, \f4rel\f1
+defines an equivalence relation on \*(gt
+.br
+(3) For the copy versions, the output array does not overlap
+the input array
+.br
+(4) For the copy versions, the output array has enough
+cells to hold the result
+.br
+(5) \*(gt has \f4operator=\f1
+.br
+.SH DESCRIPTION
+.PP
+These functions remove elements that satisfy a given criterion,
+moving the remaining elements to the left.
+They return a pointer to the cell following the last such element,
+such that if \f4b\f1 and \f4p\f1 are, respectively,
+the pointer to the beginning of the array and the
+function result, then \f4b\f1 and \f4p\f1 delimit
+a conceptually "new" array in which elements satisfying
+the criterion have been removed.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* rem(const \*(gt& val,\*(gt* b,\*(gt* e);\f1"
+Uses equality with \f4val\f1 as the
+criterion for removal,
+with \f4\*(gt::operator==\f1 used for equality.
+\f4rem\f1 does not preserve the relative order 
+of elements that are not equal to \f4val\f1; 
+that is, it is not stable. If stability is desired
+then \f4rem_s\f1 should be used.
+.IP "\f4template <class \*(gt>\f1"
+.IP "\f4\*(gt* rem_c(const \*(gt& val,\*(gt* b1,\*(gt* e1,\*(gt* b2);\f1"
+Like \f4rem\f1 except that the input array
+is preserved and the result is written to a new
+array beginning at location \f4b2\f1.
+.IP "\f4template <class \*(gt>\f1"
+.IP "\f4\*(gt* rem_p(int (*pred)(const \*(gt*),\*(gt* b,\*(gt* e);\f1"
+Like \f4rem\f1 except that it uses satisfaction
+of \f4pred\f1 as the criterion for removal.
+That is, if \f4p\f1 is a pointer into the array,
+then \f4*p\f1 will be removed if \f4pred(p)\f1
+is true and retained if \f4pred(p)\f1 is false.
+.IP "\f4template <class \*(gt>\f1"
+.IP "\f4\*(gt* rem_pc(int (*pred)(const \*(gt*),\*(gt* b1,\*(gt* e1,\*(gt* b2);\f1"
+Like \f4rem_p\f1 except that the input array
+is preserved and the result is written to a new
+array beginning at location \f4b2\f1.
+.IP "\f4template <class \*(gt>\f1"
+.IP "\f4\*(gt* rem_ps(int (*pred)(const \*(gt*),\*(gt* b,\*(gt* e);\f1"
+Like \f4rem_p\f1 except that it uses a
+stable algorithm.  That is, the relative order
+of elements within both groups is preserved.
+.IP "\f4template <class \*(gt>\f1"
+.IP "\f4\*(gt* rem_psc(int (*pred)(const \*(gt*),\*(gt* b1,\*(gt* e1,\*(gt* b2);\f1"
+Like \f4rem_ps\f1 except that the input array
+is preserved and the result is written to a new
+array beginning at location \f4b2\f1.
+.IP "\f4template <class \*(gt>\f1"
+.IP "\f4\*(gt* rem_r(int (*rel)(const \*(gt*, const \*(gt*),const \*(gt& val,\*(gt* b,\*(gt* e);\f1"
+Like \f4rem\f1 except that it
+uses \f4rel\f1 for the equality test.
+.IP "\f4template <class \*(gt>\f1"
+.IP "\f4\*(gt* rem_rc(\f1"
+.IC "\f4    int (*rel)(const \*(gt*, const \*(gt*),\f1"
+.IC "\f4    const \*(gt& val,\f1"
+.IC "\f4    \*(gt* b,\f1"
+.IC "\f4    \*(gt* e,\f1"
+.IC "\f4    \*(gt* b2\f1"
+.IC "\f4);\f1"
+Like \f4rem_r\f1 except that the input array
+is preserved and the result is written to a new
+array beginning at location \f4b2\f1.
+.IP "\f4template <class \*(gt>\f1"
+.IP "\f4\*(gt* rem_rs(int (*rel)(const \*(gt*, const \*(gt*),const \*(gt& val,\*(gt* b,\*(gt* e);\f1"
+Like \f4rem_r\f1 except that it uses a
+stable algorithm.  That is, the relative order
+of elements within both groups is preserved.
+.IP "\f4template <class \*(gt>\f1"
+.IP "\f4\*(gt* rem_rsc(\f1"
+.IC "\f4    int (*rel)(const \*(gt*, const \*(gt*),\f1"
+.IC "\f4    const \*(gt& val,\f1"
+.IC "\f4    \*(gt* b1,\f1"
+.IC "\f4    \*(gt* e1,\f1"
+.IC "\f4    \*(gt* b2\f1"
+.IC "\f4);\f1"
+Like \f4rem_rs\f1 except that the input array
+is preserved and the result is written to a new
+array beginning at location \f4b2\f1.
+.IP "\f4template <class \*(gt>\f1"
+.IP "\f4\*(gt* rem_s(const \*(gt& val,\*(gt* b,\*(gt* e);\f1"
+Like \f4rem\f1 except that it uses a
+stable algorithm.  That is, the relative order
+of elements within both groups is preserved.
+.IP "\f4template <class \*(gt>\f1"
+.IP "\f4\*(gt* rem_sc(const \*(gt& val,\*(gt* b1,\*(gt* e1,\*(gt* b2);\f1"
+Like \f4rem_s\f1 except that the input array
+is preserved and the result is written to a new
+array beginning at location \f4b2\f1.
+.SH COMPLEXITY
+If \f2N\f1 is the size of the array,
+then complexity is \f2O(N)\f1 for all versions.  
+More precisely,
+.IP "\f3non-copy versions\f1"
+Exactly \f2N\f1 tests of the criterion are done.
+If \f2P\f1 is the number of elements
+that do not satisfy the criterion, then at most
+\f2P\f1 assignments are done.
+.IP "\f3copy versions\f1"
+Exactly \f2N\f1 tests of the criterion are done. 
+If \f2P\f1 is the number of elements
+that do not satisfy the criterion, then exactly
+\f2P\f1 assignments are done.
+.SH NOTES
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3unique(.)\f1
+\f3Block(3C++)\f1
+.Be

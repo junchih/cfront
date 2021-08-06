@@ -1,0 +1,288 @@
+.\" ident	@(#)Bits:man/Bits.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Bits\fP \f33C++\fP " "
+.SH NAME
+Bits \- variable-length bit strings
+.SH SYNOPSIS OF Bits.h
+.Bf
+
+typedef
+    \f2implementation_dependent_unsigned_integral_type\fP
+    Bits_chunk;
+
+class ostream;  // See \f3iostream(3C++)\fP
+
+class Bits {
+public:
+
+//  Constructors, destructor
+
+    Bits();
+    Bits(Bits_chunk n, unsigned m = 1);
+    ~Bits();
+
+//  Copy and assign
+
+    Bits(const Bits& b);
+    Bits& operator=(const Bits& b);
+
+//  Length
+
+    unsigned size()const;
+    unsigned count()const;
+    unsigned size(unsigned n);
+    unsigned signif()const;
+    unsigned trim();
+
+//  Bitwise operators
+
+    \f2friend\fP Bits operator&(const Bits& a, const Bits& b);
+    \f2friend\fP Bits operator|(const Bits& a, const Bits& b);
+    \f2friend\fP Bits operator^(const Bits& a, const Bits& b);
+    \f2friend\fP Bits operator<<(const Bits& b, int n);
+    \f2friend\fP Bits operator>>(const Bits& b, int n);
+
+    Bits& operator&=(const Bits& b);
+    Bits& operator|=(const Bits& b);
+    Bits& operator^=(const Bits& b);
+    Bits& operator<<=(int n);
+    Bits& operator>>=(int n);
+
+    Bits& compl();
+    \f2friend\fP Bits operator~(const Bits& b);
+
+//  Relations
+
+    \f2friend\fP int operator<(const Bits& a, const Bits& b);
+    \f2friend\fP int operator>(const Bits& a, const Bits& b);
+    \f2friend\fP int operator<=(const Bits& a, const Bits& b);
+    \f2friend\fP int operator>=(const Bits& a, const Bits& b);
+    \f2friend\fP int operator==(const Bits& a, const Bits& b);
+    \f2friend\fP int operator!=(const Bits& a, const Bits& b);
+
+//  Concatenation
+
+    Bits& concat(const Bits& b);
+    \f2friend\fP Bits concat(const Bits& a, const Bits& b);
+
+//  Access individual bits
+
+    int operator[](unsigned i)const;
+    Bits& set(unsigned i);
+    Bits& reset(unsigned i);
+    Bits& compl(unsigned i);
+    Bits& set(unsigned i, unsigned long m);
+
+//  Conversion to integer
+
+    operator Bits_chunk()const;
+
+//  Stream insertion
+
+    \f2friend\fP ostream& operator<<(ostream& os,const Bits& b);
+};
+.Be
+.SH DESCRIPTION
+.PP
+A \f4Bits\f1 is a variable-length string 
+each of whose \f2elements\f1, called bits, 
+can take the value zero or one.
+Each bit is numbered sequentially; 
+for a Bits of length \f2N\f1,
+the rightmost (or \f2low-order\f1) bit is number \f20\f1
+and the leftmost (or \f2high-order\f1) bit is number \f2N\-1\f1.
+Bits behave as if they were right-justified
+under comparison and change of length.
+.PP
+The type \f4Bits_chunk\f1
+denotes the largest unsigned integral type
+acceptable for conversion to and from Bits.
+This is ordinarily \f4unsigned long\f1
+but may be shorter in some implementations.
+.SS "Constructors, destructor"
+.IP "\f4Bits();\f1"
+The empty string (a Bits of length zero).
+.IP "\f4Bits(Bits_chunk n, unsigned m = 1);\f1"
+A Bits whose elements are the bits of \f4n\f1
+and whose length is at least \f4m\f1.
+High-order zero bits will be added as necessary to attain
+the desired length, but significant bits will not be truncated
+if \f4n\f1 can not be represented in \f4m\f1 bits.
+\f4Bits(0)\f1 is treated as a one-bit string, 
+not a zero-bit string.
+.IP "\f4~Bits();\f1"
+Destructor.
+.SS "Copy and assign"
+.IP "\f4Bits(const Bits& b);\f1"
+.hS
+.IP "\f4Bits& operator=(const Bits& b);\f1"
+Copying or assigning a Bits creates a copy 
+of its value.
+.SS "Length"
+.IP "\f4unsigned size()const;\f1"
+The number of bits.
+.IP "\f4unsigned count()const;\f1"
+The number of 1-bits.
+.IP "\f4unsigned size(unsigned n);\f1"
+Change the length to \f4n\f1 bits by truncating high-order bits or
+adding high-order zero bits as necessary.  Return the new length.
+.IP "\f4unsigned signif()const;\f1"
+The number of significant bits.
+This number is zero if there are no 1-bits; 
+otherwise it is one more than the
+number of the highest order 1-bit.
+.IP "\f4unsigned trim();\f1"
+Eliminate high-order zero bits.
+Equivalent to \f4size(signif())\f1.
+.SS "Bitwise operators"
+.IP "\f4\f2friend\fP Bits operator&(const Bits& a, const Bits& b);\f1"
+.hS
+.IP "\f4\f2friend\fP Bits operator|(const Bits& a, const Bits& b);\f1"
+.hS
+.IP "\f4\f2friend\fP Bits operator^(const Bits& a, const Bits& b);\f1"
+Each bit of the result is the logical ``and,'' ``or,''
+or ``exclusive or'' of the corresponding bits of \f4a\f1
+and \f4b\f1.  Prior to performing the operation,
+the shorter operand is considered to be extended 
+with high-order zero-bits until its length is 
+that of the longer operand. 
+.IP "\f4\f2friend\fP Bits operator<<(const Bits& b, int n);\f1"
+The bits of the result are those of \f4b\f1 
+shifted left \f4n\f1 bits.  
+That is, bits \f4n,n+1,n+2,...\f1 of the result
+are equal to bits \f40,1,2,...\f1 of \f4b\f1
+and bits 0 through \f4n-1\f1 of the result
+are zero.  The length of the result is \f4b.size()+n\f1.
+If \f4n\f1 is negative, the result is \f4b>>\-n\f1.
+.IP "\f4\f2friend\fP Bits operator>>(const Bits& b, int n);\f1"
+The bits of the result are those of \f4b\f1
+shifted right \f4n\f1 bits.  
+That is, bits \f40,1,2,...\f1 of the result
+are equal to bits \f4n,n+1,n+2,...\f1 of \f4b\f1.
+The length of the result is \f4b.size()-n\f1.
+If \f4n>=b.size()\f1 then the result is the empty string.
+If \f4n\f1 is negative, the result is \f4b<<\-n\f1.
+.IP "\f4Bits& operator&=(const Bits& b);\f1"
+.hS
+.IP "\f4Bits& operator|=(const Bits& b);\f1"
+.hS
+.IP "\f4Bits& operator^=(const Bits& b);\f1"
+.hS
+.IP "\f4Bits& operator<<=(int n);\f1"
+.hS
+.IP "\f4Bits& operator>>=(int n);\f1"
+Assignment versions of the above.
+.IP "\f4Bits& compl();\f1"
+Complements each bit.
+.IP "\f4\f2friend\fP Bits operator~(const Bits& b);\f1"
+Each bit of the result is the logical complement of the
+corresponding bit of \f4b\f1.
+.SS "Relations"
+.IP "\f4\f2friend\fP int operator<(const Bits& a, const Bits& b);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator>(const Bits& a, const Bits& b);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator<=(const Bits& a, const Bits& b);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator>=(const Bits& a, const Bits& b);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator==(const Bits& a, const Bits& b);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator!=(const Bits& a, const Bits& b);\f1"
+The usual relational operators, yielding 1 if the relation is true
+and 0 if it is false.
+In each case, comparison is done as if the shorter operand 
+were extended with high-order zeroes to the length of the longer, 
+followed by a lexical comparison.
+If, after this extension, the strings would be equal,
+the shorter one is considered smaller.
+Thus the empty string is the smallest of all,
+\f40\f1 is less than \f41\f1,
+\f40\f1 is less than \f400\f1,
+\f410\f1 is less than \f4101\f1 or \f4010\f1
+but greater than \f401\f1,
+and strings of different lengths are never equal.
+.SS "Concatenation"
+.IP "\f4Bits& concat(const Bits& b);\f1"
+Concatenates the bits of \f4b\f1
+onto the right-hand (low-order) end of
+this Bits.
+.IP "\f4\f2friend\fP Bits concat(const Bits& a, const Bits& b);\f1"
+The bits of the result are those of \f4a\f1 (on the left)
+followed by those of \f4b\f1 (on the right).
+.SS "Access individual bits"
+.IP "\f4int operator[](unsigned i)const;\f1"
+Bit number \f4i\f1.  If \f4i>=size()\f1, the result is zero.
+.IP "\f4Bits& set(unsigned i);\f1"
+.hS
+.IP "\f4Bits& reset(unsigned i);\f1"
+Sets bit \f4i\f1 to 1, or 0, respectively.
+No effect if \f4i>=size()\f1.
+.IP "\f4Bits& compl(unsigned i);\f1"
+Complements bit \f4i\f1.  
+No effect if \f4i>=size()\f1.
+.IP "\f4Bits& set(unsigned i, unsigned long m);\f1"
+Sets bit \f4i\f1 to 0 if \f4m\f1 is zero, otherwise
+sets it to 1.  
+No effect if \f4i>=size()\f1.
+.SS "Conversion to integer"
+.IP "\f4operator Bits_chunk()const;\f1"
+Conversion to the unsigned integral type \f4Bits_chunk\f1.  
+If \f2N\f1 is the number of bits in a \f4Bits_chunk\f1
+and \f4size()\f1 is greater than \f2N\f1,
+the high-order \f4size()\-\f2N\f1 bits will be
+ignored when performing the conversion.
+.SS "Stream insertion"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os,const Bits& b);\f1"
+Inserts a sequence of ASCII \f4'0'\f1 and \f4'1'\f1 
+characters representing the bits of \f4b\f1 into \f4os\f1.  
+For example, \f4cout << Bits(9)\f1 would 
+print \f41001\f1.
+.SH NOTES
+Bits can be interpreted as integer sets.  For example,
+to represent the set of Fibonacci numbers less than
+1000:
+.Bf
+
+    int f1 = 1;
+    int f2 = 1;
+
+    Bits fib(0,1000);
+    fib.set(1);
+
+    while(1){
+	int f = f1 + f2;
+	if(f>=1000)break;
+	fib.set(f);
+	f2=f1;
+	f1=f;
+    }
+
+.Be
+Under this interpretation,
+\f4Bits::operator&\f1 is set intersection,
+\f4Bits::operator|\f1 is set union, and so-on.
+If you need integer sets, Bits are probably more efficient, 
+both in time and space, than \f4Set<int>\f1 
+(see \f3Set(3C++)\f1).
+Note, however, that under this interpretation, 
+\f4Bits::operator>\f1, \f4Bits::operator<\f1, and so-on 
+do not correspond to integer superset and subset relations.
+.SH ERRORS
+Any operation that allocates or changes the length of a Bits
+may run out of memory.  If this is not trapped by a handler or a 
+client-supplied \f4operator new\f1,
+the length of the Bits is set to zero.
+.SH SEE ALSO
+.Bf
+\f3Set(3C++)\f1.
+.Be

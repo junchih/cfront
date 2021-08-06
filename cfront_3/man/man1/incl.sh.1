@@ -1,0 +1,168 @@
+.\" ident	@(#)incl:man/incl.1	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3incl.sh\f1 \f31C++\f1 " "
+.SH NAME
+incl.sh \- produce #include hierarchy for C and C++ source code
+.SH SYNOPSIS
+.B
+incl.sh [ \-Aklv ] [ \-b \f2boxName\fP ] [ \-h \f2height\fP ] [ \-L \f2language\fP ] [ \-o \f2base\fP ] [ \-w \f2width\fP ] [ \-I \f2include-directory\fP ] \f2file\fP ...
+.SH DESCRIPTION
+\f3incl.sh\f1
+prints the #include hierarchy for the C++ source code contained,
+directly or indirectly, 
+in the given collection of files.
+In the absence of any 
+.B \-L
+options,
+the standard output consists of lines of the form
+.sp
+.Bf 
+    A #includes B
+.Be
+.sp
+where A and B are file names, and A #include's B.
+Notice that all files, including those directly or indirectly included
+by the specified files, are searched for #include's.
+.SS "Output languages"
+If graphic output is desired, the 
+.B \-L
+option can be used.
+The output language can be any of
+"ps" (postscript), "dag", "pic", "tex", or "dvi".
+Multiple 
+.B \-L
+options are allowed.
+\f3incl.sh\f1
+places its output for these languages in the file(s)
+.BI inclout. ext,
+where
+.I ext
+is the name of the language.
+.PP
+If any of the input files to 
+\f3incl.sh\f1
+is \f3dag(1)\f1 source, (presumably produced by a previous run of 
+\f3incl.sh\f1), 
+then the #include graph contained therein is incorporated into the current graph.
+It is up to the user to make certain that the settings of the 
+.BR a ", " i ,
+and
+.B n
+options which were used to produce the input \f3dag\f1(1) source match the current settings.
+.PP
+TeX output produced by 
+\f3incl.sh\f1
+can be included in any \f3tex(1)\f1 or \f3latex(1)\f1 document by the following sequence of commands:
+.sp
+.Bf
+    \\input{inclout}
+    \\centerline{\\box\\graph}
+.Be
+.sp
+where 
+.B inclout.tex 
+is the TeX file produced by
+\f3incl.sh\f1.
+.PP
+Additional options to
+\f3incl.sh\f1
+are as follows:
+.TP 13
+.B \-k
+Only print the file names, not the enclosing <> or "" characters.
+See "bugs" for why you would want to do this.
+.TP
+.B \-l
+Print full path names of files (the default is to print the name as it appears
+in the first file scanned that #includes it).
+.TP
+.BI \-I " include-directory"
+Search in
+.IR include-directory
+when looking for #include files.
+These directories are searched in order, followed by
+the standard C++ include directory (defined in the
+\f3incl.sh\f1 shell script), followed by 
+\fB/usr/include\fP.
+If a file is not found, a warning message is printed on stderr.
+.PP
+The following options apply only to graphic output specified by 
+.B \-L:
+.TP
+.B \-A 
+Print ascii output on the standard output in addition to any output(s) specified by 
+.B \-L.
+.TP
+.B \-v
+Orient the #include graph vertically rather than horizontally.
+.TP 
+.BI \-b " boxName"
+(With \fB\-Ltex\fR.)  Make 
+.IR boxName ,
+rather than "graph", be the name of the box defined by the TeX code.
+.TP
+.BI \-w " width," " \-h " height
+Scale the graph
+.I width
+inches wide,
+.I height
+inches high. 
+.I width 
+and 
+.I height
+should be dimensionless inches, e.g., \-h5.2.  
+The default graph size is 8.5x10.
+.TP
+.BI \-o " base"
+Use 
+.IR base ,
+rather than 
+.BR inclout ,
+as the base name for all output files.  
+.I base 
+may be any arbitrary path name; any extension on
+.I base
+is ignored.
+.SH EXAMPLE
+.RS
+.PP
+.B 
+incl.sh -L tex -L dvi *.h
+.RE
+.PP
+produces page-sized TeX and dvi versions of the #include hierarchy for 
+the header files in the current directory.  The outputs are on
+.B inclout.tex
+and
+.BR inclout.dvi ,
+respectively.
+(Notice that 
+.B inclout.dvi 
+is 
+.I not
+what one would get by directly running \f1tex(1)\f1 on
+.BR inclout.tex .)
+.SH SEE ALSO
+\f3hier(1C++)\f1, \f3postscript(1)\f1, \f3dag(1)\f1, \f3pic(1)\f1, \f3tex(1)\f1, \f3latex(1)\f1
+.SH BUGS
+\f3incl.sh\f1
+performs its own expansion of #include directives, instead of
+analyzing the output of ``CC -E'' (see \f3CC(1C++)\f1).
+This means that IT IS POSSIBLE FOR THE OUTPUT OF 
+\f3incl.sh\f1 TO BE DIFFERENT FROM THE ACTUAL #include HIERARCHY
+EXPANDED AT COMPILE TIME.
+This bug should probably be removed in a future release.
+.PP
+Some versions of tpic (the pic-to-TeX converter)
+gets confused by quotes appearing around file names; use the
+-k flag in this case to suppress the quotes.
+

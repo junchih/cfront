@@ -1,0 +1,279 @@
+.  \"ident	"@(#)cls4:man/stream/IOS.INTRO.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any
+.  \"actual or intended publication of such source code.
+.nh
+.TH IOS.INTRO 3C++ "C++ Stream Library" " "
+.SH NAME
+iostream \- buffering, formatting and input/output
+.SH SYNOPSIS
+.ta 1.5i 2.5i
+.nf
+.ft B
+#include <iostream.h>
+class streambuf ;
+class ios ;
+class istream : virtual public ios ;
+class ostream : virtual public ios ;
+class iostream : public istream, public ostream ;
+class istream_withassign : public istream ;
+class ostream_withassign : public ostream ;
+class iostream_withassign : public iostream ;
+
+class Iostream_init ;
+
+extern istream_withassign cin ;
+extern ostream_withassign cout ;
+extern ostream_withassign cerr ;
+extern ostream_withassign clog ;
+
+#include <fstream.h>
+class filebuf : public streambuf ;
+class fstream : public iostream ;
+class ifstream : public istream ;
+class ofstream : public ostream ;
+
+#include <strstream.h>
+class strstreambuf : public streambuf ;
+class istrstream : public istream ;
+class ostrstream : public ostream ;
+
+#include <stdiostream.h>
+class stdiobuf : public streambuf ;
+class stdiostream : public ios ;
+.fi
+.ft R
+.SH DESCRIPTION
+The C++ iostream package declared in
+\f(CWiostream.h\f1 and other header files
+consists primarily of a collection of classes.
+Although originally intended only to support input/output, the package
+now supports related activities such as incore formatting.
+This package is
+a mostly source-compatible extension of the earlier
+stream I/O package, described in
+.I "The C++ Programming Language"
+by Bjarne Stroustrup.
+.PP
+In the iostream man pages,
+.I character
+refers to a value that can be held in
+either a \f(CWchar\f1 or \f(CWunsigned char\f1.
+When functions that return an \f(CWint\f1
+are said to return a character, they return a positive value.
+Usually such functions can also return \f(CWEOF\f1 (-1) as an error
+indication.
+The piece of memory that can hold a character is referred to as a
+.IR byte .
+Thus, either a
+\f(CWchar*\f1 or an \f(CWunsigned char*\f1
+can point to an array of bytes.
+.PP
+The iostream package consists of several core classes,
+which provide the basic functionality for I/O conversion and buffering,
+and several specialized classes derived from the core classes.
+Both groups of classes are listed below.
+.SS "Core Classes"
+The core of the iostream package comprises the following classes:
+.RS
+.TP
+\f(CWstreambuf\f1
+This is the base class for buffers.
+It supports insertion (also known as \f2storing\f1 or \f2putting\f1)
+and extraction (also known as \f2fetching\f1 or \f2getting\f1)
+of characters.
+Most members
+are inlined for efficiency.
+The public interface of class \f(CWstreambuf\fP
+is described in \f2sbuf.pub(3C++)\fP
+and the protected interface (for derived classes)
+is described in \f2sbuf.prot(3C++)\fP.
+.TP
+\f(CWios\f1
+This class contains state variables that are common
+to the various stream classes,
+for example, error states and formatting states.
+See \f2ios(3C++)\fP.
+.TP
+\f(CWistream\f1
+This class supports formatted and unformatted conversion
+from sequences of characters fetched from \f(CWstreambuf\f1s.
+See \f2istream(3C++)\fP.
+.TP
+\f(CWostream\f1
+This class supports formatted and unformated conversion to
+sequences of characters stored into \f(CWstreambuf\f1s.
+See \f2ostream(3C++)\fP.
+.TP 
+\f(CWiostream\f1
+This class combines \f(CWistream\f1 and \f(CWostream\f1.
+It is intended for situations in which bidirectional operations
+(inserting into and extracting from a single sequence of characters)
+are desired.
+See \f2ios(3C++)\fP.
+.sp
+.nf
+.in -.5i
+\f(CWistream_withassign\f1
+\f(CWostream_withassign\f1
+\f(CWiostream_withassign\f1
+.in
+.fi
+These classes add assignment operators
+and a constructor with no operands 
+to the corresponding class \f2without assignment\f1.
+The predefined streams (see below) \f(CWcin\fP, \f(CWcout\fP, \f(CWcerr\fP,
+and \f(CWclog\fP, are objects of these classes.
+See \f2istream(3C++\fP), \f2ostream(3C++)\fP, and \f2ios(3C++)\fP.
+.TP
+\f(CWIostream_init\f1
+This class is present for technical reasons relating to initialization.
+It has no public members.
+The \f(CWIostream_init\f1 constructor initializes the predefined streams
+(listed below).
+Because an object of this class is declared
+in the \f(CWiostream.h\fP header file,
+the constructor is called once each time the header is included
+(although the real initialization is only done once),
+and therefore the predefined streams will be initialized before they
+are used.
+In some cases, global constructors may need to call the \f(CWIostream_init\fP
+constructor explicitly to ensure the standard streams are initialized
+before they are used.
+.RE
+.SS "Predefined streams"
+The following streams are predefined:
+.RS
+.TP
+\f(CWcin\f1
+The standard input (file descriptor 0).
+.TP
+\f(CWcout\f1
+The standard output (file descriptor 1).
+.TP
+\f(CWcerr\f1
+Standard error (file descriptor 2).
+Output through this stream is unit-buffered,
+which means that characters are flushed after each inserter operation.
+(See \f3ostream::osfx()\fP in \f2ostream(3C++)\fP and \f(CWios::unitbuf\fP
+in \f2ios(3C++)\fP.)
+.TP
+\f(CWclog\f1
+This stream is also directed to file descriptor 2, but unlike
+\f(CWcerr\f1 its output is buffered.
+.PP
+\f(CWcin\f1, \f(CWcerr\f1 and \f(CWclog\f1 are tied to \f(CWcout\f1 so
+that any use of these will cause \f(CWcout\f1 to be flushed.
+.RE
+.PP
+In addition to the core classes enumerated above, the iostream
+package contains additional classes derived from them and declared
+in other headers.
+Programmers may use these,
+or may choose to define their own classes derived from
+the core iostream classes.
+.SS "Classes derived from \f(CWstreambuf\fP"
+Classes derived from
+\f(CWstreambuf\f1
+define the details of how
+characters are produced or consumed.
+Derivation of a class from \f(CWstreambuf\f1 (the \f2protected
+interface\f1) is discussed in \f2sbuf.prot\f1(3C++).
+The available buffer classes are:
+.RS
+.TP
+\f(CWfilebuf\f1
+This buffer class supports I/O through file descriptors.
+Members support
+opening, closing, and seeking.
+Common uses do not require the program to manipulate file descriptors.
+See \f2filebuf(3C++)\fP.
+.TP
+\f(CWstdiobuf\f1
+This buffer class supports I/O through stdio
+\f(CWFILE\f1
+structs.
+It is intended for use when mixing C and C++ code.
+New code should prefer to use
+\f(CWfilebuf\f1s.
+See \f2stdiobuf(3C++)\fP.
+.TP
+\f(CWstrstreambuf\f1
+This buffer class stores and fetches characters from arrays of
+bytes in memory (i.e., strings).
+See \f2ssbuf(3C++)\fP.
+.RE
+.SS "Classes derived from \f(CWistream\fP, \f(CWostream\fP, and \f(CWiostream\fP"
+Classes derived from \f(CWistream\f1, \f(CWostream\f1, and
+\f(CWiostream\f1 specialize the core classes for use
+with particular kinds of \f(CWstreambuf\f1s.
+These classes are:
+.ne 3
+.RS
+.sp
+.nf
+\f(CWifstream\f1
+\f(CWofstream\f1
+\f(CWfstream\f1
+.in +.5i
+.fi
+These classes support formatted I/O to and from files.
+They use a
+\f(CWfilebuf\f1
+to do the I/O.
+Common operations (such as opening and closing) can be done directly on
+streams
+without explicit mention of 
+\f(CWfilebuf\f1s.
+See \f2fstream(3C++)\fP.
+.sp
+.nf
+.in -.5i
+\f(CWistrstream\f1
+\f(CWostrstream\f1
+.in
+.fi
+These classes support "in core" formatting.  They use a
+\f(CWstrstreambuf\f1.
+See \f2strstream(3C++)\fP.
+.TP
+\f(CWstdiostream\f1
+This class specializes \f(CWiostream\f1 for stdio \f(CWFILE\f1s.
+See \f2stdiostream.h\fP.
+.RE
+.SH CAVEATS
+Parts of the
+\f(CWstreambuf\f1
+class of the old stream package that should have been private were public.
+Most normal usage will compile properly, but any code that depends
+on details, including classes that were derived from
+\f(CWstreambuf\f1s,
+will have to be rewritten.
+.PP
+Performance of programs that copy from \f(CWcin\f1 to \f(CWcout\f1
+may sometimes be improved by breaking the tie between \f(CWcin\f1 and
+\f(CWcout\f1 and doing explicit flushes of \f(CWcout\f1.
+.PP
+The header file \f(CWstream.h\f1 exists for compatibility with
+the earlier stream package.
+It includes \f(CWiostream.h\f1, \f(CWstdio.h\f1, and some
+other headers, and it declares
+some obsolete functions, enumerations, and variables.
+Some members of \f(CWstreambuf\f(R and \f(CWios\f1 
+(not discussed in these man pages)
+are present only for backward compatibility
+with the stream package.
+.SH SEE ALSO
+ios(3C++),
+sbuf.pub(3C++),
+sbuf.prot(3C++),
+filebuf(3C++),
+stdiobuf(3C++),
+ssbuf(3C++),
+istream(3C++),
+ostream(3C++),
+fstream(3C++),
+strstream(3C++),
+manip(3C++)

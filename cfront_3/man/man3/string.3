@@ -1,0 +1,837 @@
+.fp 1 PA
+.fp 2 PI
+.fp 3 PB
+.TH \f3string\fP \f33C++\fP " "
+.SH NAME
+string, wstring \- ANSI C++ Standard character string classes
+.SH SYNOPSIS OF std_string.h
+.Bf
+class istream;           // see \f3iostream(3C++)\fP
+.br
+class ostream;           // see \f3iostream(3C++)\fP
+
+class string {
+public:
+
+    static const size_t npos;  // npos = (size_t) -1
+    typedef char* iterator;
+    typedef const char* const_iterator;
+
+//  Constructors, destructor
+
+    string();
+    string(const char* p);
+    string(const char* p, size_t n);
+    string(size_t n, char c);
+    ~string();
+
+//  Conversion to char*
+
+    const char* c_str() const;
+    const char* data() const;
+    size_t copy(char* s, size_t n, size_t pos = 0);
+
+//  Length
+
+    size_t length() const;
+    size_t size() const;
+    size_t max_size() const;
+    size_t capacity() const;
+    bool empty() const;
+
+//  Length adjustment
+
+    void resize(size_t n, char c = '\e0');
+    void reserve(size_t n);
+
+//  Copy and assign
+
+    string(const string &s, size_t pos = 0, size_t n = npos);
+    string& operator=(const string& s);
+    string& operator=(const char* p);
+    string& operator=(char c);
+    string& assign(const string& str, size_t pos = 0,
+        size_t n = npos);
+    string& assign(const char* p, size_t n);
+    string& assign(const char* p);
+    string& assign(size_t n, char c = '\e0');
+    void swap(string& str);
+
+
+//  Concatenation
+
+    \f2friend\fP string operator+(const string& s,
+        const string& t);
+    \f2friend\fP string operator+(const string& s,
+        const char* p);
+    \f2friend\fP string operator+(const string& s, char c);
+    \f2friend\fP string operator+(const char* p,
+        const string& s);
+    \f2friend\fP string operator+(char c, const string& s);
+
+//  Append
+
+    string& operator+=(const string& s);
+    string& operator+=(const char* p);
+    string& operator+=(char c);
+    string& append(const string& str, size_t pos = 0,
+        size_t n = npos);
+    string& append(const char* p, size_t n);
+    string& append(const char* p);
+    string& append(size_t n, char c = '\e0');
+
+//  Element selection
+
+    char& operator[](size_t i);
+    char operator[](size_t i) const;
+    char& at(size_t i);
+    const char& at(size_t i) const;
+    char* begin();
+    const char* begin() const;
+    char* end();
+    const char* end() const;
+
+//  Substring selection
+
+    string substr(size_t pos = 0, size_t n = npos) const;
+
+//  Insert, remove, replace
+
+    string& insert(size_t pos1, const string& str,
+        size_t pos2 = 0, size_t n = npos);
+    string& insert(size_t pos, const char* s, size_t n);
+    string& insert(size_t pos, const char* s);
+    string& insert(size_t pos, size_t n, char c = '\e0');
+    iterator insert(iterator p, char c = '\e0');
+    iterator insert(iterator p, size_t n, char c = '\e0');
+
+    string& remove(size_t pos = 0, size_t n = npos);
+    string& remove(iterator p);
+    string& remove(iterator first, iterator last);
+
+    string& replace(size_t pos1, size_t n1, const string& str,
+        size_t pos2 = 0, size_t n2 = npos);
+    string& replace(size_t pos, size_t n1, const char* s,
+        size_t n2);
+    string& replace(size_t pos, size_t n, const char* s);
+    string& replace(size_t pos, size_t n, char c);
+    string& replace(iterator first, iterator last,
+        const string& str);
+    string& replace(iterator first, iterator last,
+        const char* s, size_t n);
+    string& replace(iterator first, iterator last,
+        const char* s);
+    string& replace(iterator first, iterator last, char c);
+
+//  Relations
+
+    \f2friend\fP bool operator==(const string& s, const string& t);
+    \f2friend\fP bool operator==(const string& s, const char* p);
+    \f2friend\fP bool operator==(const char* p, const string& s);
+
+    \f2friend\fP bool operator!=(const string& s, const string& t);
+    \f2friend\fP bool operator!=(const string& s, const char* p);
+    \f2friend\fP bool operator!=(const char* p, const string& s);
+
+    \f2friend\fP bool operator<(const string& s, const string& t);
+    \f2friend\fP bool operator<=(const string& s, const string& t);
+    \f2friend\fP bool operator>(const string& s, const string& t);
+    \f2friend\fP bool operator>=(const string& s, const string& t);
+
+    \f2friend\fP bool operator<(const string& s, const char* p);
+    \f2friend\fP bool operator<=(const string& s, const char* p);
+    \f2friend\fP bool operator>(const string& s, const char* p);
+    \f2friend\fP bool operator>=(const string& s, const char* p);
+
+    \f2friend\fP bool operator<(const char* p, const string& s);
+    \f2friend\fP bool operator<=(const char* p, const string& s);
+    \f2friend\fP bool operator>(const char* p, const string& s);
+    \f2friend\fP bool operator>=(const char* p, const string& s);
+
+    int compare(const string& s, size_t pos = 0,
+        size_t n = npos) const;
+    int compare(const char* p, size_t pos, size_t n) const;
+    int compare(const char* p, size_t pos = 0) const;
+
+//  String searching
+
+    size_t find(const string& s, size_t pos = 0) const;
+    size_t find(const char* s, size_t pos, size_t n) const;
+    size_t find(const char* s, size_t pos = 0) const;
+    size_t find(char c, size_t pos = 0) const;
+
+    size_t rfind(const string& s, size_t pos = npos) const;
+    size_t rfind(const char* s, size_t pos, size_t n) const;
+    size_t rfind(const char* s, size_t pos = npos) const;
+    size_t rfind(char c, size_t pos = npos) const;
+
+    size_t find_first_of(const string& s, size_t pos = 0) const;
+    size_t find_first_of(const char* s, size_t pos,
+        size_t n) const;
+    size_t find_first_of(const char* s, size_t pos = 0) const;
+    size_t find_first_of(char c, size_t pos = 0) const;
+
+    size_t find_last_of(const string& s, size_t pos = npos) const;
+    size_t find_last_of(const char* s, size_t pos,
+        size_t n) const;
+    size_t find_last_of(const char* s, size_t pos = npos) const;
+    size_t find_last_of(char c, size_t pos = npos) const;
+
+    size_t find_first_not_of(const string& s, size_t pos = 0) const;
+    size_t find_first_not_of(const char* s, size_t pos,
+        size_t n) const;
+    size_t find_first_not_of(const char* s, size_t pos = 0) const;
+    size_t find_first_not_of(char c, size_t pos = 0) const;
+
+    size_t find_last_not_of(const string& s, size_t pos = npos) const;
+    size_t find_last_not_of(const char* s, size_t pos,
+        size_t n) const;
+    size_t find_last_not_of(const char* s, size_t pos = npos) const;
+    size_t find_last_not_of(char c, size_t pos = npos) const;
+
+//  Stream insertion and extraction
+
+    \f2friend\fP ostream& operator<<(ostream& os, const string& s);
+    \f2friend\fP istream& operator>>(istream& is, string& s);
+    \f2friend\fP istream& getline(istream&, string&, char delim = '\en');
+};
+
+class wstring {
+public:
+    ... the same functions for strings of wchar_t ...
+};
+.Be
+.SH DESCRIPTION
+A \f4string\f1 is a variable-length sequence of characters.
+A \f4wstring\f1 is a variable-length sequence of wide characters
+(\f4wchar_t\f1).
+These two standard string data types differ from the
+standard C null-terminated character array representation
+in the following ways:
+.RS
+\(bu\ Strings are not null-terminated; they may
+contain any character, including the null character.
+.br
+\(bu\ Copying or assigning a string creates a
+copy of its value (see below).
+.br
+\(bu\ Storage management for strings is performed
+automatically.
+.RE
+.PP
+The current implementation uses a shared internal
+representation to avoid making physical copies wherever
+possible.
+For example, although
+\f4s=t\f1 creates a \f2logical\f1 copy of \f4t\f1
+(where \f4s\f1 and \f4t\f1 are strings),
+a physical copy is avoided by simply making \f4s\f1
+share storage with \f4t\f1.
+Assignment therefore runs in \f2O(1)\f1, not
+\f2O(#characters in t)\f1,
+which would be expected if a physical copy were
+performed.
+Note that whenever one of the strings is modified, and
+there are more than one string that shares the
+representation, a unique copy of
+that string's representation must first be made
+to avoid changing other strings as a side effect.
+Because of this, the worst-case order estimates
+for modification operations may be pessimistic.
+For this reason, the section below gives both
+best-case and worst-case order estimates for
+these operations.
+.PP
+All of the operation descriptions below are given
+for the \f4string\fP class, but there are similar
+operations for the \f4wstring\fP class, with
+\f4char\fP replaced by \f4wchar_t\fP everywhere.
+.SH " "
+.SH " "
+.SS "Constructors, destructor"
+.IP "\f4string();\f1"
+The empty string (a string of length zero).
+Runs in \f2O(1)\f1.
+.IP "\f4string(const char* p);\f1"
+The string constructed from the first \f4strlen(p)\f1
+characters of the null-terminated character array
+pointed to by \f4p\f1.
+Runs in \f2O(#characters)\f1.
+.IP "\f4string(const char* p, size_t n);\f1"
+The string constructed from the first \f4n\f1 characters
+pointed to by \f4p\f1.
+Note that if any of these characters is the null byte,
+it is not given any special interpretation; in particular,
+a null byte is not interpreted
+as terminating the character array,
+but instead becomes part of the string.
+Runs in \f2O(n)\f1.
+.IP "\f4string(size_t n, char c);\f1"
+The string containing \f4n\f1 copies of character \f4c\f1.
+Runs in \f2O(n)\f1.
+.IP "\f4~string();\f1"
+Destructor.
+.SS "Conversion to char*"
+The following functions provide an interface to
+C-style functions that expect pointers to
+null-terminated character arrays.
+.IP "\f4const char* c_str() const;\f1"
+This function returns a ``const'' pointer
+to the first character of the string
+representation.
+It also insures that there is a null
+character at the \f4length()+1\f1 position
+in the string representation.
+Runs in \f2O(length())\f1 when space must be
+acquired to make room for the extra cell (worst case),
+and \f2O(1)\f1 otherwise.
+.IP "\f4const char* data() const;\f1"
+This function returns a null pointer if the
+length of the string is zero, otherwise it returns
+a ``const'' pointer to the first character of the string
+representation.
+.IP "\f4size_t copy(char* s, size_t n, size_t pos = 0) const;\f1"
+Copies \f4n\f1 characters of this string (beginning at position
+\f4pos\f1 if \f4pos > 0\f1) into the character array pointed to
+by \f4p\f1.
+This function does not add a null character at the end.
+The array is assumed to be at least \f4min(n, length()-pos)\f1
+characters in length, but this requirement is not checked for.
+Runs in \f2O(min(n,length()-pos))\f1.
+.SS "Length"
+The following functions run in \f2O(1)\f1.
+.IP "\f4size_t length() const;\f1"
+.ns
+.IP "\f4size_t size() const;\f1"
+The number of characters in the string.
+Runs in \f2O(1)\f1.
+.IP "\f4size_t max_size() const;\f1"
+.ns
+.IP "\f4size_t capacity() const;\f1"
+Returns the size of the memory chunk containing this
+string's internal representation.
+Runs in \f2O(1)\f1.
+.IP "\f4bool empty() const;\f1"
+Returns true if the string is empty.
+Runs in \f2O(1)\f1.
+.SS "Length adjustment"
+.IP "\f4void resize(size_t n, char c = '\e0');\f1"
+If \f4n > length()\f1, the string will have
+\f4length() - n\f1 characters added to the end.
+Runs in \f2O(length() - n)\f1 if the \f4n <= capacity()\f1,
+or in \f2O(n)\f1 otherwise.
+.IP "\f4void reserve(size_t n);\f1"
+Guarantees that the size of the memory chunk
+occupied by this string is at
+least \f4n\f1 characters.
+Runs in \f2O(1)\f1 (tests inline to see
+if the current chunk is large enough) if
+\f4n <= capacity()\f1, or \f2O(length())\fP
+otherwise.
+.SS "Copy and assign"
+.IP "\f4string(const string& s, size_t pos = 0, size_t n = npos);\f1"
+Copy constructor.
+If \f4pos == 0\f1 and \f4n == npos\f1, this constructor
+will make the string share its representation with the string \f4s\f1.
+Otherwise it will build a new string representation from
+\f4n\f1 characters starting at position \f4pos\f1 of string \f4s\f1.
+If \f4n == npos\f1, it will build the new string representation from
+the characters in \f4s\f1 between position \f4pos\f1 and the end of
+the \f4s\f1.
+Runs in \f2O(1)\f1 if \f4pos == 0\f1 and \f4n == npos\f1.
+Otherwise it runs in \f2O(#of chars in the new string).
+.IP "\f4string& operator=(const string& s);\f1"
+Assignment.
+Runs in \f2O(1)\f1.
+.IP "\f4string& operator=(const char* p);\f1"
+Assigns the first \f4strlen(p)\f1
+characters of the null-terminated character array
+pointed to by \f4p\f1.
+Runs in \f2O(#characters)\f1.
+.IP "\f4string& operator=(char c);\f1"
+Assigns the string containing \f4c\f1 as its only character.
+Runs in \f2O(1)\f1.
+.IP "\f4string& assign(const string& s, size_t pos = 0, size_t n = npos);\f1"
+Assigns the string to the \f4n\f1 characters starting at position \f4pos\f1
+in the string \f4str\f1.
+If \f4n == npos\fP, the string is assigned to the characters
+in \f4str\f1 between position \f4pos\f1 and the end of the \f4str\f1.
+Runs in \f2O(1)\f1 if \f4pos == 0\f1 and \f4n == npos\f1.
+Otherwise it runs in \f2O(#of chars in the new string).
+.IP "\f4string& assign(const char* p, size_t n);\f1"
+Assigns the first \f4n\f1 characters pointed to by \f4p\f1
+to this string.
+Note that if any of these characters is the null byte,
+it is not given any special interpretation; in particular,
+a null byte is not interpreted
+as terminating the character array,
+but instead becomes part of the string.
+Runs in \f2O(n)\f1.
+.IP "\f4string& assign(const char* p);\f1"
+Assigns the null-terminated character string
+pointed to by \f4p\f1 to this string.
+Runs in \f2O(strlen(p))\f1.
+.IP "\f4string& assign(size_t n, char c = '\e0');\f1"
+Fills this string with \f4n\f1 copies of the character \f4c\f1.
+Runs in \f2O(n)\f1.
+.IP "\f4void swap(string& str);\f1"
+Exchanges the string representations of two strings.
+Runs in \f2O(1)\f1.
+.SS "Concatenation"
+All functions in this group run in \f2O(max(N,M))\f1,
+where \f2N\f1 and \f2M\f1 are the number of characters
+in the first and second operand, respectively.
+.IP "\f4\f2friend\fP string operator+(const string& s, const string& t);\f1"
+Constructs and returns the string consisting of the characters
+of \f4s\f1 followed by the characters of \f4t\f1.
+.IP "\f4\f2friend\fP string operator+(const string& s, const char* p);\f1"
+Constructs and returns the string consisting of the characters
+of \f4s\f1 followed by the first \f4strlen(p)\f1
+characters of the null-terminated character array
+pointed to by \f4p\f1.
+.IP "\f4\f2friend\fP string operator+(const string& s, char c);\f1"
+Constructs and returns the string consisting of the characters of \f4s\f1
+followed by the character \f4c\f1.
+.IP "\f4\f2friend\fP string operator+(const char* p, const string& s);\f1"
+Constructs and returns the string consisting of the first \f4strlen(p)\f1
+characters of the null-terminated character array
+pointed to by \f4p\f1 followed by the characters of \f4s\f1.
+.IP "\f4\f2friend\fP string operator+(char c, const string& s);\f1"
+Constructs and returns the string consisting of the character
+\f4c\f1 followed by the characters of \f4s\f1.
+.SS "Append"
+Worst-case time order estimates for all functions in this
+group is \f2O(max(length(),N))\f1,
+where \f2N\f1 is the number of characters to be appended.
+Best-case is \f2O(N)\f1.
+.IP "\f4string& operator+=(const string& s);\f1"
+.ns
+.IP "\f4string& operator+=(const char* p);\f1"
+.ns
+.IP "\f4string& operator+=(char c);\f1"
+Append the character(s) of the operand to
+this string (the new characters become the rightmost
+characters of this string).
+.IP "\f4string append(const string& str, size_t pos = 0, size_t n = npos);\f1"
+Appends the string constructed from the \f4n\f1 characters
+of string \f4str\f1 beginning at position \f4pos\f1 to this string.
+If \f4n == npos\fP, the characters
+in \f4str\f1 between position \f4pos\f1 and the end of the \f4str\f1
+are appended to this string.
+For example:
+.nf
+.ft 4
+  string a = "abcde"; string b = "01234";
+  a.append(b, 2, 3);  // now a == "abcde234"
+.ft 1
+.fi
+.IP "\f4string append(const char* p, size_t n);\f1"
+Appends the string constructed from the first \f4n\f1
+characters pointed to by \f4p\f1 to this string.
+Note that if any of these characters is the null byte,
+it is not given any special interpretation; in particular,
+a null byte is not interpreted
+as terminating the character array,
+but instead becomes part of this string.
+.IP "\f4string append(const char* p);\f1"
+Appends the null-terminated character string
+pointed to by \f4p\f1 to this string.
+.IP "\f4string append(size_t n, char c = '\e0');\f1"
+Appends \f4n\f1 copies of the character \f4c\f1
+to this string.
+.SS "Element selection"
+.IP "\f4char& operator[](size_t i);\f1"
+.ns
+.IP "\f4char& at(size_t i);\f1"
+\f3Preconditions: \f4i < length()\f1.
+Returns a reference to character number \f4i\f1 so
+that the result may be used as the target of an assignment.
+Runs in \f2O(length())\f1.
+(worst-case, if there are multiple references
+to this string's representation) or \f2O(1)\f1 (best-case).
+.IP "\f4char operator[](size_t i) const;\f1"
+.ns
+.IP "\f4const char& at(size_t i) const;\f1"
+\f3Preconditions: \f4i < length()\f1.
+Return character number \f4i\f1.
+Runs in \f2O(1)\f1.
+.IP "\f4char* begin();\f1"
+Returns a pointer to the first character of the
+string representation (after making a copy of
+the string representation if there are multiple
+strings that point to this string's representation).
+Runs in \f2O(length())\f1.
+(worst-case, if there are multiple references
+to this string's representation) or \f2O(1)\f1 (best-case).
+.IP "\f4char* end();\f1"
+Returns a pointer to the character after the last character of the
+string in the string representation (after making a copy of
+the string representation if there are multiple
+strings that point to this string's representation).
+Runs in \f2O(length())\f1.
+(worst-case, if there are multiple references
+to this string's representation) or \f2O(1)\f1 (best-case).
+.IP "\f4const char* begin() const;\f1"
+Returns a pointer to the first character of the
+string representation.
+Runs in \f2O(1)\fP.
+.IP "\f4const char* end() const;\f1"
+Returns a pointer to the character after the last character of the
+string in the string representation.
+Runs in \f2O(1)\fP.
+.SS "Substring selection"
+.IP "\f4string substr(size_t pos = 0, size_t n = npos) const;\f1"
+Constructs and returns the string consisting of the characters
+beginning at position \f4pos\f1 and followed by the characters of \f4s\f1.
+This function is very similar to the copy constructor.
+If \f4pos == 0\f1 and \f4n == npos\f1, this string that is constructed
+will share its representation with the string \f4s\f1.
+Otherwise it will build a new string representation from
+\f4n\f1 characters starting at position \f4pos\f1 of this string.
+If \f4n == npos\f1, it will build the new string representation from
+the characters in \f4s\f1 between position \f4pos\f1 and the end of
+the current string.
+Runs in \f2O(max(length(),N))\f1, where \f2N\f1 is the
+number of characters in the specified substring (worst-case)
+or \f2O(N)\f1 (best-case).
+.SS "Insert, remove, replace"
+Worst-case time order estimates for all functions in this
+group is \f2O(max(length(),N))\f1,
+where \f2N\f1 is the number of characters in the resulting string.
+Best-case is \f2O(N)\f1.
+.IP "\f4string& insert(size_t pos1, const string& str,\f1"
+.ns
+.IC "      size_t pos2 = 0, size_t n = npos);\f1"
+The current string will have \f4n\f1 characters from the
+string \f4str\f1 beginning at position \f4pos2\f1 inserted
+into this string before position \f4pos1\f1 of the current string.
+.IP "\f4string& insert(size_t pos, const char* s, size_t n);\f1"
+The current string will have the first \f4n\f1
+characters pointed to by \f4p\f1 inserted into this string
+before position \f4pos\f1 of the current string.
+Note that if any of these characters is the null byte,
+it is not given any special interpretation; in particular,
+a null byte is not interpreted as terminating the character
+array, but instead will be inserted into this string.
+.IP "\f4string& insert(size_t pos, const char* s);\f1"
+The current string will have the characters of the null-terminated
+character string pointed to by \f4p\f1 inserted into this string
+before position \f4pos\f1 of the current string.
+.IP "\f4string& insert(size_t pos, size_t n, char c = '\e0');\f1"
+The current string will have \f4n\f1 copies of the character \f4c\f1
+inserted into this string
+before position \f4pos\f1 of the current string.
+.IP "\f4iterator insert(iterator p, char c = '\e0');\f1"
+The current string will have the character \f4c\f1
+inserted into this string
+before position \f4pos\f1 of the current string.
+.IP "\f4iterator insert(iterator p, size_t n, char c = '\e0');\f1"
+The current string will have \f4n\f1 copies of the character \f4c\f1
+inserted into this string
+before position of the current string pointed to by the iterator \f4p\f1.
+.IP "\f4string& remove(size_t pos = 0, size_t n = npos);\f1"
+The current string will have \f4n\f1 characters removed beginning
+at position \f4pos\f1.
+If \f4n == npos\f1, all characters from position \f4pos\f1 to
+the end of the string will be removed.
+.IP "\f4string& remove(iterator p);\f1"
+The current string will have one character removed; the
+character pointed to by the iterator \f4p\f1.
+.IP "\f4string& remove(iterator first, iterator last);\f1"
+All characters of the string beginning with the character
+pointed to by the iterator \f4first\f1 and ending with
+the character before the one pointed pointed to by the
+iterator \f4last\f1 will be removed from the string.
+.IP "\f4string& replace(size_t pos1, size_t n1, const string& str,\f1"
+.ns
+.IC "\f4     size_t pos2 = 0, size_t n2 = npos);\f1"
+This function will remove \f4n1\f1 characters from the current
+string beginning at position \f4pos1\f1 and replace them
+with \f4n2\f1 characters from the string \f4str\f1 beginning
+at position \f4pos2\f1.
+If \f4n2 == npos\f1, the characters beginning at position \f4pos2\f1
+of \f4str\f1 through the end of the string will be inserted.
+.IP "\f4string& replace(size_t pos, size_t n1, const char* s,\f1"
+.ns
+.IC "\f4     size_t n2);\f1"
+This function will remove \f4n1\f1 characters from the current
+string beginning at position \f4pos\f1 and replace them
+with \f4n2\f1 characters from the character string pointed
+to by \f4s\f1.
+.IP "\f4string& replace(size_t pos, size_t n, const char* s);\f1"
+This function will remove \f4n\f1 characters from the current
+string beginning at position \f4pos\f1 and replace them
+with the characters from the null-terminated character string pointed
+to by \f4s\f1.
+.IP "\f4string& replace(size_t pos, size_t n, char c);\f1"
+This function will overwrite \f4n\f1 characters from the current
+string beginning at position \f4pos\f1 with the character
+value \f4c\f1.
+.IP "\f4string& replace(iterator first, iterator last,\f1"
+.ns
+.IC "\f4     const string& str);\f1"
+This function will remove the characters in the current
+string beginning with the character
+pointed to by the iterator \f4first\f1 and ending with
+the character before the one pointed pointed to by the
+iterator \f4last\f1, and replace them with the characters
+in the string \f4str\f1.
+.IP "\f4string& replace(iterator first, iterator last,\f1"
+.ns
+.IC "\f4     const char* s, size_t n);\f1"
+This function will remove the characters in the current
+string beginning with the character
+pointed to by the iterator \f4first\f1 and ending with
+the character before the one pointed pointed to by the
+iterator \f4last\f1, and replace them with \f4n\f1 characters
+from the character string pointed to by \f4p\f1.
+.IP "\f4string& replace(iterator first, iterator last,\f1"
+.ns
+.IC "\f4     const char* s);\f1"
+This function will remove the characters in the current
+string beginning with the character
+pointed to by the iterator \f4first\f1 and ending with
+the character before the one pointed pointed to by the
+iterator \f4last\f1, and replace them with the characters
+from the null-terminated character string pointed to by \f4p\f1.
+.IP "\f4string& replace(iterator first, iterator last, char c);\f1"
+This function will remove the characters in the current
+string beginning with the character
+pointed to by the iterator \f4first\f1 and ending with
+the character before the one pointed pointed to by the
+iterator \f4last\f1, and replace them with character \f4c\f1.
+.SS "Relations"
+.IP "\f4\f2friend\fP bool operator==(const string& s, const string& t);\f1"
+Equality relation.
+Returns non-zero if \f4s\f1 and \f4t\f1 contain
+the same sequence of characters.
+Runs in \f2O(length of shorter operand)\f1.
+.IP "\f4\f2friend\fP bool operator==(const string& s, const char* p);\f1"
+.ns
+.IP "\f4\f2friend\fP bool operator==(const char* p, const string& s);\f1"
+Like the above, except that either one of the operands may
+be a pointer to a null-terminated character array.
+.IP "\f4\f2friend\fP bool operator!=(const string& s, const string& t);\f1"
+Inequality relation.
+Returns non-zero if \f4s\f1 and \f4t\f1 contain
+a different sequence of characters.
+Runs in \f2O(length of shorter operand)\f1.
+.IP "\f4\f2friend\fP bool operator!=(const string& s, const char* p);\f1"
+.ns
+.IP "\f4\f2friend\fP bool operator!=(const char* p, const string& s);\f1"
+Like the above, except that either one of the operands may
+be a pointer to a null-terminated character array.
+
+.IP "\f4\f2friend\fP bool operator<(const string& s, const string& t);\f1"
+.ns
+.IP "\f4\f2friend\fP bool operator<=(const string& s, const string& t);\f1"
+.ns
+.IP "\f4\f2friend\fP bool operator>(const string& s, const string& t);\f1"
+.ns
+.IP "\f4\f2friend\fP bool operator>=(const string& s, const string& t);\f1"
+The usual (lexicographic) ordering relations, returning
+non-zero if the relation is true.
+Run in \f2O(length of longer operand)\f1.
+.IP "\f4\f2friend\fP bool operator<(const string& s, const char* p);\f1"
+.ns
+.IP "\f4\f2friend\fP bool operator<=(const string& s, const char* p);\f1"
+.ns
+.IP "\f4\f2friend\fP bool operator>(const string& s, const char* p);\f1"
+.ns
+.IP "\f4\f2friend\fP bool operator>=(const string& s, const char* p);\f1"
+.ns
+.IP "\f4\f2friend\fP bool operator<(const char* p, const string& s);\f1"
+.ns
+.IP "\f4\f2friend\fP bool operator<=(const char* p, const string& s);\f1"
+.ns
+.IP "\f4\f2friend\fP bool operator>(const char* p, const string& s);\f1"
+.ns
+.IP "\f4\f2friend\fP bool operator>=(const char* p, const string& s);\f1"
+Like the above, except that either one of the operands may
+be a pointer to a null-terminated character array.
+.IP "\f4int compare(const string& s, size_t pos = 0,\f1"
+.ns
+.IC "\f4        size_t n = npos) const;\f1"
+Returns negative, zero, or positive, depending on
+whether a selected substring of this string is
+lexically less than, equal to, or greater than,
+the string \f4s\f1.
+The selected substring is formed by taking the \f4n\f1
+characters of this string starting at position \f4pos\f1.
+The comparison is done using the most natural character
+comparison available on the machine.
+Thus the sign of the result when one of the characters
+has its high-order bit set is not the same in all
+implementations, and should not be relied upon.
+.IP "\f4int compare(const char* p, size_t pos, size_t n) const;\f1"
+.ns
+.IP "\f4int compare(const char* p, size_t pos = 0) const;\f1"
+Like the above, except that the selected substring of this string is compared
+with the characters of the null-terminated character
+array pointed to by \f4p\f1.
+.SS "String searching"
+All functions run in \f2O(min(N,M))\f1, where \f2N\f1
+and \f2M\f1 are the number of characters in the first
+and second operand, respectively.
+.IP "\f4size_t find(const string& s, size_t pos = 0) const;\f1"
+Returns the lowest index in this string beginning at which
+the characters of \f4s\f1 match those of this string.
+If \f4pos > 0\f1, the string will only be searched for in
+the substring of \f4s\f1 beginning at position \f4pos\f1.
+Returns \f4npos\fP if no match is found,
+or if \f4pos\f1 is not a legal index
+in this string.
+.IP "\f4size_t find(const char* s, size_t pos, size_t n) const;\f1"
+Like the above, except that the pattern to search
+for is the first \f4n\f1 characters pointed to by \f4s\f1.
+.IP "\f4size_t find(const char* s, size_t pos = 0) const;\f1"
+Like the above, except that the pattern to search
+for is the null-terminated string pointed to by \f4s\f1.
+.IP "\f4size_t find(char c, size_t pos = 0) const;\f1"
+Like the above, except that it searches for
+character \f4c\f1.
+.IP "\f4size_t rfind(const string& s, size_t pos = npos) const;\f1"
+.ns
+.IP "\f4size_t rfind(const char* s, size_t pos, size_t n) const;\f1"
+.ns
+.IP "\f4size_t rfind(const char* s, size_t pos = npos) const;\f1"
+.ns
+.IP "\f4size_t rfind(char c, size_t pos = npos) const;\f1"
+Returns the highest index in this string beginning at which
+the characters of \f4s\f1 (or \f4c\fP) match those of this string.
+If \f4pos != npos\f1, the string will only be searched for in
+the substring of \f4s\f1 ending at position \f4pos\f1.
+Returns \f4npos\fP if no match is found,
+or if \f4pos\f1 is not a legal index
+in this string.
+.IP "\f4size_t find_first_of(const string& s, size_t pos = 0) const;\f1"
+.ns
+.IP "\f4size_t find_first_of(const char* s, size_t pos, size_t n) const;\f1"
+.ns
+.IP "\f4size_t find_first_of(const char* s, size_t pos = 0) const;\f1"
+.ns
+.IP "\f4size_t find_first_of(char c, size_t pos = 0) const;\f1"
+Returns the lowest index in this string beginning at which
+one the characters of \f4s\f1 (or \f4c\fP) matches a character
+in this string.
+If \f4pos != 0\f1, the string will only be searched for in
+the substring of \f4s\f1 beginning at position \f4pos\f1.
+Returns \f4npos\fP if no match is found,
+or if \f4pos\f1 is not a legal index
+in this string.
+.IP "\f4size_t find_last_of(const string& s, size_t pos = npos) const;\f1"
+.ns
+.IP "\f4size_t find_last_of(const char* s, size_t pos, size_t n) const;\f1"
+.ns
+.IP "\f4size_t find_last_of(const char* s, size_t pos = npos) const;\f1"
+.ns
+.IP "\f4size_t find_last_of(char c, size_t pos = npos) const;\f1"
+Returns the highest index in this string beginning at which
+one the characters of \f4s\f1 (or \f4c\fP) matches a character
+in this string.
+If \f4pos != npos\f1, the string will only be searched for in
+the substring of \f4s\f1 ending at position \f4pos\f1.
+Returns \f4npos\fP if no match is found,
+or if \f4pos\f1 is not a legal index
+in this string.
+.IP "\f4size_t find_first_not_of(const string& s,\f1"
+.ns
+.IC "\f4        size_t pos = 0) const;\f1"
+.ns
+.IP "\f4size_t find_first_not_of(const char* s, size_t pos,\f1"
+.ns
+.IC "\f4        size_t n) const;\f1"
+.ns
+.IP "\f4size_t find_first_not_of(const char* s, size_t pos = 0) const;\f1"
+.ns
+.IP "\f4size_t find_first_not_of(char c, size_t pos = 0) const;\f1"
+Returns the lowest index in this string beginning at which
+one the characters of \f4s\f1 (or \f4c\fP) doesn't match a character
+in this string.
+If \f4pos != 0\f1, the string will only be searched for in
+the substring of \f4s\f1 beginning at position \f4pos\f1.
+Returns \f4npos\fP if no match is found,
+or if \f4pos\f1 is not a legal index
+in this string.
+.IP "\f4size_t find_last_not_of(const string& s,\f1"
+.ns
+.IC "\f4        size_t pos = npos) const;\f1"
+.ns
+.IP "\f4size_t find_last_not_of(const char* s, size_t pos,\f1"
+.ns
+.IC "\f4        size_t n) const;\f1"
+.ns
+.IP "\f4size_t find_last_not_of(const char* s, size_t pos = npos) const;\f1"
+.ns
+.IP "\f4size_t find_last_not_of(char c, size_t pos = npos) const;\f1"
+Returns the highest index in this string beginning at which
+one the characters of \f4s\f1 (or \f4c\fP) doesn't match a character
+in this string.
+If \f4pos != npos\f1, the string will only be searched for in
+the substring of \f4s\f1 ending at position \f4pos\f1.
+Returns \f4npos\fP if no match is found,
+or if \f4pos\f1 is not a legal index
+in this string.
+.SS "Stream insertion and extraction\f1"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os, const string& s);\f1"
+Inserts the characters of \f4s\f1 into \f4os\f1.
+.IP "\f4\f2friend\fP istream& operator>>(istream& is, string& s);\f1"
+Extracts the next whitespace-separated sequence of
+characters from \f4is\f1, constructs a string
+from them, and assigns the string to \f4s\f1.
+.IP "\f4\f2friend\fP istream& getline(istream& is, string& s, char delim = '\en');\f1"
+Extracts the sequence of characters from \f4is\f1 up to the next
+occurrence of \f4delim\f1, constructs a string
+from them, and assigns the string to \f4s\f1.
+.SH COMPLEXITY
+Because it is not always possible to predict, by
+means of static program analysis alone, when a string's
+representation is shared or when its memory
+chunk is full, the cost of modification operations cannot,
+in general, be predicted.
+When it is essential to know the cost of such operations (for example, in
+innermost loops of programs with strict performance
+requirements), the best-case order estimates can be
+guaranteed by calling the \f4begin()\f1 function (which
+has the side effect of making the string representation
+unique if it is called on a non-const string) followed
+by \f4reserve()\f1 with a size value large enough
+to hold the longest intermediate result.
+.SH NOTES
+The characters in a string are stored in a contiguous memory chunk.
+The chunk may be larger than the length of the string,
+allowing a certain amount of growth before reallocation
+is necessary.
+The implementation generally manages these chunks quite
+efficiently.
+However there are certain situations where information
+from the client can help to achieve optimum performance.
+For example, if the client knows in advance that a
+string will eventually grow to 1000 characters, it would
+be nice to be able to request that a chunk of 1000
+characters be allocated in advance for it.
+This can be done using the \f4reserve()\f1 function.
+.PP
+The current implementation uses a shared internal
+representation to avoid copying wherever possible.
+A physical copy operation only becomes necessary if
+one of the strings is changed.
+In typical code, this scheme completely avoids many
+physical copy operations much of the time.
+.SH EXAMPLES
+.Bf
+#include <std_string.h>
+#include <iostream.h>
+
+main() {
+    string s1 = "Now is the time";
+    wstring ws2 = L"A penny saved";
+
+    cout << "s1 = " << s1 << "\en";
+    cout << "length of s1 = " << s1.length() << "\en";
+    cout << "length of ws1 = " << ws1.length() << "\en";
+
+    s1.append(" for all good men");
+    ws1 += L" is a penny earned";
+}
+.Be

@@ -1,0 +1,211 @@
+.\" ident	@(#)hier:man/hier.1	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3hier\f1 \f31C++\f1 " "
+.SH NAME
+hier \- print inheritance hierarchy for C++ source code
+.SH SYNOPSIS
+.B
+hier [ \-Aacikmnstuv ] [ \-b \f2boxName\fP ] [ \-h \f2height\fP ] [ \-L \f2language\fP ] [ \-o \f2base\fP ] [ \-w \f2width\fP ] [ \f2cpp options\fP ] \f2file\fP ...
+.SH DESCRIPTION
+\f3hier\f1
+prints the inheritance hierarchy for the C++ source code contained,
+directly or indirectly, 
+in the given collection of files. While the source code is being processed, templates are 
+treated similar to classes, with every option applicable to class also applicable
+to template. The output construct name for template contains the argument
+names enclosed by angle brackets.
+In the absence of any 
+.B \-L
+options,
+the standard output consists of lines of the form
+.sp
+.Bf
+    A \fIprotection\fP B
+.Be
+.sp
+where A and B are class names, 
+.I protection
+is one of "public", "private", or "protected", 
+and
+A inherits from B in the stated way.
+Virtual inheritance is denoted by
+.sp
+.Bf
+    A \fIprotection\fP B virtual 
+.Be
+.sp
+(The format is intended to make it easier for post-processors to parse.)
+.PP
+Notice that all files, including those directly or indirectly included
+by the specified files, are searched for inheritance (but see 
+.B \-t
+below).
+.SS "Output languages"
+If graphic output is desired, the 
+.B \-L
+option can be used.
+The output language can be any of
+"ps" (postscript), "dag", "pic", "tex", or "dvi".
+Multiple 
+.B \-L
+options are allowed.
+\f3hier\f1
+places its output for these languages in the file(s)
+.BI hierout. ext,
+where
+.I ext
+is the name of the language.
+.PP
+If any of the input files to 
+\f3hier\f1
+is \f3dag(1)\f1 source, (presumably produced by a previous run of 
+\f3hier\f1), 
+then the inheritance graph contained therein is incorporated into the current graph.
+It is up to the user to make certain that the settings of the 
+.BR a ", " i ,
+and
+.B n
+options which were used to produce the input \f3dag\f1(1) source match the current settings.
+.PP
+TeX output produced by 
+\f3hier\f1
+can be included in any \f3tex(1)\f1 or \f3latex(1)\f1 document by the following sequence of commands:
+.sp
+.Bf
+    \\input{hierout}
+    \\centerline{\\box\\graph}
+.Be
+.sp
+where 
+.B hierout.tex 
+is the TeX file produced by
+\f3hier\f1.
+.PP
+Additional options to
+\f3hier\f1
+are as follows:
+.TP 13
+.BR \-c , " \-s" , " \-u"
+Print information for classes (structs, unions).  If none of these switches is selected, the default is 
+.BR \-c .
+.TP
+.B \-n
+Also print the names of isolated classes
+(classes with no predecessors or successors
+in the inheritance graph).
+.TP
+.B \-t
+Only print inheritances directly contained in the files specified on the command line
+(i.e., do not print inheritances only contained in included files).
+For .i files, only print inheritances for the first file mentioned in a #line directive,
+as well as anything preceding that line.
+.PP
+The following options apply only to graphic output specified by 
+.B \-L:
+.TP 13
+.B \-A 
+Print ascii output on the standard output in addition to any output(s) specified by 
+.B \-L.
+.TP
+.B \-a
+Differentiate aggregate types in the inheritance graph by drawing classes as ellipses, structs as boxes, 
+and unions as diamonds.  (Normally, all are drawn as ellipses.)
+.TP
+.B \-i
+Do 
+.I not
+differentiate type of inheritance in the inheritance graph.  (Normally, private
+inheritance is drawn as a dashed arrow.)
+.TP
+.B \-k
+Draw inheritance edges backwards, that is, from 
+derived class to base class
+rather than from 
+base class to derived class.
+.TP
+.B \-m
+(With \fB\-L dag\fR.)
+In the \f3dag(1)\f1 output, insert \f3cpp(1)\f1-style comments showing the 
+file name 
+and 
+line number 
+where
+each of the edges in the inheritance graph is defined.  (But see the WARNINGS below.)
+.TP 
+.B \-v
+Orient the inheritance graph vertically rather than horizontally.
+.TP
+.BI \-b " boxName"
+(With \fB\-L tex\fR.)  Make 
+.IR boxName ,
+rather than "graph", be the name of the box defined by the TeX code.
+.TP
+.BI \-w " width," " \-h " height
+Scale the graph
+.I width
+inches wide,
+.I height
+inches high. 
+.I width 
+and 
+.I height
+should be dimensionless inches, e.g., \-h5.2.  
+The default graph size is 8.5x10.
+.TP
+.BI \-o " base"
+Use 
+.IR base ,
+rather than 
+.BR hierout ,
+as the base name for all output files.  
+.I base 
+may be any arbitrary path name; any extension on
+.I base
+is ignored.
+.SH EXAMPLE
+.RS
+.PP
+.B 
+hier -L tex -L dvi *.h
+.RE
+.PP
+produces page-sized TeX and dvi versions of the inheritance hierarchy for 
+the classes defined in the header files in the current directory.  The outputs are on
+.B hierout.tex
+and
+.BR hierout.dvi ,
+respectively.
+(Notice that 
+.B hierout.dvi 
+is 
+.I not
+what one would get by directly running \f1tex(1)\f1 on
+.BR hierout.tex .)
+.SH SEE ALSO
+\f3postscript(1)\f1, \f3dag(1)\f1, \f3pic(1)\f1, \f3tex(1)\f1, \f3latex(1)\f1
+.SH WARNINGS
+The comments inserted by the 
+.B \-m 
+option are not treated as comments by \f3dag(1)\f1,
+and will have to be stripped out (e.g., with
+\f3sed(1)\f1)
+before further processing.
+.SH BUGS
+Depending on the capabilities of your document production environment,
+dashed lines in .dvi files may be rendered as solid lines.  
+.PP
+Printing the word "virtual" over arrows in order to denote virtual inheritance is ugly.
+.PP
+Some people think \f3hier\f1's notion of "backwards" (see the 
+.B \-k
+option)
+is backwards.

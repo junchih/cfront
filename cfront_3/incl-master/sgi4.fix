@@ -1,0 +1,22 @@
+#   Sun has included the following code in all of their system
+#   headers:
+#        #ifdef  __cplusplus
+#        extern "C" {
+#        #endif
+#   This wraps the entire C include file in an extern C.  What this
+#   effectively does is generate extern C declarations for all
+#   of the system functions.  The problem is that all of the functions
+#   have no arguments.  If you define __SDTC__ you will get Sun's
+#   version of ANSI headers which also cause problems (i.e. on other
+#   SVR4 systems mallinfo takes an int, Solaris expects a void).
+#
+#   This script effectively gets rid of Sun's extern "C" block
+#   by appending SUN to __cplusplus
+
+files=`find . -name \*.h -print`
+for i in $files
+do
+	echo "Running sgi4.fix on $i"
+	sed -e 's/^#ifdef[	 ]*__cplusplus$/&SGI/' $i > /tmp/dma.$$
+	mv /tmp/dma.$$ $i
+done

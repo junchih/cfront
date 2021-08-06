@@ -1,0 +1,157 @@
+.  "\ident	"@(#)cls4:man/complex/cplxerr.3	1.1"
+.TH CPLXERR 3C++ "C++ Complex Math Library" " "
+.SH NAME
+complex_error \- error-handling function for the C++ Complex Math Library
+.SH SYNOPSIS
+.nf
+.ta 1i 2.5i
+.PP
+.B #include <complex.h>
+.PP
+\f3class c_exception
+{
+	int	type;
+	char	*name;
+	complex	arg1;
+	complex	arg2;
+	complex	retval;
+
+public:
+
+	c_exception( char *n, const complex& a1, const complex& a2 = complex_zero );
+
+	friend int	complex_error( c_exception& );
+
+	friend complex	exp( complex );
+	friend complex	sinh( complex );
+	friend complex	cosh( complex );
+	friend complex	log( complex );    
+.br
+};\fP
+.fi
+.SH DESCRIPTION
+In the following description of the
+\f(CWcomplex\fP error handling routine,
+ \(em \f3d\fP is of type \f(CWdouble\fP
+and
+ \(em \f3x\fP is of type \f(CWcomplex\fP.
+.TP 25
+\f3d = complex_error(x&)\fP
+Invoked by functions in the C++ Complex Mathematics Library when
+errors are detected.
+.RE
+.P
+Users may define their own procedures for handling errors,
+by defining a function named
+.B complex_error
+in their programs.
+.B complex_error
+must be of the form described above.
+.PP
+The element
+.I type
+is an integer describing the type of error that has occurred, from the
+following list of constants (defined in the header file):
+.RS
+.PP
+.nf
+.ta \w'\s-1UNDERFLOW\s+1\ \ 'u
+\s-1SING\s+1	argument singularity
+\s-1OVERFLOW\s+1	overflow range error
+\s-1UNDERFLOW\s+1 	underflow range error
+.DT
+.fi
+.RE
+.PP
+The element
+.I name
+points to a string containing
+the name of the function that incurred the error.
+The variables
+.I arg1
+and
+.I arg2
+are the arguments with which the function was invoked.
+.I Retval
+is set to the default value that will be returned by the function
+unless the user's
+.B complex_error
+sets it to a different value.
+.PP
+If the user's
+.B complex_error
+function returns non-zero,
+no error message will be printed,
+and
+.I errno
+will not be set.
+.PP
+If
+.B complex_error
+is not supplied by the user,
+the default error-handling procedures, described with
+the complex math functions involved, will be invoked upon error.
+These procedures are also summarized in the table below.
+In every case,
+.I errno
+is set to
+.SM EDOM
+or
+.SM ERANGE
+and the program continues.
+.PP
+Note that complex math functions call functions included in the
+math library which has its own error handling routine,
+.I matherr(3M).
+Users may also override this routine by supplying their own version.
+.PP
+.in 0
+.TS
+expand allbox ;
+cB s s s
+c | cI s s
+c | c | c | c
+cI | c | c | c
+l | c | c | c .
+\s-1DEFAULT ERROR HANDLING PROCEDURES\s+1
+_
+	Types of Errors
+_
+\s-1type	\s-1SING\s+1	\s-1OVERFLOW\s+1 	\s-1UNDERFLOW\s+1	\s+1
+_
+\s-2\f2errno\fP	\s-1EDOM\s+1	\s-1ERANGE\s+1	\s-1ERANGE\s+1\s+2
+_
+\s-2\s-1EXP\s+1:\s+2
+\s-2 real too large/small	\-	(\(+-H, \(+-H)	(0, 0)\s+2
+\s-2 \|imag\| too large	\-	(0, 0)	\-\s+2
+_
+\s-2\s-1LOG\s+1:\s+2
+\s-2 arg = (0, 0)	M, (H, 0) 	\-	\-\s+2
+_
+\s-2\s-1SINH\s+1:\s+2
+\s-2 \|real\| too large	\-	(\(+-H, \(+-H)	\-\s+2
+\s-2 \|imag\| too large	\-	(0, 0)	\-\s+2
+_
+\s-2\s-1COSH\s+1:\s+2
+\s-2 \|real\| too large	\-	(\(+-H, \(+-H)	\-\s+2
+\s-2 \|imag\| too large	\-	(0, 0)	\-\s+2
+.TE
+.PP
+.TS
+box;
+cB s
+c l .
+\s-1ABBREVIATIONS\s+1
+\s-1 M	Message is printed (EDOM error).\s+1
+\s-1 (H, 0)	(HUGE, 0) is returned.\s+1
+\s-1 (\(+-H, \(+-H)	(\(+-HUGE, \(+-HUGE) is returned.\s+1
+\s-1 (0, 0)	(0, 0) is returned.\s+1
+.TE
+.SH SEE ALSO
+CPLX.INTRO(3C++),
+matherr(3M),
+cartpol(3C++),
+cplxops(3C++),
+cplxexp(3C++),
+and
+cplxtrig(3C++).

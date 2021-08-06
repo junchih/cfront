@@ -1,0 +1,54 @@
+.\" ident	@(#)publik:man/publik.1	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3publik\f1 \f31C++\f1 " "
+.SH NAME
+publik \- find and print the public parts of class/template definitions
+.SH SYNOPSIS
+.B 
+publik [ \-clmp ] [ \fIcpp options\fB ] 
+.IR file " ..."
+.SH DESCRIPTION
+\f3publik\f1
+prints the public portions of all class/template definitions contained, directly or indirectly,
+in the list of input files.
+If a class/template contains nested classes/templates, then only the ``upwardly public''
+portions of nested classes/templates are printed.
+.PP
+Options modify the behavior of
+\f3publik\f1
+as follows:
+.TP 6
+.B \-c
+Do not print comments.  
+(Normally both the C-style and C++-style comments in the public portions of classes/templates are printed.)
+.TP 6
+.B \-l
+Print 
+\f3cpp(1)\f1-style 
+line directives showing the location of each class/template definition.
+.TP 6
+.B \-m
+Print the bodies of any member functions defined in their respective classes/templates.  (Normally omitted.)
+.TP 6
+.B \-p
+Print the ``public:'' keyword in the appropriate places.  
+(Normally omitted, since everything printed is public.)
+.SH WARNINGS
+The class/template definitions output by 
+\f3publik\f1
+are not equivalent to their actual definitions, so do not
+use them in C++ source code.
+.SH BUGS
+\f3publik\f1
+is spelled with a `k' in order to evade a problem with 
+\f3man(1)\f1
+on some machines.

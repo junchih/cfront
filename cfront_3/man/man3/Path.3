@@ -1,0 +1,388 @@
+.\" ident	@(#)Path:man/Path.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Path\fP \f3Path(3C++)\fP " "
+.SH NAME
+Path \- UNIX path names
+.SH "SYNOPSIS of Path.h"
+.Bf
+
+#include <String.h>
+#include <List.h>
+#include <Objection.h>
+#include <sys/file.h>
+
+class Path{
+public:
+
+//  Enumerations
+
+    enum completion{ 
+	no_completion=0, 
+	unique_completion, 
+	several_completions 
+    };
+
+//  Objections
+
+    static Objection no_wd;
+
+//  Constructors
+
+    Path();
+    Path(const char* s);
+    Path(const String& s);
+    Path(const List<Path>& p);
+    Path(const char* dirs,const char* base);
+    Path(const char* dirs,const char* base,
+        const char* ext);
+
+//  Copy and assign
+
+    Path(const Path& p);
+    Path& operator=(const Path& p);
+
+//  Conversion to and from strings
+
+    operator const char*()const;
+    operator String()const;
+
+//  Length
+
+    int length()const;
+    int ncomponents()const;
+
+//  Component manipulators
+
+    Path dirname()const;
+    String basename()const;
+    String basename(const char* suffix)const;
+    void explode(List<Path>& ret)const;
+
+//  Concatenation
+
+    \f2friend\fP Path operator/(const Path& s,const Path& t);
+    Path& operator/=(const Path& p);
+
+//  Absolute and relative versions of Paths
+
+    int is_absolute()const;
+    int is_relative()const;
+    Path absolute_version()const;
+    Path relative_version()const;
+    Path relative_version(
+        const Path& with_respect_to)const;
+
+//  Wildcard and tilde expansion
+
+    void expand_wildcards(List<Path>& ret)const;
+    int expand_tilde();
+
+//  File name completion
+
+    completion complete(String& s)const;
+
+//  Comparison
+
+    \f2friend\fP int operator==(const Path& p,const Path& q);
+    \f2friend\fP int operator!=(const Path& p,const Path& q);
+    \f2friend\fP int componentwise_prefix(const Path & p,
+        const Path & q);
+
+//  Stream insertion and extraction
+
+    \f2friend\fP ostream& operator<<(ostream& os,const Path& p);
+    \f2friend\fP istream& operator>>(istream& is,Path& p);
+
+//  Miscellaneous
+
+    int is_wd()const;
+    int truncate_components(int maxlen);
+};		
+.Be
+.SH DESCRIPTION
+.PP
+A Path represents a UNIX path name, that is, a 
+sequence of slash-separated 
+.IR components .
+The components in "foo/bar" are "foo" and "bar";
+in "/foo/bar" are "/", "foo", and "bar";
+and in "../foo/bar" are "..", "foo", and "bar".
+Further, the path "/" consists of the single component "/",
+and the path "." has no components.
+.PP
+A Path need not correspond to an actual file in the 
+underlying file system: it merely represents a 
+\f2possible\fP 
+file; it is up to the user
+to arrange (if so desired) that the file and all directories 
+leading up to it exist.
+.PP
+Paths are always kept in
+\f2canonical form.\fP
+In canonical form, "." components are stripped
+(except for the path "." itself, which is the 
+relative path representing the current working directory), ".." 
+components are collapsed where possible 
+(i.e., other than in an initial ".." series in a relative path),
+multiple consecutive '/'s are reduced to a single '/',
+and trailing '/'s are removed.
+Thus, for example, the following code fragment
+.Bf
+
+	Path p("../x//a");
+	p /= "../b/";
+	cout << p;
+
+.Be
+will print out \f4../x/b\fP.
+.PP
+Where it makes sense to do so, the behavior of Path functions
+matches that of the Korn shell (see \f3ksh(1)\f1).
+Notice that the user need not be running 
+\f3ksh(1)\f1
+in order for this to occur; in particular, 
+.I
+even if the user is running another shell, 
+the behavior of the Path
+library will still match
+\f3ksh(1)\f1.
+.SS "Enumerations"
+.IP "\f4enum completion{\f1"
+.hS
+.IP "\f4    no_completion=0,\f1"
+.hS
+.IP "\f4    unique_completion,\f1"
+.hS
+.IP "\f4    several_completions\f1"
+.hS
+.IP "\f4};\f1"
+.br
+Return value of 
+\f4complete()\fP.
+The completion of a Path is defined the same as in 
+\f3ksh(1)\f1.
+That is, the completion of a Path \f2P\f1
+is the longest common prefix of the Paths 
+in the set resulting from an expansion of the Path
+\f2P*\fP, where \f2P*\fP
+is the Path formed by concatenating (with no intervening "/")
+the "\f4*\fP" wildcard onto the end of \f2P\fP.
+The value
+\f4no_completion\f1
+means the resulting set was empty,
+\f4unique_completion\f1
+means the set had a singleton element
+(which is therefore the completion),
+and 
+\f4several_completions\f1
+means the set had more than one element.
+.SS "Objections"
+.IP "\f4static Objection no_wd;\f1"
+Indicates a return value of 0 from
+\f3getwd(3C)\f1.  The default action
+is to abort with an error message.
+The recovery action in every place this Objection is raised
+is to use "/" as the working directory.
+.SS "Constructors"
+.IP "\f4Path();\f1"
+Equivalent to \f4Path(".")\fP.
+.IP "\f4Path(const char* s);\f1"
+.hS
+.IP "\f4Path(const String& s);\f1"
+The Path represented by \f4s\fP.
+.IP "\f4Path(const List<Path>& p);\f1"
+The Path represented by the given list of components.
+.IP "\f4Path(const char* dirs,const char* base);\f1"
+The Path constructed by first appending a trailing slash onto 
+\f4dirs\fP if \f4dirs\fP does not already have a trailing slash,
+then concatenating \f4base\fP onto the result.
+.IP "\f4Path(const char* dirs,const char* base,const char* ext);\f1"
+The Path constructed by first appending a trailing slash onto 
+\f4dirs\fP if \f4dirs\fP does not already have a trailing slash,
+then concatenating \f4base\fP and \f4ext\fP onto the result.
+.SS "Copy and assign"
+.IP "\f4Path(const Path& p);\f1"
+.hS
+.IP "\f4Path& operator=(const Path& p);\f1"
+Paths have \f2value semantics\fP.  That is, copying
+or assigning a Path creates a copy of its value.
+.SS "Conversion to and from strings"
+.IP "\f4operator const char*()const;\f1"
+.hS
+.IP "\f4operator String()const;\f1"
+Conversions to character pointers and Strings.
+.SS "Length"
+.IP "\f4int length()const;\f1"
+Returns the number of characters in the path.
+.IP "\f4int ncomponents()const;\f1"
+Returns the number of components in the path.
+.SS "Component manipulators"
+.IP "\f4Path dirname()const;\f1"
+Equivalent to
+\f3dirname(1)\f1.
+.IP "\f4String basename()const;\f1"
+.hS
+.IP "\f4String basename(const char* suffix)const;\f1"
+Equivalent to \f3basename(1)\f1.
+Notice that this function returns 
+a String and not a Path, since
+a basename can be the empty string, 
+whereas a Path must contain at least one character.
+.IP "\f4void explode(List<Path>& ret)const;\f1"
+Sets
+\f4ret\fP to the list whose elements are the 
+individual components of the Path.
+Notice that if the Path 
+is absolute, the first element of the list will be "/",
+and if the Path is ".",
+the list will be empty.
+The current position of \f4ret\fP is at the beginning of the List.
+.SS "Conatenation"
+.IP "\f4\f2friend\fP Path operator/(const Path& s,const Path& t);\f1"
+Returns
+\f4Path(String(s) + '/' + String(t)).\fP
+.IP "\f4Path& operator/=(const Path& p);\f1"
+Assignment version of above.
+.SS "Absolute and relative versions of Paths"
+.IP "\f4int is_absolute()const;\f1"
+.hS
+.IP "\f4int is_relative()const;\f1"
+Returns true or false, depending on whether 
+the Path is absolute (starts with a slash) or 
+relative (does not start with a slash).
+.IP "\f4Path absolute_version()const;\f1"
+If the Path is relative, returns the absolute version of it
+with respect to the current working directory,
+raising \f4no_wd\fP if necessary.
+If the Path is absolute, simply returns it unchanged.
+.IP "\f4Path relative_version()const;\f1"
+Returns the relative version of the Path
+with respect to the current working directory, 
+raising \f4no_wd\fP if necessary.
+.IP "\f4Path relative_version(const Path& with_respect_to)const;\f1"
+Similar to the above, but uses 
+\f4with_respect_to\fP
+rather than the current working directory
+as the directory with respect to which
+the Path is made relative.
+If 
+\f4with_respect_to\fP
+is itself relative, 
+it is first interpreted with respect to the current working
+directory, raising \f4no_wd\fP if necessary.
+.SS "Wildcard and tilde expansion"
+.IP "\f4void expand_wildcards(List<Path>& ret)const;\f1"
+Sets
+\f4ret\fP
+to the list whose elements
+are the Paths representing those files in
+the underlying file system which match 
+the given Path
+according to the \f3ksh(1)\f1
+pattern matching rules.
+The current position of \f4ret\f1 is at the beginning of the List.
+.IP "\f4int expand_tilde();\f1"
+If the first (or only) component of the Path is "\f4~\f1",
+then replaces that component with the current value of $HOME, and returns 1;
+if HOME is not set, then returns 0 without affecting the Path.
+If the first (or only) component of the Path is of the
+form "\f4~\fPname", then replaces that component with the
+login directory for user "name" 
+(as found in \f4getpwnam(name)->pw_dir\f1; see \f3getpwnam(3C)\f1), and returns 1;
+if there is no password entry for "name" (getpwnam returns 0), then returns 0 without affecting the Path.
+If the Path does not begin with a '\f4~\fP', then 
+returns 1 without affecting the Path.
+See also the WARNINGS section below.
+.SS "File name completion"
+.IP "\f4completion complete(String& s)const;\f1"
+Sets \f4s\fP to the completion
+of the Path
+with respect to the files in the underlying file system.
+Notice that 
+\f4s\fP is a String and not a Path, since
+a completion can be the empty string, whereas a Path must 
+contain at least one character.  Returns
+the appropriate value of 
+\f4completion\fP (see above).
+.SS "Comparison"
+.IP "\f4\f2friend\fP int operator==(const Path& p,const Path& q);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator!=(const Path& p,const Path& q);\f1"
+Equality and inequality.
+Paths \f2P\fP and \f2Q\fP are equal if and only if
+\f4(String)\f2P\fP == (String)\f2Q\fP\f1.
+.IP "\f4\f2friend\fP int componentwise_prefix(const Path & p,\f1"
+.hS
+.IC "    \f4const Path & q);\f1"
+Returns \-1, 1, or 0 depending on whether \f4p\f1 is a componentwise prefix of \f4q\f1,
+\f4q\f1 is a componentwise prefix of \f4p\f1, or neither is a componentwise prefix of the other.
+If \f4p == q\f1 then returns 1.
+
+A Path is a 
+.I componentwise prefix 
+of another if
+the list of components
+of the first is a (possibly non-proper) prefix of the list of components of the second,
+except that the Path "." (which has no components) is only considered 
+a componentwise prefix of every 
+.I relative 
+Path.
+Note that the Path "/" is by definition a componentwise prefix of every absolute Path.
+.SS "Stream insertion and extraction"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os,const Path& p);\f1"
+.hS
+.IP "\f4\f2friend\fP istream& operator>>(istream& is,Path& p);\f1"
+Representation is as in UNIX, i.e., 
+a slash-separated string of components.
+.SS "Miscellaneous"
+.IP "\f4int is_wd()const;\f1"
+Returns true if the Path is "." or
+the absolute path name of the current working 
+directory.  Raises \f4no_wd\fP if necessary.
+.IP "\f4int truncate_components(int maxlen);\f1"
+Truncates every component in the Path to a maximum of \f4maxlen\fP characters.
+If \f4maxlen\fP is less than 2, it is treated as 2.
+Returns 0 if no truncation occurred (i.e., if every component was less than or
+equal to \f4maxlen\fP characters long).  
+.SH WARNINGS
+On some machines with symbolic links, it is not always true that
+/a/b/.. is equal to /a 
+in the underlying file system.
+(Doing a ".." back across a link follows the actual hard link, 
+even if you got there by a symbolic link.)
+The Path "a/b/..", however, will still be canonicalized to "a".
+.PP
+On machines running Sun NIS,
+in certain unusual situations the behavior of \f4Path::expand_tilde\f1
+will not match the behavior of \f3ksh(1)\f1.
+This is why \f4Path::expand_tilde\f1 is defined with
+respect to \f3getpwnam(3C)\f1 rather than \f3ksh(1)\f1.
+In any case, the behavior of \f4Path::expand_tilde\f1 should
+always match the behavior of \f3logdir(1)\f1.
+.SH SEE ALSO
+.Bf
+\f3basename(1)\fP 
+\f3dirname(1)\fP 
+\f3getenv(3C)\fP 
+\f3getpwnam(3C)\fP 
+\f3getwd(3C)\fP 
+\f3intro(2)\fP 
+\f3ksh(1)\fP 
+\f3ksh_test(.)\fP
+\f3logdir(1)\fP
+\f3stat(2)\fP 
+\f3List(3C++)\fP 
+\f3Objection(3C++)\fP
+\f3Search_path(.)\fP 
+\f3String(3C++)\fP
+\f3Tmppath(.)\fP
+.Be

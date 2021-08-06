@@ -1,0 +1,77 @@
+.\" ident	@(#)Graph_alg:man/cycle.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3cycle\fP \f3Graph_alg(3C++)\fP " "
+.SH NAME
+cycle, cycle_u \- determine whether a Graph contains cycles
+.SH SYNOPSIS OF Graph_alg.h
+.Bf
+
+#define Graph_algdeclare(\f2G\fP,\f2V\fP,\f2E\fP)...
+#define Graph_algimplement(\f2G\fP,\f2V\fP,\f2E\fP)...
+
+\f2Expanding Graph_algdeclare(G,V,E) produces the following text:\fP
+
+    \f2V\fP* cycle(const \f2G\fP& g);
+    \f2V\fP* cycle_u(const \f2G\fP& g);
+
+    int cycle(const \f2G\fP& g,const \f2V\fP* v);
+    int cycle_u(const \f2G\fP& g,const \f2V\fP* v);
+
+    int cycle(const \f2G\fP& g,const \f2E\fP* e);
+    int cycle_u(const \f2G\fP& g,const \f2E\fP* e);
+
+.Be
+.SH DESCRIPTION
+.PP
+A cycle is a sequence of Edges starting at 
+a Vertex and returning to that Vertex (no Edge can
+appear twice in the sequence).  
+For an undirected Graph, the sequence must include at least
+three Edges; for a directed Graph, at least one.
+These functions 
+indicate whether a given Graph contains cycles.
+As usual, functions whose names end in \f4_u\f1 treat 
+Graphs as undirected, while functions without the 
+suffix treat Graph as directed.  
+A cycle in an undirected Graph must include at least
+three Edges; a cycle in a directed Graph must include
+at least one.
+.IP "\f4\f2V\fP* cycle(const \f2G\fP& g);\f1"
+.hS
+.IP "\f4\f2V\fP* cycle_u(const \f2G\fP& g);\f1
+These determine whether \f4g\f1 contains cycles; 
+if there are no cycles, they return zero.
+Otherwise, they return a pointer to an arbitrary 
+Vertex involved in a cycle.
+.IP "\f4int cycle(const \f2G\fP& g,const \f2V\fP* v);\f1"
+.hS
+.IP "\f4int cycle_u(const \f2G\fP& g,const \f2V\fP* v);\f1"
+These return non-zero if there is a cycle involving 
+Vertex \f4v\f1.
+.IP "\f4int cycle(const \f2G\fP& g,const \f2E\fP* e);\f1"
+.hS
+.IP "\f4int cycle_u(const \f2G\fP& g,const \f2E\fP* e);\f1"
+These return non-zero if there is a cycle involving 
+Edge \f4e\f1.
+.SH COMPLEXITY
+\f2O(max(v,e))\f1, where \f2v\f1
+is the number of Vertices and \f2e\f1
+is the number of Edges in the Graph.  
+Average performance seems much better.
+.NOTES
+These functions only tell if one or more cycles exist; 
+to examine the cycles, use \f3cycle_list(.)\f1.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3cycle_list(.)\f1
+.Be

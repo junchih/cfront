@@ -1,0 +1,143 @@
+.\" ident	@(#)Objection:man/Objection.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.tr %"
+.TH \f3Objection\fP \f33C++\fP " "
+.SH NAME
+Objection \- rudimentary error-handling
+.SH SYNOPSIS OF Objection.h
+.Bf
+
+//  Handlers and default actions
+
+typedef int Objection_action(const char* message);
+
+class Objection{
+public:
+
+//  Constructors, destructor
+
+    Objection();
+    Objection(Objection_action* default_action);
+    ~Objection();
+
+//  Copy and assign
+
+    Objection(const Objection& o);
+    Objection& operator=(const Objection& o);
+
+//  Raise the Objection
+
+    int raise(const char* message = "");
+
+//  Designate a handler
+
+    Objection_action* appoint(Objection_action* hdlr=0);
+    Objection_action* ignore();
+};
+
+.Be
+.SH DESCRIPTION
+.PP
+Objections provide a simple error-handling facility
+similar to UNIX\(rg signals 
+(see \f3ssignal(3C)\f1 and \f3gsignal(3C)\f1).
+Several library components 
+(e.g., \f3Fsm(3C++)\f1)
+use Objections to report errors to clients.
+.PP
+An Objection is normally associated with 
+a single error or class of errors.
+Consider the sequence of events that occurs
+when an error associated with Objection \f4x\f1
+is detected.
+To signal that the error has occurred, \f4x.raise()\f1 
+is called.  \f4raise()\f1, in turn, calls
+the \f2handler\f1 associated with Objection \f4x\f1.  
+A handler is associated with Objection \f4x\f1 by
+calling \f4x.appoint()\f1 
+with the address of the handler.
+If \f4x.appoint()\f1 is not called,
+a \f2default handler\f1 will be used (see below).
+A handler is expected to perform some appropriate
+action and then return an integer value;
+by convention, 1 indicates success and 0 indicates 
+failure in handling the error.
+A default handler does nothing except return 0.
+Next, assuming the handler returns 0 
+AND a \f2default action\f1 was specified when 
+the Objection was created, the default action 
+will be performed.
+Finally, control will be returned to the caller 
+(the one who called \f4raise()\f1).  
+The value returned to the caller is precisely the 
+value returned by \f4raise()\f1.
+.SS "Handlers and default actions"
+.IP "\f4typedef int Objection_action(const char* message);\f1"
+Serves as the type for both handlers and default actions.
+Handlers return an integer; by convention, 
+0 indicates failure and 1 indicates success.
+A default action returns an integer, 
+but the integer has no meaning.
+.SS "Constructors, destructor"
+.IP "\f4Objection();\f1"
+An Objection whose default handler does nothing
+except return 0.  No default action is defined for
+this Objection.
+.IP "\f4Objection(Objection_action* default_action);\f1"
+An Objection whose default handler does nothing
+except return 0 and
+whose default action is \f4default_action\f1.
+If \f4default_action\f1 is 0, the 
+Objection is equivalent to one created using
+the parameterless constructor.
+.IP "\f4~Objection();\f1"
+Destructor.
+.SS "Copy and assign"
+.IP "\f4Objection(const Objection& o);\f1"
+.hS
+.IP "\f4Objection& operator=(const Objection& o);\f1"
+Copying or assigning an Objection creates a 
+copy of its value.
+.SS "Raise the Objection
+.IP "\f4int raise(const char* message = %%);\f1"
+Calls the handler associated with this Objection,
+passing the string \f4message\f1.
+If the handler returns zero and a default action has
+been defined, the default action will be performed.
+Returns the value returned by the handler.
+.SS "Designate a handler
+.IP "\f4Objection_action* appoint(Objection_action* hdlr=0);\f1"
+Changes the handler associated with this Objection 
+to \f4hdlr\f1. 
+If the argument is omitted, a handler that
+does nothing except return 0 will be used.
+Returns a pointer to the previous handler.
+.IP "\f4Objection_action* ignore();\f1"
+Changes the handler associated with this Objection to 
+one that does nothing except return 1.
+Returns a pointer to the previous handler.
+.SH NOTES
+Ideally, exception-handling facilities
+should be built into a programming language.
+Exceptions have quite complex semantics that
+cannot be simulated by function calls.
+Objections are not a substitute for exceptions, 
+nor are they upward-compatible with exceptions.  
+.SH BUGS
+There should probably be two typedefs, one for
+handlers and one for default actions.
+.SH SEE ALSO
+.Bf
+\f3Fsm(3C++)\f1
+\f3gsignal(3C)\f1
+\f3ssignal(3C)\f1
+.Be

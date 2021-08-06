@@ -1,0 +1,81 @@
+.  "\ident	"@(#)cls4:man/complex/cartpol.3	1.1"
+.TH CARTPOL 3C++ "C++ Complex Math Library" " "
+.SH NAME
+cartesian/polar \- functions for the C++ Complex Math Library
+.SH SYNOPSIS
+.B #include <complex.h>
+.PP
+.nf
+.ta1i 2.5i
+\f3
+class complex {
+
+public:
+             
+	friend double	abs(complex);
+	friend double	arg(complex);
+	friend complex	conj(complex);
+	friend double	imag(complex);
+	friend double	norm(complex);
+	friend complex	polar(double, double = 0);
+	friend double	real(complex);
+.br
+};
+.fi
+\fP
+.SH DESCRIPTION
+The following functions are defined for \f(CWcomplex\fP, where:
+ \(em \f3d\fP, \f3m\fP, and \f3a\fP are of type \f(CWinteger\fP
+and
+ \(em \f3x\fP and \f3y\fP are of type \f(CWcomplex\fP.
+.TP 15
+\f3d = abs(x)\fP
+Returns the absolute value or magnitude of
+.B x.
+.TP 15
+\f3d = norm(x)\fP
+Returns the square of the magnitude of
+.B x.
+It is faster than
+.B abs,
+but more likely to cause an overflow error.
+It is intended for comparison of magnitudes.
+.TP 15
+\f3d = arg(x)\fP
+Returns the angle of
+.B x,
+measured in radians in the range \-\(*p to \(*p.
+.TP 15
+\f3y = conj(x)\fP
+Returns the conjugation of
+.B x.
+That is, if
+.B x
+is
+\f2(real, imag)\fP,
+then
+.B conj(x)
+is
+\f2(real, \-imag)\fP.
+.TP 15
+\f3y = polar(m, a)\fP
+Creates a complex given a pair of polar coordinates, magnitude
+.B m,
+and angle
+.B a,
+measured in radians in the range \-\(*p to \(*p.
+.TP 15
+\f3d = real(x)\fP
+Returns the real part of
+.B x.
+.TP 15
+\f3d = imag(x)\fP
+Returns the imaginary part of
+.B x.
+.SH SEE ALSO
+CPLX.INTRO(3C++),
+cplxerr(3C++),
+cplxops(3C++),
+cplxexp(3C++),
+and
+cplxtrig(3C++).

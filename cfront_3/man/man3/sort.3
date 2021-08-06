@@ -1,0 +1,82 @@
+.\" ident	@(#)Array_alg:man/sort.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3sort\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+sort \- sort an array in place
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    void sort(\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    void sort_r(int (*rel)(const \*(gt*,const \*(gt*),\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    void sort_rs(int (*rel)(const \*(gt*,const \*(gt*),\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    void sort_s(\*(gt* b,\*(gt* e);
+
+.Be
+.SH ASSUMPTIONS
+.PP
+(1) For the non-relational versions, \*(gt\f4::operator<\f1
+defines a total ordering relation on \*(gt
+.br
+(2) For the relational version, \f4rel\f1 
+defines a total ordering relation on \*(gt
+.br
+(3) \*(gt has \f4operator=\f1
+.SH DESCRIPTION
+.PP
+These functions sort an array in place.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void sort(\*(gt* b,\*(gt* e);\f1"
+Uses \f4\*(gt::operator<\f1 
+to define the ordering relation used by the
+sorting algorithm.
+\f4sort\f1 is not stable; that is, it does not 
+preserve the relative order of equal elements.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void sort_r(int (*rel)(const \*(gt*,const \*(gt*),\*(gt* b,\*(gt* e);\f1"
+Uses \f4rel\f1 to define the ordering relation
+used by the sorting algorithm.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void sort_rs(int (*rel)(const \*(gt*,const \*(gt*),\*(gt* b,\*(gt* e);\f1"
+Like \f4sort_r\f1 except that it uses a stable algorithm.  
+That is, the relative order of equal elements is preserved.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void sort_s(\*(gt* b,\*(gt* e);\f1"
+Like \f4sort\f1 except that it uses a stable algorithm.
+That is, the relative order of equal elements is preserved.
+.SH COMPLEXITY
+.PP
+If \f2N\f1 is the size of the array, then
+complexity is \f2O(NlgN)\f1 on average. 
+Complexity is \f2O(N*N)\f1 in the worst case, 
+which is highly improbable.
+.SH NOTES
+The non-stable versions use \f4drand48(3C)\f1 to obtain
+pseudo-random numbers.
+.PP
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3drand48(3C)\f1
+\f3intro(.)\f1
+\f3ins_sort(.)\f1
+\f3merge_sort(.)\f1
+\f3Block(3C++)\f1
+.Be

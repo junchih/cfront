@@ -1,0 +1,46 @@
+Description:
+
+	L4-5convert [ [ -d ] files ]
+
+translates files using macro versions of the LC libraries to use
+pure parameterized types (Templates).
+In particular, for hardwired pt names X in the libraries,
+	1) calls to Xdeclare, Ximplement, and in some cases Xout are
+	   deleted
+	2) X(args) is translated to X<args> with a trailing space to
+	   avoid syntax errors for nested instantiations.
+	   The only exception is ~X(), which is left unchanged.
+Comments and #directives are passed through untouched.
+
+If files are specified, output for each file is written to a temp file,
+then copied back to the original file.
+
+If no arguments are specified, L4-5convert reads from stdin and writes
+to stdout.
+
+The -d option specifies debug mode, in which a diagnostic is printed for
+each modification made to the source file.  This helps identify unexpected
+translations.  (See below.)
+
+BUILDING
+
+To build the L4-5convert program you should do the following:
+
+	3.0CC -I. -oL4-5convert L4-5convert.c -l++
+
+Where 3.0CC is you 3.0 C++ driver script, and L4-5convert.h is in the
+same directory as the .c.
+
+FILES
+	L4-5convert.c, L4-5convert.h, README.convert
+
+BUGS
+PT_name, PT_end and PT_define directives are not processed and
+library-defined macro names are hard-coded and processed, even if
+a particular library is not included.
+(Note that only "parameterized" names from the libraries, such as
+List and Block, are processed.  This tool has no effect on non-
+parameterized names from the libraries, such as Fsm and Graph.)
+
+If a user defines a name such as Block to have another meaning,
+the results will be unpredictable.

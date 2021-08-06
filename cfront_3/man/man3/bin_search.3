@@ -1,0 +1,77 @@
+.\" ident	@(#)Array_alg:man/bin_search.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3bin_search\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+bin_search \- search a sorted array for an element with a given value
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    const \*(gt* bin_search(
+	const \*(gt& val, 
+	const \*(gt* b, 
+	const \*(gt* e
+    );
+    template <class \*(gt>
+    const \*(gt* bin_search_r(
+	int (*rel)(const \*(gt)*, const \*(gt)*),
+	const \*(gt& val, 
+	const \*(gt* b, 
+	const \*(gt* e
+    );
+.Be
+.SH ASSUMPTIONS
+.PP
+(1) For the plain version, \*(gt\f4::operator<\f1
+defines a total ordering relation on \*(gt and the array is
+sorted w.r.t. that relation.
+.br
+(2) For the relational version, \f4rel\f1 defines 
+a total ordering relation on \*(gt and the array is
+sorted w.r.t. that relation.
+.SH DESCRIPTION
+.PP
+These functions find the rightmost element in a sorted 
+array equal to \f4val\f1 and return a pointer to it.
+They return 0 if no such value exists.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4const \*(gt* bin_search(\f1"
+.IC "\f4    const \*(gt& val,\f1" 
+.IC "\f4    const \*(gt* b,\f1" 
+.IC "\f4    const \*(gt* e\f1"
+.IC "\f4);\f1"
+Uses \f4\*(gt::operator<\f1 to find the element.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4const \*(gt* bin_search_r(\f1"
+.IC "\f4    int (*rel)(const \*(gt)*, const \*(gt)*),\f1"
+.IC "\f4    const \*(gt& val,\f1" 
+.IC "\f4    const \*(gt* b,\f1" 
+.IC "\f4    const \*(gt* e\f1"
+.IC "\f4);\f1"
+Uses \f4rel\f1 to find the element.
+.SH COMPLEXITY
+.PP
+If \f2N\f1 is the size of the array,
+then complexity is \f2O(lgN)\f1.
+At most \f2lgN\f1 tests of the relation are done.
+.SH NOTES
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3Block(3C++)\f1
+.Be

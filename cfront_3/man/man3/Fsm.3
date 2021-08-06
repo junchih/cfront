@@ -1,0 +1,342 @@
+.\" ident	@(#)Fsm:man/Fsm.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Fsm\fP \f33C++\fP " "
+.SH NAME
+Fsm \- simple deterministic finite state machines
+.SH SYNOPSIS OF Fsm.h
+.Bf
+
+class ostream;           // See \f3iostream(3C++)\fP
+
+//  Types of functions to be supplied by the client
+
+typedef int Fsm_action(Fsm& f,unsigned inp);
+typedef void
+    Fsm_tracer(const Fsm& f,int s1,int inp,int s2);
+
+class Fsm{
+public:
+
+//  Constructors, destructor
+
+    Fsm(unsigned n, unsigned init=0, Fsm_action* act=0);
+    ~Fsm();
+
+//  Copy and assign
+
+    Fsm(const Fsm& f);
+    Fsm& operator=(const Fsm& f);
+
+//  Specify transitions
+
+    int trans(
+	unsigned s1,
+	unsigned inp,
+	unsigned s2,
+	Fsm_action* act=0
+    );
+    int trans(
+	unsigned s1,
+	unsigned lo,
+	unsigned hi,
+	unsigned s2,
+	Fsm_action* act=0
+    );
+    int trans(
+	unsigned s1,
+	const char* reg,
+	unsigned s2,
+	Fsm_action* act=0
+    );
+
+//  Examine the machine
+
+    unsigned nstates()const;
+    unsigned nactions()const;
+    unsigned state()const;
+    unsigned initial_state()const;
+    Fsm_action* default_action()const;
+    Fsm_action* action(unsigned state,unsigned inp)const;
+    unsigned action_number(unsigned state,
+        unsigned inp)const;
+    unsigned target(unsigned state,unsigned inp)const;
+
+//  Change the state of the machine
+
+    int fire(unsigned inp);
+    void go(unsigned state);
+    void reset();
+    void abort();
+
+//  Trace state changes
+
+    trace(Fsm_tracer* tracer);
+
+//  Stream insertion
+
+    \f2friend\fP ostream& operator<<(ostream& os,const Fsm& f);
+};
+
+.Be
+.SH DESCRIPTION
+A \f2deterministic finite state machine\f1 (Fsm) 
+consists of a set of \f2states\f1, among which 
+one is distinguished as the \f2initial state\f1,
+and a set of \f2transitions\f1 among those states.  
+A transition from a given state 
+is fired by an integer \f2input\f1 and causes a 
+programmer-defined \f2action routine\f1 to be called.
+Upon return from the action routine, the machine state 
+changes to a unique \f2target state\f1.  
+Inputs and states must be 
+unsigned integers in the range \f2[0,255]\f1.  
+A maximum of \f2256\f1 unique action routines can be defined
+for any given machine.
+.PP
+An Fsm is constructed by giving
+(1) the total number of states \f2N\f1 
+(2) an optional \f2initial state\f1 (which defaults to \f20\f1) and
+(3) an optional programmer-defined \f2default action routine\f1
+(which defaults to the \f2null action\f1).
+The resulting \f2default machine\f1 has \f2N\f1 states
+implicitly numbered \f20,...,N\-1\f1 and occupies the
+specified initial state.   
+For every \f2(state,input)\f1 combination,
+the transitions of the default machine are defined as follows: 
+first call the default action routine and then go to state \f20\f1.
+To redefine any one of these transitions, 
+the client must specify a 4-tuple 
+\f2(start state, input, target state, action routine)\f1.
+Three functions named \f4trans()\f1
+allow clients to specify transitions in three different ways.
+One of these is convenient when
+working with inputs that represent printable characters;
+it accepts an \f3ed(1)\f1\-style one-character regular
+expression and defines a transition for each printable
+character that matches the expression.
+.PP
+Transitions are effected
+by calling \f4fire()\f1 with an integer input.
+\f4fire()\f1 calls the action routine
+in the current state and
+places the machine in the target state when the 
+action routine returns.  
+Arbitrary state changes can be forced
+by calling \f4go()\f1, \f4reset()\f1, or \f4abort()\f1.
+If an action routine should
+itself call \f4fire()\f1, \f4go()\f1, \f4reset()\f1, 
+or \f4abort()\f1, the state change that would normally take place
+upon return from the action routine will not occur.
+.PP
+State changes may be traced by supplying a user-defined trace
+routine.  
+.SS "Types of functions to be supplied by the client"
+.IP "\f4typedef int Fsm_action(Fsm& f,unsigned inp);\f1"
+User-defined action routine.
+Action routines are called by function \f4Fsm::fire()\f1 
+with two pieces of information:
+(1) a reference to the machine and 
+(2) the input that caused the transition. 
+This information is sufficient for a routine to 
+perform any desired action, 
+including one that modifies the machine state 
+(for example, by recursively calling \f4fire()\f1).
+The return value may be any integer; 
+it is not interpreted by the machine, 
+but merely returned to the client as the result 
+of function \f4fire()\f1.
+.IP "\f4typedef void\f1"
+.IC "\f4    Fsm_tracer(const Fsm& f,int s1,int inp,int s2);\f1"
+User-defined trace routine.
+Trace routines are called each time a state change occurs,
+upon arrival in the new state.  Their four parameters are:
+(1) a (constant) reference to machine,
+(2) the start state, 
+(3) the input (if any) that caused the state change
+(4) the target state. 
+A call to a trace routine resulting from a state change
+caused by \f4go()\f1, \f4abort()\f1, 
+or \f4reset()\f1 will have a negative value for \f4inp\f1.
+.SS "Constructors, destructor"
+.IP "\f4Fsm(unsigned n, unsigned init=0, Fsm_action* act=0);\f1"
+A machine with \f4nstates()\f1 set to \f4n\f1 
+(the legal states are implicitly numbered \f20,1,...,n\-1\f1),
+\f4initial_state()\f1 set to \f4init\f1,
+\f4default_action()\f1 set to \f4act\f1,
+and \f4state()\f1 set to \f4init\f1.
+The transitions of the machine are defined as follows:
+For every legal state number \f2S\f1 and legal input \f2I\f1, 
+\f4action(\f2S,I\fP)\f1 is set to\f4act\f1 and \f4target(\f2S,I\fP)\f1
+is set to \f40\f1.
+\f3Preconditions\f1: \f4init\f1 must be a legal state number.
+.IP "\f4~Fsm();\f1"
+Destructor.  
+.SS "Copy and assign"
+.IP "\f4Fsm(const Fsm& f);\f1"
+.hS
+.IP "\f4Fsm& operator=(const Fsm& f);\f1"
+Copying or assigning an Fsm creates a copy of its value.
+.SS "Specify transitions"
+.IP "\f4int trans(\f1"
+.IC "\f4    unsigned s1,\f1"
+.IC "\f4    unsigned inp,\f1"
+.IC "\f4    unsigned s2,\f1"
+.IC "\f4    Fsm_action* act=0\f1"
+.IC "\f4    );\f1"
+Redefines a single transition as follows:
+\f4action(s1,inp)\f1 is set to \f4act\f1 and \f4target(s1,inp)\f1
+is set to \f4s2\f1.
+\f3Preconditions\f1:
+\f4s1\f1 and \f4s2\f1 must be legal state numbers;
+\f4inp\f1 must be a legal input;
+if \f4act\f1 is a new action, then
+fewer than \f2256\f1 unique action routines 
+have already been specified.
+.IP "\f4int trans(\f1"
+.IC "\f4    unsigned s1,\f1"
+.IC "\f4    unsigned lo,\f1"
+.IC "\f4    unsigned hi,\f1"
+.IC "\f4    unsigned s2,\f1"
+.IC "\f4    Fsm_action* act=0\f1"
+.IC "\f4    );\f1"
+Redefines \f4hi\-lo+1\f1 transitions as follows: for every
+integer \f2I\f1 between \f4lo\f1 and \f4hi\f1, inclusive,
+\f4action(s1,\f2I\fP)\f1 is set to \f4act\f1 
+and \f4target(s1,\f2I\fP)\f1 is set to \f4s2\f1.
+\f3Preconditions\f1:
+\f4s1\f1 and \f4s2\f1 must be legal state numbers;
+\f4lo\f1 and \f4hi\f1 must be legal inputs;
+if \f4act\f1 is a new action, then
+fewer than \f2256\f1 unique action routines 
+have already been specified.
+.IP "\f4int trans(\f1"
+.IC "\f4    unsigned s1,\f1"
+.IC "\f4    const char* reg,\f1"
+.IC "\f4    unsigned s2,\f1"
+.IC "\f4    Fsm_action* act=0\f1"
+.IC "\f4    );\f1"
+For every integer \f2I\f1 for which the corresponding 
+printable ASCII character matches the one-character regular 
+expression \f4reg\f1, redefine one transition as follows:
+\f4action(s1,\f2I\fP)\f1 is set to \f4act\f1 
+and \f4target(s1,\f2I\fP)\f1 is set to \f4s2\f1.
+Has no effect if \f4reg\f1 is zero or if
+no printable characters match the expression.
+\f3Preconditions\f1:
+\f4s1\f1 and \f4s2\f1 must be legal state numbers:
+if \f4act\f1 is a new action, then
+fewer than \f2256\f1 unique action routines 
+have already been specified.
+.SS "Examine the machine
+.IP "\f4unsigned nstates()const;\f1"
+The number of states.
+.IP "\f4unsigned nactions()const;\f1"
+The number of unique action routines that have been passed
+to the machine 
+(equivalently, one greater than the current 
+highest-assigned \f2action number\f1).  
+.IP "\f4unsigned state()const;\f1"
+The current machine state.
+.IP "\f4unsigned initial_state()const;\f1"
+The initial state.
+.IP "\f4Fsm_action* default_action()const;\f1"
+The default action.
+.IP "\f4Fsm_action* action(unsigned state,unsigned inp)const;\f1"
+Returns a pointer to the action routine 
+associated with the transition
+from state \f4state\f1 on input \f4inp\f1.  
+\f3Preconditions\f1:
+\f4state\f1 must be a legal state number;
+\f4inp\f1 must be a legal input.
+.IP "\f4unsigned action_number(unsigned state,unsigned inp)const;\f1"
+Returns the \f2action number\f1 of the action routine associated with
+the transition from state \f4state\f1 on input \f4inp\f1.  
+Action numbers are assigned as follows: 
+the default action defined by the constructor is assigned
+action number \f20\f1;
+each unique action routine subsequently 
+encountered by the machine
+is assigned an action number one greater than the 
+previously highest-assigned action number.
+\f3Preconditions\f1:
+\f4state\f1 must be a legal state number;
+\f4inp\f1 must be a legal input.
+.IP "\f4unsigned target(unsigned state,unsigned inp)const;\f1"
+Returns the target state associated with the transition 
+from state \f4state\f1 on input \f4inp\f1.
+\f3Preconditions\f1:
+\f4state\f1 must be a legal state number;
+\f4inp\f1 must be a legal input.
+.SS "Change the state of the machine"
+.IP "\f4int fire(unsigned inp);\f1"
+Effects the transition associated with 
+input \f4inp\f1 in the current state.  
+That is, calls \f4action(state(),inp)\f1 and
+then goes to state \f4target(state(),inp)\f1.
+If the action routine should invoke 
+either \f4fire()\f1, \f4reset()\f1, \f4go()\f1, 
+or \f4abort()\f1, 
+the machine will not make a state change upon return from
+the action routine.
+The return value is the return value of
+the action routine, or zero if the null action was specified 
+for this transition.
+\f3Preconditions\f1:
+\f4inp\f1 must be a legal input.
+.IP "\f4void go(unsigned state);\f1"
+Forces the machine into state \f4state\f1. 
+\f3Preconditions\f1:
+\f4state\f1 must be a legal state number.
+.IP "\f4void reset();\f1"
+Forces the machine into state \f4initial_state()\f1.
+.IP "\f4void abort();\f1"
+Equivalent to \f4go(state())\f1.  
+This function only has an effect
+when called from within an action routine, in
+which case it cancels any pending state change.
+.SS "Trace state changes"
+.IP "\f4trace(Fsm_tracer* tracer);\f1"
+A zero argument turns tracing 
+off if it is currently on, and
+has no effect otherwise.
+A non-zero argument turns tracing on if it is currently 
+off, and defines a new tracing routine if tracing is 
+currently turned on.  When tracing is turned on,
+\f4tracer()\f1 will be called 
+each time the machine state changes,
+\f2upon arrival in the new state\f1.
+.SS "Stream insertion"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os,const Fsm& f);\f1"
+Inserts an ASCII representation of \f4f\f1 into ostream \f4os\f1.
+The representation is a table with 
+one row for each input value and one column for each state.  
+The intersection of each row and column is a transition
+displayed as \f2(A,T)\f1, where \f2T\f1 is the target state associated
+with the transition and \f2A\f1 is the
+\f2action number\f1 of the action routine associated with the transition. 
+The table is compressed in the sense that any rows 
+with all entries equal to \f2(0,0)\f1 are omitted.  May
+be replaced by a programmer-defined stream insertion operator 
+as long as the user's object file is seen by the linker 
+prior to the library's version.
+.SH COMPLEXITY
+Constructors, destructors, and assignment, run 
+in \f2O(N)\f1 (where \f2N\f1 is the number of states),
+plus the time for calls to \f4new\f1 and \f4delete\f1.  
+Assuming user-defined action and trace routines 
+to run in \f2O(1)\f1, all other operations are \f2O(1)\f1.
+An Fsm occupies \f2256*(2N+4)\f1 bytes of storage.
+.SH SEE ALSO
+.Bf
+\f3ed(1)\f1
+\f3iostream(3C++)\f1
+.Be

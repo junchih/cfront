@@ -1,0 +1,586 @@
+#!/bin/sh
+#ident	"@(#)local:bin/buildprod	3.2" 
+###############################################################################
+#
+# C++ Standard Components, Release 3.0.
+#
+# Copyright (c) 1991, 1992 AT&T and Unix System Laboratories, Inc.
+# Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+#
+# THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and Unix System
+# Laboratories, Inc.  The copyright notice above does not evidence
+# any actual or intended publication of such source code.
+#
+###############################################################################
+
+#set -x
+root=`pwd`
+#root=$HOME/lib/build
+complist=$root/complist
+MAKE=make
+IGNORE=
+BSD=0
+SYS=SYSV
+CC=CC
+EXTRACCFLAGS=
+variant=
+POPT=
+EXTENSION=
+SHELL=${SHELL-/bin/sh}
+export SHELL
+
+# what to build
+buildalllisted=0
+buildregressions=0
+buildhypertext=0
+builddemos=0
+clean=0
+clobber=0
+
+tmp=$root/tmpdir
+cleanup() {
+	rm -rf $tmp
+	exit $1
+}
+trap 'cleanup 1' 1 2 3 15
+rm -rf $tmp
+mkdir $tmp
+
+error() {
+        echo "`basename $0`: $@"
+        cleanup 1
+}
+
+badargs=0
+#set -- `getopt al:cbdtTiphrC:F:x $*`
+#if [ $? -ne 0 ]; then
+# 	badargs=1
+#fi
+#for i
+while true
+do
+ 	#case $i in
+ 	case $1 in
+	-F)
+		EXTRACCFLAGS="$2"
+		shift; shift;;
+	-C)
+		CC="$2"
+		shift; shift;;
+	-d)
+		builddemos=1
+		shift;;
+	-c)
+		clean=1
+		shift;;
+	-k)
+		clobber=1
+		shift;;
+	-l)
+		case $2 in
+		/*)	complist=$2;;
+		*)	complist=$root/$2;;
+		esac
+		shift; shift;;
+	-h)
+		buildhypertext=1
+		shift;;
+	-a)
+		buildalllisted=1
+		shift;;
+	-b) 
+		BSD=1
+		SYS=BSD
+		shift;;
+	-i)
+		IGNORE=-i
+		shift;;
+	-p)
+		variant=p
+		EXTENSION="_p"
+		shift;;
+	-x)
+		variant=x
+		EXTENSION="_eh"
+		shift;;
+	--cfront_2.1)
+		variant=b
+		EXTENSION="_b"
+		shift;;
+	-T)
+		buildregressions=1
+		shift;;
+	--)	shift; break;;
+	-*)	shift;;
+	*)	break;;
+	esac
+done
+if test $badargs -eq 1; then
+ 	echo
+	echo "usage: buildprod [-abcdhitT] [-l complist] [-C CC] [-F CCFLAGS]" 1>&2
+	echo "" 1>&2
+	echo "-d = build and test demos on all components listed in complist" 1>&2
+	echo "-h = build hypertext manual" 1>&2
+	echo "-T = build and test regression tests on all components listed in complist" 1>&2
+	echo "-a = build all components listed in complist" 1>&2
+	echo "-c = don't build, just clean the results of a previous build" 1>&2
+	echo "none of -dhTtc implies 'build all components listed in complist'" 1>&2
+	echo "" 1>&2
+	echo "-b = this is a BSD-like machine" 1>&2
+	echo "-i = ignore compiler errors" 1>&2
+	echo "complist defaults to ./complist" 1>&2
+	echo "CC = CC with which to do the build (defaults to CC)" 1>&2
+	echo "CCFLAGS = append CCFLAGS to built-in CC options" 1>&2
+	echo "" 1>&2
+	cleanup 2
+fi
+
+if [ $builddemos -eq 0 -a $buildhypertext -eq 0 -a $buildregressions -eq 0 -a $clean -eq 0 ]; then
+	buildalllisted=1
+fi
+
+components=`cat $complist`
+
+echoifexists() {
+	if [ -f $1 ]; then
+		echo $1
+	fi
+}
+
+# echo a list of all the .a's that should be melded into lib++.a; 
+# link all others to $root/lib
+lndotas() {
+	list=
+	for i in $root/libSC/*/*.a; do
+		case `basename $i` in
+		libfs.a|libg2++.a|libGA.a|libGraph.a)
+			real_libname=`basename $i .a`$EXTENSION.a
+			rm -f $root/$real_libname
+			ln $i $root/$real_libname;;
+		*)	list="$list $i";;
+		esac
+	done
+	echo $list
+}
+
+# echo a list of all the .a's in $root, in the order they must appear when linking
+liblist() {
+	list=
+	for i in g2++ GA Graph ++; do
+		lib=$root/lib$i$EXTENSION.a
+		if [ -f $lib ]; then
+			list="$list $lib"
+		fi	
+	done
+	echo $list
+}
+# echo a list of all the .a's, in the order they must appear when buildin
+# the demo programs
+demoliblist() {
+	LIBVARIANT=
+	for opt in $EXTRACCFLAGS -dummy
+	do
+		case $opt in
+		-b | --cfront_2.1 | --cfront_3.0)
+			LIBVARIANT=_b
+			;;
+		-p)
+			LIBVARIANT=_p
+			;;
+		-x | --exceptions)
+			LIBVARIANT=_eh
+			;;
+		esac
+	done
+	list=
+	for i in g2++ GA Graph ++; do
+		lib=$root/lib$i$LIBVARIANT.a
+		if [ -f $lib ]; then
+			list="$list $lib"
+		else
+			list="$list -l$i"
+		fi	
+	done
+	echo $list
+}
+
+# crack the .a's $* into the current directory
+crackhere() {
+	for i in $*; do
+		ar x $i
+	done
+}
+
+# lib++.a is out of date, build it
+dobuildlpp() {
+	meld="$*"
+	echo "buildprod: hold on while I build a lib++$EXTENSION.a..." 1>&2
+	cd $tmp
+	rm -f * 
+	crackhere $meld
+	lpp=$root/lib++$EXTENSION.a
+	rm -f $lpp
+	if [ -f /usr/bin/ranlib ]; then
+		ar cr $lpp *.o
+		ranlib $lpp
+	else
+		oorder=`lorder *.o | tsort 2>/dev/null`
+		ar cr $lpp $oorder
+	fi
+	#rm -f *
+	cd $root
+}
+
+#return 0 if any of $2, $3, ... are newer than $1
+anynewer() {
+	f=$1
+	shift
+	for i in $*
+	do
+		$root/aux/fnewer $i $f
+		if [ $? -eq 0 ]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+# build lib++.a, libfs.a, etc. from all the $root/libSC/*/*.a
+# don't bother building lib++.a if it's not out of date
+buildlpp() {
+	meld="`lndotas`"
+	anynewer $root/lib++$EXTENSION.a $meld
+	if [ $? -eq 0 ]; then
+		dobuildlpp $meld
+	fi
+}
+
+fixmakefile() {
+	# some versions of make (e.g., on pre-4.0 SunOS) don't expand environment variables in include statements
+	rm -f Makefile
+	sed "s%^include \$(SLELIB)%include $SLELIB%" makefile >Makefile
+}
+
+fixasserth() {
+	# some old assert.h's incorrectly #include <iostream.h> even when NDEBUG is defined
+	rm -f assert.h
+	echo "#define assert(e) ((void)0)" > assert.h
+}
+
+# -c = making (non-tool) component
+# -t = making tool
+# -d = making demo/test
+makethisdir() {
+	ccflags=
+	if [ "$1" = "-c" ]; then
+		ccflags="$ccflags --no_auto_instantiation -DBUILDING_LIBRARY"
+	fi
+	if [ "$1" = "-c" -o "$1" = "-t" ]; then
+		fixasserth
+		ccflags="$ccflags -DNDEBUG"
+	fi
+	ccflags="$ccflags -D$SYS -I$root/incl -I. $EXTRACCFLAGS"
+	if [ "$1" = "-d" ]
+	then
+		libs="`demoliblist`"
+	else
+		libs="`liblist`"
+	fi
+	fixmakefile
+
+	if test -r .variant
+	then
+		lastvariant=`cat .variant`
+	else
+		lastvariant=
+	fi
+	if test "$lastvariant" != "$variant"
+	then
+		# The .o's and .a's in this directory were compiled
+		# for a different variant.  Move them to a save
+		# directory, then recover the last build of the
+		# variant we are currently trying to build.
+	
+		savedir=.variant_$lastvariant
+		lastbuild=.variant_$variant
+		save_dirlist=`find . -type d -print |\
+		   grep -v "/\.variant" | grep -v '/tut$' |\
+		   grep -v '/man$' | grep -v "/demo" | grep -v '/incl$' |\
+		   grep -v '/bin$' | grep -v '/lib$' |\
+		   grep -v "/ptrepository" | grep -v "/Templates.DB"`
+
+		echo "saving previous variant ($lastvariant)"
+		for i in $save_dirlist
+		do
+			if test ! -d $i/$savedir
+			then
+				mkdir $i/$savedir
+			fi
+			if [ "$i/$savedir/*" != $i/$savedir/'*' ]
+			then
+				rm -f $i/$savedir/*
+			fi
+			if [ "$i/*.a" != $i/'*'.a -a "$i/*.o" != $i/'*'.o ]
+			then
+				mv $i/*.a $i/*.o $i/$savedir
+			fi
+			if [ -d $i/ptrepository ]
+			then
+				mv $i/ptrepository $i/$savedir/ptrepository
+			fi
+			if [ -d $i/Templates.DB ]
+			then
+				mv $i/Templates.DB $i/$savedir/Templates.DB
+			fi
+		done
+		$MAKE clean
+		for i in $save_dirlist
+		do
+			if [ "$i/*.a" != $i/'*'.a -a "$i/*.o" != $i/'*'.o ]
+			then
+				rm -f $i/*.a $i/*.o
+			fi
+		done
+		if test -d $lastbuild
+		then
+			echo "recovering previous build of variant $variant"
+		fi
+		for i in $save_dirlist
+		do
+			if [ "$i/$lastbuild/*" != $i/$lastbuild/'*' ]
+			then
+				mv $i/$lastbuild/* $i
+			fi
+		done
+	fi
+	echo "$variant" > .variant
+	
+	if [ "$variant" = "p" ]
+	then
+		POPT=-p
+	fi
+	
+	echo $MAKE $IGNORE SYS=$SYS $SYS=1 BSD=$BSD CC=$CC CCFLAGS=\"$ccflags $POPT\" LIBS=\"$libs\"
+	$MAKE -f Makefile $IGNORE SYS=$SYS $SYS=1 BSD=$BSD CC=$CC CCFLAGS="$ccflags $POPT" LIBS="$libs" O="-O $POPT" 2>&1 
+}
+
+lncontents() {
+	from=$1
+	to=$2
+	files=`ls $from/* 2>/dev/null`
+	if [ "$files" != "" ]; then
+		for i in $files; do
+			# incl has been renamed to incl.sh
+			if [ `basename $i` = "incl" ]; then
+				rm -f $to/incl.sh
+				ln $i $to/incl.sh
+			# don't move up the CC shell script
+			elif [ `basename $i` != "CC" ]; then
+				rm -f $to/`basename $i`
+				ln $i $to
+			fi
+		done
+	fi
+}
+
+copyup() {
+	#archive=`ls *.a 2>/dev/null`
+	#if [ "$archive" != "" ]; then
+	#	rm -f $root/$archive
+	#	ln $archive $root/$archive
+	#fi
+	if [ "$variant" = "" ]
+	then
+		chmod +x bin/* 2>/dev/null
+		lncontents bin $root
+		lncontents lib $root
+	fi
+}
+
+# -c = (non-tool) component
+# -t = tool
+buildcomp() {
+	flag=$1
+	comp=$2
+	echo 1>&2
+	echo "buildprod: building $comp component" 1>&2
+	echo 1>&2
+	cd $root/libSC/$comp
+	if [ -f makefile ]; then
+		makethisdir $flag
+	fi
+	# some components generate header files during the build
+	# mv -f incl/* $root/incl 2>/dev/null
+	cp incl/* $root/incl 2>/dev/null
+	copyup
+	cd $root
+}	
+
+hymangen() {
+	$root/bin/hymangen -xCXh -I $root/incl
+	if [ -f hyman ]; then
+		rm -f $root/bin/hyman
+		ln hyman $root/bin
+	fi
+}
+
+if [ $clean -eq 1 -o $clobber -eq 1 ]; then
+    if [ $clobber -eq 1 ]; then
+	rm -f $root/aux/fnewer $root/incl/g2mach.h $root/incl/g2values.h
+	rm -f $root/lib++*.a
+	rm -f $root/libGA*.a
+	rm -f $root/libGraph*.a
+	rm -f $root/libfs*.a
+	rm -f $root/libg2++*.a
+	rm -f $root/demangle
+	rm -f $root/g2++comp
+	rm -f $root/hier
+	rm -f $root/incl.sh
+	rm -f $root/publik
+	rm -f $root/publik2
+	rm -f $root/c++filt
+	rm -f $root/dem
+	rm -f $root/fscpp
+	rm -f $root/fsipp
+	rm -f $root/hier2
+	rm -f $root/incl2
+    fi
+	for comp in $components; do
+		if [ -d $root/libSC/$comp ]; then
+			echo "buildprod: cleaning $comp" 1>&2
+			cd $root/libSC/$comp
+			rm -f assert.h core
+			rm -rf ptrepository Templates.DB
+			find . -name "*.ii" -type f -print | xargs rm -rf
+			rm -rf .variant* */.variant*
+			$MAKE clean
+			rm -f Makefile
+			clean_dirs="tests demos"
+			cd_back=".."
+			if [ $comp = "G2++" ]; then
+			    clean_dirs="compsrc/demos g2++lib/demos"
+			    cd_back="../.."
+			fi
+			for d in $clean_dirs; do
+				if [ -d $d ]; then
+					cd $d
+					rm -f *.[Eor] core
+					rm -f .variant*
+					rm -rf ptrepository Templates.DB
+					rm -rf *.ii
+					$MAKE clean 2>/dev/null
+					rm -f Makefile
+					cd $cd_back
+				fi
+			done
+		fi
+	done
+	cleanup 0
+fi
+
+firsttoolmade=
+checknotoolsyet() {
+	comp=$1
+	if [ "$firsttoolmade" != "" ]; then
+		echo "buildprod: components must be listed before tools in $complist" 1>&2
+		echo "   Earlier you built $firsttoolmade, and now you're trying to build $comp" 1>&2
+		exit 2
+	fi
+}
+
+if [ $buildalllisted -eq 1 ]; then
+	for comp in $components; do
+		case $comp in
+		String|Pool|CC)
+			checknotoolsyet $comp
+			if [ $buildalllisted -eq 1 ]; then
+				buildcomp -c $comp
+			fi
+			;;
+		demangle|aoutdem|fs|G2++|hier|hyman|incl|publik)
+			# don't build -p, -x, or -b versions of the tools
+			if [ "$comp" != "fs" -a "$comp" != "G2++" -a "$EXTENSION" != "" ]
+			then
+				continue
+			fi
+			# before building any tools, build a bootstrap version of lib++.a
+			if [ "$firsttoolmade" = "" ]; then
+				buildlpp  # bootstrap version
+				firsttoolmade=$comp
+			fi
+			buildcomp -t $comp
+			if [ $comp = "G2++" -a "$variant" = "" ]; then
+			    files=`ls $root/libSC/G2++/*.a 2>/dev/null`
+			    if [ "$files" != "" ]; then
+				rm -f $root/libg2++.a
+				ln $root/libSC/G2++/libg2++.a $root
+			    fi
+			    files=`ls $root/libSC/G2++/g2++comp 2>/dev/null`
+			    if [ "$files" != "" ]; then
+				rm -f bin/g2++comp
+				ln $root/libSC/G2++/g2++comp $root
+			    fi
+			fi
+			if [ $comp = "G2++" -a "$variant" != "" ]; then
+			    files=`ls $root/libSC/G2++/*.a 2>/dev/null`
+			    if [ "$files" != "" ]; then
+				rm -f $root/libg2++$EXTENSION.a
+				ln $root/libSC/G2++/libg2++.a $root/libg2++$EXTENSION.a
+			    fi
+			fi
+			if [ $comp = "hyman" ]; then
+				buildhypertext=1
+			fi
+			;;
+		*)	
+			checknotoolsyet $comp
+			buildcomp -c $comp
+			;;
+		esac
+	done
+	buildlpp  # final version
+fi
+if [ $buildhypertext -eq 1 ]; then
+	cd $root/man
+	hymangen
+fi
+cd $root
+
+dotests() {
+	dir=$1
+	for comp in $components; do
+		if [ -d $root/libSC/$comp/$dir ]; then
+			if [ $BSD -eq 0 -o $comp != "ipc" ]; then
+				echo "" 1>&2
+				echo "Doing $dir for $comp" 1>&2
+				echo "" 1>&2
+				cd $root/libSC/$comp/$dir
+				makethisdir -d
+			fi
+		fi
+		if [ $comp = "G2++" ]; then
+			echo "" 1>&2
+			echo "Doing $dir for $comp" 1>&2
+			echo "" 1>&2
+                        cd $root/libSC/$comp/compsrc/$dir
+                        fixmakefile
+                        cd $root/libSC/$comp/g2++lib/$dir
+                        fixmakefile
+			cd $root/libSC/$comp
+			ccflags="$ccflags -D$SYS -I. -I$root/incl $EXTRACCFLAGS"
+			libs="`demoliblist`"
+			fixmakefile
+			echo $MAKE $IGNORE SYS=$SYS $SYS=1 BSD=$BSD CC=$CC CCFLAGS=\"$ccflags\" LIBS=\"$libs\" $dir
+			$MAKE -f Makefile $IGNORE SYS=$SYS $SYS=1 BSD=$BSD CC=$CC CCFLAGS="$ccflags" LIBS="$libs" $dir 2>&1 
+		fi
+	done
+}
+
+if [ $builddemos -eq 1 ]; then
+	dotests demos
+fi
+if [ $buildregressions -eq 1 ]; then
+	dotests tests
+fi
+cd $root
+cleanup 0

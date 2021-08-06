@@ -1,0 +1,61 @@
+/*
+ *  stdarg.h for MIPS-based systems
+ *
+ *  This header file is designed to work with
+ *  Silicon Graphics IRIX 4.0.
+ *  
+ *  The C compilation system requires some alignment
+ *  information to be manipulated when stepping through
+ *  the argument list.
+ */
+#ifndef _STDARG_H
+#define _STDARG_H
+
+/*
+ * The following code is a portable C++ implementation
+ * of the "alignof" operation.  It uses the template
+ * feature of C++ 3.0 to define a function that can
+ * determine the alignment requirements for each datatype.
+ */
+#ifndef _VA_LIST_
+#define _VA_LIST_
+typedef char *va_list;
+#endif /* !_VA_LIST_ */
+
+static int dvz;
+template <class T>
+struct Ttmp { char c; T t; };
+template <class T>
+inline alignof(T *) {
+	return (sizeof(Ttmp<T>) - sizeof(T));
+}
+#define _VA_ALIGNOF_ATTLC(mode) (alignof((mode *)(&dvz)))
+
+#define va_start(__list, __parmN) (__list = (char *) \
+ ( \
+  (alignof(&__parmN) == 8) ? \
+   (((unsigned int)&__parmN + sizeof(__parmN) + 8 - 1) & (~0x7) ) : \
+   (((unsigned int)&__parmN + ((sizeof(__parmN) > 4)?sizeof(__parmN):4) + 4 - 1) & (~0x3)) \
+  ) \
+ )
+
+#define va_arg(__list, __mode) ((__mode *)(__list = (char *) \
+    ( \
+      (_VA_ALIGNOF_ATTLC(__mode) == 8) ? \
+       (((unsigned int)__list + sizeof(__mode) + 8 - 1) & (~0x7) ) : \
+       (((unsigned int)__list + ((sizeof(__mode) > 4)?sizeof(__mode):4) + 4 - 1) & (~0x3)) \
+    ) \
+    )) [-1]
+
+extern void va_end(va_list);
+
+#define va_end(list) (void)0
+
+#include <stdio.h>
+extern "C" {
+extern int vprintf(const char*, va_list),
+	vfprintf(FILE*, const char*, va_list),
+	vsprintf(char*, const char*, va_list);
+}
+
+#endif 	/* _STDARG_H */

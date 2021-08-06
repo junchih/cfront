@@ -1,0 +1,162 @@
+.\" ident	@(#)Symbol:man/Symbol.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Symbol\fP \f33C++\fP " "
+.SH NAME
+Symbol \- unique identifiers based on character strings
+.SH SYNOPSIS OF Symbol.h
+.Bf
+#include <String.h>
+
+class Symbol{
+public:
+
+//  Constructors, destructor
+
+    Symbol();
+    Symbol(const String& s);
+    Symbol(const char* cp);
+    ~Symbol();
+
+//  Copy and assign
+
+    Symbol(const Symbol& s);
+    Symbol& operator=(const Symbol& s);
+
+//  Relations
+
+    int operator==(const Symbol& b)const;
+    int operator!=(const Symbol& b)const;
+
+    int operator<(const Symbol& b)const;
+    int operator<=(const Symbol& b)const;
+    int operator>(const Symbol& b)const;
+    int operator>=(const Symbol& b)const;
+
+//  Miscellaneous
+
+    String the_string()const;
+    unsigned long hashval()const;
+};
+.Be
+.SH DESCRIPTION
+.PP
+Symbols are unique identifiers based on character strings.
+They are characterized by extremely efficient equality 
+and total order relations whose speed is independent of 
+the length of the string on which the Symbol is based.
+The efficiency of these operations is gained at the expense 
+of Symbol construction, which is considerably slower 
+than String construction.
+Symbols should be used instead of strings
+(either null-terminated character arrays 
+or \f3String(3C++)\f1)
+in applications with the following characteristics:
+(1) the strings are used primarily as keys for data storage 
+and retrieval (2) the application is lookup-intensive
+(keys are used many times over their lifetimes) and
+(3) lexicographic ordering of keys is not required.
+A good example is a compiler symbol table.
+For such applications,
+\f4Set<Symbol>\f1,
+\f4Map<Symbol,\*(gu>\f1, and
+\f4Block<Symbol>\f1
+provide appealing alternatives to
+\f4Set<String>\f1,
+\f4Map<String,\*(gu>\f1, and
+\f4Block<String>\f1,
+respectively
+(see \f3Set(3C++)\f1, \f3Map(3C++)\f1, and
+\f3Block(3C++)\f1).
+.sp +0.5v
+.SS "Constructors, destructor"
+.IP "\f4Symbol();\f1"
+The Symbol associated with the empty string ("").  
+.IP "\f4Symbol(const String& s);\f1"
+The Symbol associated with String \f4s\f1.
+.IP "\f4Symbol(const char* cp);\f1"
+The Symbol associated with the null-terminated character
+array pointed to by \f4cp\f1. If \f4cp\f1 is zero,
+the result is the same as if the parameterless constructor
+had been used.
+.IP "\f4~Symbol();\f1
+Destructor. 
+.SS "Copy and assign"
+.IP "\f4Symbol(const Symbol& s);\f1"
+.hS
+.IP "\f4Symbol& operator=(const Symbol& s);\f1"
+Copying or assigning a Symbol creates a copy of its value.
+.SS "Relations"
+.IP "\f4int operator==(const Symbol& b)const;\f1"
+.hS
+.IP "\f4int operator!=(const Symbol& b)const;\f1"
+Equality and inequality relations.  
+Two Symbols are equal 
+if their associated strings are equal.
+.IP "\f4int operator<(const Symbol& b)const;\f1"
+.hS
+.IP "\f4int operator<=(const Symbol& b)const;\f1"
+.hS
+.IP "\f4int operator>(const Symbol& b)const;\f1"
+.hS
+.IP "\f4int operator>=(const Symbol& b)const;\f1"
+Non-lexicographic total order relations.  
+.SS "Miscellaneous"
+.IP "\f4String the_string()const;\f1"
+The String associated with this Symbol. 
+.IP "\f4unsigned long hashval()const;\f1"
+A perfect hash function that can be used when creating 
+Sets or Bags of Symbols (see \f3Set(3C++)\f1).
+.SH COMPLEXITY
+The constructors run
+in \f2O(#characters in associated string)\f1
+and all other operations run in \f2O(1)\f1.
+.PP
+Symbols are constructed by inserting their associated
+Strings into a \f4Set<String>\f1 (see \f3Set(3C++)\f1).  
+Although Set insertion runs in constant time,
+it is a rather large constant.
+The equality, inequality, and ordering relations, on
+the other hand, are each implemented as a single inline 
+pointer comparison.
+.SH EXAMPLE
+The following two versions of \f4lookup()\f1 are 
+functionally equivalent, but the second version is
+much faster than the first:
+.Bf
+
+    #include <Block.h>
+    #include <String.h>
+    #include <Symbol.h>
+
+    int lookup(Block<String>& table, const String& arg){
+	for(String* p = table;p<table.end();p++){
+	    if(*p==arg)return 1;
+	}
+	return 0;
+    }
+    int lookup(Block<Symbol>& table, const Symbol& arg){
+	for(Symbol* p = table;p<table.end();p++){
+	    if(*p==arg)return 1;
+	}
+	return 0;
+    }
+
+.Be
+.SH WARNINGS
+The total order relations are not lexicographic.  
+.SH SEE ALSO
+.Bf
+\f3Block(3C++)\f1
+\f3Map(3C++)\f1
+\f3Set(3C++)\f1
+\f3String(3C++)\f1
+.Be

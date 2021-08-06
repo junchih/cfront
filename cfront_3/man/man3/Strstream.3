@@ -1,0 +1,177 @@
+.\" ident	@(#)Strstream:man/Strstream.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Strstream\fP \f33C++\fP " "
+.SH NAME
+Strstream \- iostream and streambuf specialized to Strings
+.SH SYNOPSIS OF Strstream.h
+.Bf
+
+#include <iostream.h>       // see \f3iostream(3C++)\fP
+#include <String.h>         // see \f3String(3C++)\fP
+
+class Strstreambuf : public streambuf {
+public:
+    Strstreambuf();
+    Strstreambuf(String& s);
+    Strstreambuf(const String& s);
+    ~Strstreambuf();
+    String str();
+};
+
+class Strstreambase : virtual public ios {
+public:
+    Strstreambase();
+    Strstreambase(String& s);
+    Strstreambase(const String& s);
+    ~Strstreambase();
+    Strstreambuf* rdbuf();
+};		
+
+class iStrstream : public Strstreambase, public istream {
+public:
+    iStrstream(const String& s);
+    ~iStrstream();
+};
+
+class oStrstream : public Strstreambase, public ostream {
+public:		
+    oStrstream();
+    oStrstream(String& s);
+    ~oStrstream();
+    String str();
+};
+
+class Strstream : public Strstreambase, public iostream {
+public:		
+    Strstream();
+    Strstream(String& s);
+    ~Strstream();
+    String str();
+};
+
+// Compatibility
+
+typedef ... oStrstream;
+typedef ... iStrstream;
+
+.Be
+.SH DESCRIPTION
+Strstreambuf, Strstreambase, iStrstream, oStrstream, and
+Strstream are specialized versions of the classes 
+streambuf, ios, istream, ostream, and iostream
+(see \f3iostream(3C++)\f1).
+These classes use a String (see \f3String(3C++)\f1)
+to store their underlying sequence of characters.
+.SS "class Strstreambuf"
+A Strstreambuf is normally queuelike; 
+characters are stored at the
+right end of the underlying String and 
+fetched from the left.
+If the Strstreambuf was created with a non-const
+String, the fetch operations may delete characters
+from the beginning of the String.
+If the Strstreambuf was created with a const String,
+the fetch operations won't modify the String, and
+output operations will have no effect.
+Strstreambufs support arbitrary putback.
+.IP "\f4Strstreambuf();\f1"
+Characters will be stored into and fetched from an 
+initially empty internal String.
+.IP "\f4Strstreambuf(String& s);\f1"
+Characters will be stored into and fetched 
+from \f4s\f1.  Since buffering may occur,
+the contents of \f4s\f1 at any given moment may not 
+be equal to the the current contents of the sequence.
+Calling \f4sync()\f1 forces agreement.
+.IP "\f4Strstreambuf(const String& s);\f1"
+Characters will be fetched from \f4s\f1.
+All store operations on the Strstreambuf
+object will fail.
+.IP "\f4~Strstreambuf();\f1"
+Destructor.
+.IP "\f4str();\f1"
+The current contents of the sequence.
+.SS "class Strstreambase"
+.IP "\f4Strstreambase();\f1"
+An ios employing a Strstreambuf
+created by the constructor \f4Strstreambuf()\f1.
+.IP "\f4Strstreambase(String& s);\f1"
+An ios employing a Strstreambuf
+created by the constructor \f4Strstreambuf(s)\f1.
+.IP "\f4Strstreambase(const String& s);\f1"
+An ios employing a Strstreambuf
+created by the constructor \f4Strstreambuf(s)\f1.
+.IP "\f4~Strstreambase();\f1"
+Destructor.
+.IP "\f4Strstreambuf* rdbuf();\f1"
+A pointer to the underlying Strstreambuf.
+.SS "class iStrstream"
+.IP "\f4iStrstream(const String& s);\f1"
+An istream employing a Strstreambuf
+created by the constructor \f4Strstreambuf(s)\f1.
+Reading characters from an iStrstream will not
+modify the characters in the String.
+.IP "\f4~iStrstream();\f1"
+Destructor.
+.SS "class oStrstream"
+.IP "\f4oStrstream();\f1"
+An ostream employing a Strstreambuf
+created by the constructor \f4Strstreambuf()\f1.
+.IP "\f4oStrstream(String& s);\f1"
+An ostream employing a Strstreambuf
+created by the constructor \f4Strstreambuf(s)\f1.
+.IP "\f4~oStrstream();\f1"
+Destructor.
+.IP "\f4str();\f1"
+The current contents of the sequence.  
+(Equivalent to \f4rdbuf()->str()\f1.)
+.SS "class Strstream"
+.IP "\f4Strstream();\f1"
+An iostream employing a Strstreambuf
+created by the constructor \f4Strstreambuf()\f1.
+.IP "\f4Strstream(String& s);\f1"
+An iostream employing a Strstreambuf
+created by the constructor \f4Strstreambuf(s)\f1.
+Reading characters from an iStrstream will
+remove the characters from the String.
+.IP "\f4~Strstream();\f1"
+Destructor.
+.IP "\f4str();\f1"
+The current contents of the sequence.  
+(Equivalent to \f4rdbuf()->str()\f1.)
+.SS COMPATIBILITY
+In earlier releases, the class Strstreambase 
+was called Strstream, and the current class Strstream did 
+not exist.  If your code uses the old class Strstream, 
+then you must change all occurrences of Strstream to 
+Strstreambase.  This change was made to add missing 
+functionality to this component
+in a way which matches the functionality already present 
+in \f3strstream(iostream(3C++))\f1.
+.P
+In a previous release, the iStrstream class
+worked just like the Strstream class \- it
+required a non-const String argument, and
+each read operation on an iStrstream would remove
+characters that were read
+from the beginning of the String.
+This has been changed for three reasons:  it is more
+efficient not to modify the underlying String
+(especially for large Strings), the new behavior
+matches the behavior of istrstream, and now it is
+possible to create iStrstreams from const Strings.
+.SH SEE ALSO
+.Bf
+\f3iostream(3C++)\fP
+\f3String(3C++)\fP
+\f3strstream(3C++)\fP
+.Be

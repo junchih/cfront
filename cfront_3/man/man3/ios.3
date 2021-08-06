@@ -1,0 +1,616 @@
+.  \"ident	"@(#)cls4:man/stream/ios.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any
+.  \"actual or intended publication of such source code.
+.TH IOS 3C++ "C++ Stream Library" " "
+.SH NAME
+ios \- input/output formatting
+.SH SYNOPSIS
+.nf
+.ta1i 2i
+.ft B
+#include <iostream.h>
+
+class ios {
+public:
+	enum	io_state { goodbit=0, eofbit, failbit, badbit };
+	enum	open_mode { in, out, ate, app, trunc, nocreate, noreplace };
+	enum	seek_dir { beg, cur, end };
+	/* flags for controlling format */
+	enum	{ skipws=01,
+		  left=02,  right=04, internal=010,
+		  dec=020, oct=040, hex=0100,
+		  showbase=0200, showpoint=0400, uppercase=01000, showpos=02000,
+		  scientific=04000, fixed=010000,
+		  unitbuf=020000, stdio=040000 };
+	static const long basefield;
+					/* dec|oct|hex */
+	static const long adjustfield;
+					/* left|right|internal */
+	static const long floatfield;
+					/* scientific|fixed */
+public:
+		ios(streambuf*);
+
+	int	bad() const;
+	static long	bitalloc();
+	void	clear(int state =0);
+	int	eof() const;
+	int	fail() const;
+	char	fill() const;
+	char	fill(char);
+	long	flags() const;
+	long	flags(long);
+	int	good() const;
+	long&	iword(int);
+	int	operator!() const;
+		operator void*();
+		operator const void*() const;
+	int	precision() const;
+	int	precision(int);
+	streambuf*	rdbuf();
+	void* &	pword(int);
+	int	rdstate() const;
+	long	setf(long setbits, long field);
+	long	setf(long);
+	static void	sync_with_stdio();
+	ostream*	tie();
+	ostream*	tie(ostream*);
+	long	unsetf(long);
+	int	width() const;
+	int	width(int);
+	static int	xalloc();
+protected:
+		ios();
+		init(streambuf*);
+private:
+		ios(ios&);
+	void	operator=(ios&)	;
+};
+
+	/* Manipulators */
+ios&	dec(ios&) ; 
+ios&	hex(ios&) ;
+ios&	oct(ios&) ;
+ostream&	endl(ostream& i) ;
+ostream&	ends(ostream& i) ;
+ostream&	flush(ostream&) ;
+istream&	ws(istream&) ;
+.fi
+.ft R
+.SH DESCRIPTION
+The stream classes derived from class \f(CWios\f1
+provide a high level interface that
+supports transferring
+formatted and unformatted information into and out of
+\f(CWstreambuf\f1s.
+This manual page describes the operations common to both input
+and output.
+.PP
+Several enumerations are declared in class \f(CWios\fP,
+\f(CWopen_mode\fP, \f(CWio_state\fP, \f(CWseek_dir\fP,
+and format flags,
+to avoid polluting the global name space.
+The \f(CWio_state\fPs are described on this manual page
+under "Error States."
+The format fields are also described on this page,
+under "Formatting."
+The \f(CWopen_mode\fPs are described in detail in \f2fstream(3C++)\fP
+under \f3open()\fP.
+The \f(CWseek_dir\fPs are described in \f2sbuf.pub(3C++)\fP
+under \f3seekoff()\fP.
+.PP
+In the following descriptions assume:
+.RS
+.br
+\(em \f3s\f1 and \f3s2\f1 are \f(CWios\f1s.
+.br
+\(em \f3sr\f1 is an \f(CWios&\f1.
+.br
+\(em \f3sp\f1 is a \f(CWios*\f1.
+.br
+\(em \f3i\f1, \f3oi\f1 \f3j\fP, and \f3n\f1 are \f(CWint\f1s.
+.br
+\(em \f3l\f1, \f3f\fP, and \f3b\f1 are \f(CWlong\fPs.
+.br
+\(em \f3c\f1 and \f3oc\f1 are \f(CWchar\f1s.
+.br
+\(em \f3osp\f1 and \f3oosp\fP are \f(CWostream*\f1s.
+.br
+\(em \f3sb\f1 is a \f(CWstreambuf*\f1.
+.br
+\(em \f3pos\f1 is a \f(CWstreampos\f1.
+.br
+\(em \f3off\f1 is a \f(CWstreamoff\f1.
+.br
+\(em \f3dir\f1 is a \f(CWseek_dir\f1.
+.br
+\(em \f3mode\f1 is an \f(CWint\f1 representing an \f(CWopen_mode\fP.
+.br
+\(em \f3fct\f1 is a function with type \f(CWios& (*)(ios&)\f1.
+.br
+\(em \f3vp\f1 is a \f(CWvoid*&\f1.
+.RE
+.SS "Constructors and assignment:"
+.RS
+.TP
+\f3ios(sb)\f1
+The \f(CWstreambuf\fP denoted by \f3sb\f1
+becomes the \f(CWstreambuf\f1 associated with the constructed \f3ios\f1.
+If \f3sb\f1 is null, the effect is undefined.
+.sp
+.nf
+.in -.5i
+\f3ios(sr)\f1
+\f3s2=s\f1
+.in
+.fi
+Copying of \f(CWios\f1s is not well-defined in general,
+therefore the constructor and assignment operators are private
+so that the compiler will complain about attempts
+to copy \f(CWios\fP objects.
+Copying pointers to \f(CWiostream\fPs
+is usually what is desired.
+.sp
+.nf
+.in -.5i
+\f3ios()\f1
+\f3init(sb)\f1
+.in
+.fi
+Because class ios is now inherited as a virtual base class,
+a constructor with no arguments must be used.
+This constructor is declared protected.
+Therefore ios::init(streambuf*) is declared protected and
+must be used for initialization of derived classes.
+.RE
+.SS "Error States"
+An \f3ios\f1 has an internal \f2error state\fP (which is a collection
+of the bits declared as \f(CWio_state\f1s).
+Members related to the error state are:
+.RS
+.TP
+\f3i=s.rdstate()\f1
+Returns the current error state.
+.TP
+\f3s.clear(i)\f1
+Stores \f3i\f1 as the error state.
+If \f3i\f1 is zero, this clears all bits.
+To set a bit without clearing previously
+set bits requires something like
+\f3s.clear(ios::badbit|s.rdstate())\f1.
+.TP
+\f3i=s.good()\f1
+Returns non-zero if the error state has no bits set,
+zero otherwise.
+.TP
+\f3i=s.eof()\f1
+Returns non-zero if \f(CWeofbit\f1 is set in the error state,
+zero otherwise.
+Normally this bit is set when an end-of-file has been encountered
+during an extraction.
+.TP
+\f3i=s.fail()\f1
+Returns non-zero if either \f(CWbadbit\f1 or \f(CWfailbit\f1
+is set in the error state, zero otherwise.
+Normally this indicates that some extraction or conversion has failed,
+but the stream is still usable.
+That is, once the \f(CWfailbit\f1 is cleared,
+I/O on \f3s\fP can usually continue.
+.TP
+\f3i=s.bad()\f1
+Returns non-zero if \f3badbit\f1 is set in the error state,
+zero otherwise.
+This usually indicates that some operation on \f3s.rdbuf()\f1 has failed,
+a severe error, from which recovery is probably impossible.
+That is, it will probably be impossible to continue I/O operations
+on \f3s\fP.
+.RE
+.SS "Operators"
+.PP
+Three operators are defined to allow convenient checking of the
+error state of an \f(CWios\fP:
+\f3operator!()\fP, \f3operator const void*()\fP, and \f3operator void*()\fP.
+The latter two functions convert an \f(CWios\fP to a pointer so that it can be
+compared to zero.
+The conversion will return 0 if \f(CWfailbit\fP or \f(CWbadbit\fP
+is set in the error state,
+and will return a pointer value otherwise.
+This pointer is not meant to be used.
+This allows one to write expressions such as:
+.RS
+\f3
+if ( cin ) ...
+.sp
+if ( cin >> x ) ...
+\f1
+.RE
+.PP
+The \f3!\fP operator returns non-zero if \f(CWfailbit\fP or \f(CWbadbit\fP
+is set in the error state,
+which allows expressions like the following to be used:
+.RS
+\f3
+if ( !cout ) ...
+\f1
+.RE
+.SS "Formatting"
+An \f(CWios\f1 has a \f2format state\fP
+that is used by input and output operations to control the
+details of formatting operations.
+For other operations the format state has no particular effect
+and its components may be set and examined arbitrarily by user code.
+Most formatting details are controlled by using the
+\f3flags()\fP, \f3setf()\fP, and \f3unsetf()\fP functions
+to set the following flags,
+which are declared in an enumeration in class \f(CWios\fP.
+Three other components of the format state are controlled separately
+with the functions \f3fill()\fP, \f3width()\fP, and \f3precision()\fP.
+.RS
+.TP
+\f(CWskipws\fP
+If \f(CWskipws\fP is set, whitespace will be skipped on input.
+This applies to scalar extractions.
+When \f(CWskipws\fP is not set, whitespace is not skipped
+before the extractor begins conversion.
+As a precaution against looping,
+zero width fields are considered a bad format by the extractors,
+so if the next character is whitespace and the skip variable is not set,
+the arithmetic extractors will signal an error.
+.sp
+.nf
+.in -.5i
+\f(CWleft\fP
+\f(CWright\fP
+\f(CWinternal\fP
+.in
+.fi
+These flags control the padding of a value.
+When \f(CWleft\fP is set, the value is left-adjusted,
+that is, the fill character is added after the value.
+When \f(CWright\fP is set, the value is right-adjusted,
+that is, the fill character is added before the value.
+When \f(CWinternal\fP is set, the fill character is added after
+any leading sign or base indication, but before the value.
+Right-adjustment is the default if none of these flags is set.
+These fields are collectively identified by the static member,
+\f(CWios::adjustfield\fP.
+The fill character is controlled by the \f3fill()\fP function,
+and the width of padding is controlled by the \f3width()\fP function.
+.sp
+.nf
+.in -.5i
+\f(CWdec\fP
+\f(CWoct\fP
+\f(CWhex\fP
+.in
+.fi
+These flags control the conversion base of a value.
+The conversion base is 10 (decimal) if \f(CWdec\fP is set,
+but if \f(CWoct\fP or \f(CWhex\fP is set,
+conversions are done in octal or hexidecimal, respectively.
+If none of these is set, insertions are in decimal,
+but extractions are interpreted according to the C++ lexical conventions
+for integral constants.
+These fields are collectively identified by the static member,
+\f(CWios::basefield\fP.
+The flag \f(CWdec\fP is set by default in ios::init(streambuf*), and a manipulator
+must be used to change the conversion base flags to another value; see
+\f2manip(3C++)\fP.
+The manipulators \f3hex\fP, \f3dec\fP, and \f3oct\fP
+can also be used to set the conversion base; see "Built-in Manipulators"
+below.
+.TP
+\f(CWshowbase\fP
+If \f(CWshowbase\fP is set, 
+insertions will be converted to an external form that can be read
+according to the C++ lexical conventions for integral constants.
+\f(CWshowbase\fP is unset by default.
+.TP
+\f(CWshowpos\fP
+If \f(CWshowpos\fP is set, then a "+" will be inserted
+into a decimal conversion of a postive integral value.
+.TP
+\f(CWuppercase\fP
+If \f(CWuppercase\fP is set, then an uppercase "X" will be used
+for hexadecimal conversion when \f(CWshowbase\fP is set,
+or an uppercase "E" will be used
+to print floating point numbers in scientific notation.
+.TP
+\f(CWshowpoint\fP
+If \f(CWshowpoint\fP is set, trailing zeros and decimal points
+appear in the result of a floating point conversion.
+.sp
+.nf
+.in -.5i
+\f(CWscientific\fP
+\f(CWfixed\fP
+.in
+.fi
+These flags control the format to which a floating point value
+is converted for insertion into a stream.
+If \f(CWscientific\fP is set, the value is converted using scientific
+notation, where there is one digit before the decimal point
+and the number of digits after it is equal to the \f2precision\fP
+(see below), which is six by default.
+An uppercase "E" will introduce the exponent if \f(CWuppercase\fP
+is set, a lowercase "e" will appear otherwise.
+If \f(CWfixed\fP is set, the value is converted to decimal notation
+with \f2precision\fP digits after the decimal point,
+or six by default.
+If neither \f(CWscientific\fP nor \f(CWfixed\fP is set,
+then the value will be converted using either notation,
+depending on the value;  scientific notation will be used
+only if the exponent resulting from the conversion
+is less than -4 or greater than the precision.
+If \f(CWshowpoint\fP is not set and \f(CWfixed\fP and \f(CWscientific\fP
+are also unset,
+trailing zeroes are removed from the result
+and a decimal point appears only if it is followed by a digit.
+\f(CWscientific\fP and \f(CWfixed\fP are collectively identified
+by the static member \f(CWios::floatfield\fP.
+.TP
+\f(CWunitbuf\fP
+When set, a flush is performed by \f3ostream::osfx()\fP
+after each insertion.
+Unit buffering provides a compromise between buffered output
+and unbuffered output.
+Performance is better under unit buffering than unbuffered output,
+which makes a system call for each character output.
+Unit buffering makes a system call for each insertion operation,
+and doesn't require the user to call \f3ostream::flush()\fP.
+.TP
+\f(CWstdio\fP
+When set, \f(CWstdout\fP and \f(CWstderr\fP are flushed by
+\f3ostream::osfx()\fP after each insertion.
+.RE
+.PP
+The following functions use and set the format flags and variables.
+.RS
+.TP
+\f3oc=s.fill(c)\f1
+Sets the "fill character" format state variable to \f3c\f1
+and returns the previous value.
+\f3c\fP will be used as the padding character, if one is necessary
+(see \f3width\fP(), below).
+The default fill or padding character is a space.
+The positioning of the fill character is determined by
+the \f(CWright\fP, \f(CWleft\fP, and \f(CWinternal\fP flags; see above.
+A parameterized manipulator, \f3setfill\fP, is also available for
+setting the fill character; see \f2manip(3C++)\fP.
+.TP
+\f3c=s.fill()\f1
+Returns the "fill character" format state variable.
+.TP
+\f3l=s.flags()\fP
+Returns the current format flags.
+.TP
+\f3l=s.flags(f)\fP
+Resets all the format flags to those specified in \f3f\fP
+and returns the previous settings.
+.TP
+\f3oi=s.precision(i)\f1
+Sets the "precision" format state variable to \f3i\f1
+and returns the previous value.
+This variable controls the number of significant digits inserted
+by the floating point inserter.
+The default is 6.
+A parameterized manipulator, \f3setprecision\fP, is also available for
+setting the precision; see \f2manip(3C++)\fP.
+.TP
+\f3i=s.precision()\f1
+Returns the "precision" format state variable.
+.TP
+\f3l=s.setf(b)\fP
+Turns on in \f3s\fP the format flags marked in \f3b\fP
+and returns the previous settings.
+A parameterized manipulator, \f3setiosflags\fP, performs the same function;
+see \f2manip(3C++)\fP.
+.TP
+\f3l=s.setf(b,f)\fP
+Resets in \f3s\fP only the format flags specified by \f3f\fP
+to the settings marked in \f3b\fP,
+and returns the previous settings.
+That is, the format flags specified by \f3f\fP are cleared in \f3s\fP,
+then reset to be those marked in \f3b\fP.
+For example, to change the conversion base in \f3s\fP to be \f(CWhex\fP,
+one could write:
+.B "s.setf(ios::hex,ios::basefield)" .
+\f(CWios::basefield\fP specifies the conversion base bits
+as candidates for change, and \f(CWios::hex\fP specifies the new value.
+.B "s.setf(0,f)"
+will clear all the bits specified by \f3f\fP,
+as will a parameterized manipulator, \f3resetiosflags\fP;
+see \f2manip(3C++)\fP.
+.TP
+\f3l=s.unsetf(b)\f1
+Unsets in \f3s\fP the bits set in \f3b\fP
+and returns the previous settings.
+.TP
+\f3oi=s.width(i)\f1
+Sets the "field width" format variable to \f3i\fP
+and returns the previous value.
+When the field width is zero (the default),
+inserters will insert only as many characters as necessary
+to represent the value being inserted.
+When the field width is non-zero, the inserters will insert at least
+that many characters, using the fill character to pad the value,
+if the value being inserted requires fewer than field-width characters
+to be represented.
+However, the numeric inserters never truncate values,
+so if the value being inserted will not fit in field-width characters,
+more than field-width characters will be output.
+The field width is always interpreted as a mininum number of characters;
+there is no direct way to specify a maximum number of characters.
+The field width format variable is reset to the default (zero)
+after each insertion or extraction,
+and in this sense it behaves as a parameter for insertions and extractions.
+A parameterized manipulator, \f3setw\fP, is also available for
+setting the width, see \f2manip(3C++)\fP.
+.TP
+\f3i=s.width()\f1
+Returns the "field width" format variable.
+.RE
+.SS "User-defined Format Flags"
+Class \f(CWios\fP can be used as a base class for derived classes
+that require additional format flags or variables.
+The iostream library provides several functions to do this.
+The two static member functions \f3ios::xalloc\fP and \f3ios::bitalloc\fP,
+allow several such classes to be used together without interference.
+.RS
+.TP
+\f3b=ios::bitalloc()\fP
+Returns a \f(CWlong\fP with a single, previously unallocated, bit set.
+This allows users who need an additional flag to acquire one,
+and pass it as an argument to \f3ios::setf()\fP, for example.
+.TP
+\f3i=ios::xalloc()\fP
+Returns a previously unused index into an array of words
+available for use as format state variables by derived classes.
+.TP
+\f3l=s.iword(i)\fP
+When \f3i\fP is an index allocated by \f3ios::xalloc\fP,
+\f3iword()\fP returns a reference to the \f3i\fPth user-defined word.
+.TP
+\f3vp=s.pword(i)\fP
+When \f3i\fP is an index allocated by \f3ios::xalloc\fP,
+\f3pword()\fP returns a reference to the \f3i\fPth user-defined word.
+\f3pword()\fP is the same as \f3iword\fP except that it is typed differently.
+.RE
+.SS "Other members:"
+.RS
+.TP
+\f3sb=s.rdbuf()\f1
+Returns a pointer to the \f(CWstreambuf\f1 associated with
+\f3s\f1 when \f3s\f1 was constructed.
+.TP
+\f3ios::sync_with_stdio()\f1
+Solves problems that arise when mixing stdio and iostreams.
+The first time it is called it will reset the
+standard iostreams (\f(CWcin\f1, \f(CWcout\f1, \f(CWcerr\f1,
+\f(CWclog\f1) to be streams using  \f(CWstdiobuf\f1s.
+After that, input and output using these streams may
+be mixed with input and output using the corresponding \f(CWFILE\f1s
+(\f(CWstdin\fP, \f(CWstdout\fP, and \f(CWstderr\fP)
+and will be properly synchronized.
+\f3sync_with_stdio()\fP makes \f(CWcout\fP and \f(CWcerr\fP unit buffered
+(see \f(CWios::unitbuf\fP and \f(CWios::stdio\fP above).
+Invoking \f3sync_with_stdio()\fP degrades performance a variable amount,
+depending on the length of the strings being inserted
+(shorter strings incur a larger performance hit).
+.TP
+\f3oosp=s.tie(osp)\f1
+Sets the "tie" variable to \f3osp\fP,
+and returns its previous value.
+This variable supports automatic "flushing" of \f(CWios\fPs.
+If the tie variable is non-null and an \f(CWios\fP needs more characters
+or has characters to be consumed,
+the \f(CWios\fP pointed at by the tie variable is flushed.
+By default, \f(CWcin\fP is tied initially to \f(CWcout\fP
+so that attempts to get more characters from standard input
+result in flushing standard output.
+Additionally, \f(CWcerr\fP and \f(CWclog\fP are tied to \f(CWcout\fP
+by default.
+For other \f(CWios\fPs, the tie variable is set to zero by default.
+.TP
+\f3osp=s.tie()\f1
+Returns the "tie" variable.
+.RE
+.SS "Built-in Manipulators:"
+Some convenient manipulators (functions that take an \f(CWios&\f1,
+an \f(CWistream&\f1, or an \f(CWostream&\f1
+and return their argument, see \f2manip(3C++)\fP) are:
+.RS
+.br
+.nf
+.in -.5i
+\f3sr<<dec
+\f3sr>>dec\f1
+.fi
+.in
+These set the conversion base format flag to 10.
+.sp
+.nf
+.in -.5i
+\f3sr<<hex
+\f3sr>>hex\f1
+.in
+.fi
+These set the conversion base format flag to 16.
+.sp
+.nf
+.in -.5i
+\f3sr<<oct
+\f3sr>>oct\f1
+.fi
+.in
+These set the conversion base format flag to 8.
+.TP
+\f3sr>>ws\f1
+Extracts whitespace characters.
+See \f2istream(3C++)\fP.
+.TP
+\f3sr<<endl\f1
+Ends a line by inserting a newline character and flushing.
+See \f2ostream(3C++)\fP.
+.TP
+\f3sr<<ends\f1
+Ends a string by inserting a null (0) character.
+See \f2ostream(3C++)\fP.
+.TP
+\f3sr<<flush\f1
+Flushes \f3outs\f1.
+See \f2ostream(3C++)\fP.
+.RE
+.PP
+Several parameterized manipulators that operate on \f(CWios\fP
+objects are described in \f2manip(3C++)\fP:
+\f3setw\fP, \f3setfill\fP, \f3setprecision\fP, \f3setiosflags\fP,
+and \f3resetiosflags\fP.
+.PP
+The \f(CWstreambuf\f1 associated with an \f(CWios\f1 may be manipulated
+by other methods than through the \f(CWios\f1.
+For example, characters may
+be stored in a queuelike \f(CWstreambuf\f1 through an \f(CWostream\f1
+while they are being fetched through an \f(CWistream\f1.
+Or for efficiency some
+part of a program may choose to do \f(CWstreambuf\f1 operations
+directly rather than through the \f(CWios\f1.
+In most cases
+the program does not have to worry about this possibility, because
+an \f(CWios\f1 never saves information about the internal state
+of a \f(CWstreambuf\f1.
+For example, if the \f(CWstreambuf\f1 is
+repositioned between extraction operations the extraction (input) 
+will proceed normally.
+.SH CAVEATS
+.PP
+The need for \f3sync_with_stdio\f1 is a wart.
+The old stream package did this as a default, but in the iostream package
+unbuffered \f(CWstdiobuf\f1s are too inefficient to be the default.
+.PP
+The stream package had a constructor that took a \f3FILE*\f1 argument.
+This is now replaced by \f(CWstdiostream\f1.
+It is not declared even as an obsolete form to avoid
+having \f(CWiostream.h\f1
+depend on \f(CWstdio.h\f1.
+.PP
+The old stream package allowed copying of streams.
+This is disallowed by the iostream package.
+However, objects of type \f(CWistream_withassign\fP,
+\f(CWostream_withassign\fP, and \f(CWiostream_withassign\fP
+can be assigned to.
+Old code using copying can usually be
+rewritten to use pointers or these classes.
+(The standard streams \f(CWcin\fP, \f(CWcout\fP, \f(CWcerr\fP,
+and \f(CWclog\fP are members of "withassign" classes,
+so they can be assigned to, as in
+\f(CWcin = inputfstream\fP.)
+.SH SEE ALSO
+IOS.INTRO(3C++),
+streambuf(3C++),
+istream(3C++),
+ostream(3C++),
+manip(3C++).

@@ -1,0 +1,69 @@
+#ident	"@(#)local:lib/makefile	3.1" 
+###############################################################################
+#
+# C++ Standard Components, Release 3.0.
+#
+# Copyright (c) 1991, 1992 AT&T and Unix System Laboratories, Inc.
+# Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+#
+# THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and Unix System
+# Laboratories, Inc.  The copyright notice above does not evidence
+# any actual or intended publication of such source code.
+#
+###############################################################################
+
+CC=CC
+
+# Set this to the flavor of your operating system.
+# Set it to 0 for systems that are like UNIX System V, 
+# such as Amdahl UTS and HP-UX.  Set it to 1 for systems 
+# that are like Berkeley UNIX, such as SunOS.
+BSD=1
+
+# Here you should specify any special options you need
+# to pass to the CC command.
+CCFLAGS= 
+
+############################################################
+# You shouldn't have to change anything below this line
+############################################################
+SHELL=/bin/sh
+
+DEMODIRS= \
+	libSC/Args/demos \
+	libSC/Block/demos \
+	libSC/Fsm/demos \
+	libSC/Graph/demos \
+	libSC/Graph_alg/demos \
+	libSC/List/demos \
+	libSC/List_old/demos \
+	libSC/Map/demos \
+	libSC/Path/demos \
+	libSC/Pool/demos \
+	libSC/Regex/demos \
+	libSC/Set/demos \
+	libSC/Stopwatch/demos \
+	libSC/String/demos \
+	libSC/Symbol/demos \
+	libSC/Time/demos \
+	libSC/fs/demos \
+	libSC/ipc/demos \
+	libSC/G2++/compsrc/demos \
+	libSC/G2++/g2++lib/demos
+
+all:	force
+	@-echo "You can only do a make demos" 1>&2
+
+demos:	aux/fnewer force
+	chmod +x ./aux/domake
+	./aux/domake -d $(CC) $(BSD) "$(CCFLAGS)"
+
+aux/fnewer:	aux/fnewer.c
+	$(CC) $(CCFLAGS) -oaux/fnewer aux/fnewer.c
+
+clean:
+	for d in $(DEMODIRS); do \
+		(cd $$d && $(MAKE) SLELIB=$(PWD)/aux clean); \
+	done
+
+force:	

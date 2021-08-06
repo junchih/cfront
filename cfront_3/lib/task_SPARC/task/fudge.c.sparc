@@ -1,0 +1,72 @@
+/*ident	"@(#)cop4:sparc_task/task/fudge.c.sparc	1.1" */
+/*******************************************************************************
+ 
+C++ source for the C++ Language System, Release 3.0.  This product
+is a new release of the original cfront developed in the computer
+science research center of AT&T Bell Laboratories.
+
+Copyright (c) 1991 AT&T and UNIX System Laboratories, Inc.
+Copyright (c) 1984, 1989, 1990 AT&T.  All Rights Reserved.
+
+THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE of AT&T and UNIX System
+Laboratories, Inc.  The copyright notice above does not evidence
+any actual or intended publication of such source code.
+
+*******************************************************************************/
+/*
+ * Copyright (c) 1990, 1991 by Sun Microsystems, Inc.
+ */
+
+#include <task.h>
+#include "hw_stack.h"
+
+// SPARC frame fudger
+int*    Skip_pc_p;      // global to hold fudged return pc.
+                        // See comments in hw_stack.c.
+
+
+/* careful -- stack frame not self-describing */
+// STACK GROWS DOWN
+
+/*
+ * On the SPARC, it's hopeless to try to guess how many of the
+ * saved registers are meaningful.  But, they're always there and
+ * the relevant parts of the stack layout never change.
+ */
+FrameLayout::FrameLayout(int* fp)
+{
+	int *ofp = (int*)OLD_FP(fp);
+
+	FullFrameLen = ofp - fp;
+}
+
+/*
+ * Fudge frame of function-defined-by-f_fp (called "f" below)
+ * so that that function returns to its grandparent,
+ * in particular, so a parent task returns to the function that
+ * called the derived constructor (de_ctor), skipping de_ctor;
+ * the child will return to the derived constructor, which is its "main."
+ *
+ * This will be quite different on the SPARC.
+ *
+ * Here's the first thing I think might work:
+ *	SAVE
+ *	FLUSH-REGS
+ *	ALTER THE STACK CONNECTIONS
+ *	RESTORE
+ */
+void
+task::fudge_return(int* f_fp)
+{
+	int *p_fp, gramps_fp;
+
+	// C gives me the SAVE
+	asm("	t 0x83 ");
+
+	// Now re-string the stack frames
+	p_fp = (int*)OLD_FP(f_fp);
+	gramps_fp = OLD_FP(p_fp);
+
+	OLD_PC(f_fp) = OLD_PC(p_fp);
+	OLD_FP(f_fp) = gramps_fp;
+}

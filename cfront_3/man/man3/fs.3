@@ -1,0 +1,303 @@
+.\" ident	@(#)fs:man/fs.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3fs\f1 \f33C++\f1 " "
+.SH NAME
+fs \- C++ symbolic freestore manager
+.SH SYNOPSIS of fs.h
+.Bf
+extern "C" {
+    void fs_showall();
+    void fs_mark();
+    void fs_unmark();
+    void fs_since();
+    void fs_sincen(int i);
+    void fs_watch(int i);
+    void fs_unwatch(int i);
+    void fs_watchall_d();
+    void fs_unwatchall_d();
+    void fs_watchall_n();
+    void fs_unwatchall_n();
+    void fs_break();
+    void fs_status();
+    void fs_dbxinit();
+    void fs_help();
+}
+.SH DESCRIPTION
+These routines let the programmer
+view the contents of the freestore symbolically
+during execution of a C++ program.  They are normally
+called "by hand" by the programmer from within a debugger,
+but since they are linked in as part of the application
+code, they can also be called from the program itself.
+.PP
+In order to maximize the quality and accuracy of the symbolic information provided,
+as many of the program source files as possible should
+be compiled with 
+.B \-fs
+(see 
+\f3CC(1C++)\f1).
+In order to use any of the above functions, programmers
+should link their program with 
+.BR \-lfs .
+.SS "Symbolic information"
+For each object in the freestore 
+(that is, for each object created by a 
+.I new
+operation), 
+\f3fs\f1
+keeps track of
+the object's
+type and size, the source code line on which it was newed,
+its main memory address, and miscellaneous other information.
+Each freestore object is also given a unique identifying number.
+Calling the function 
+\f3fs_showall\f1
+from somewhere within the current context 
+(i.e., from within a debugger or from the program itself)
+results in the information for all objects currently in the freestore 
+being printed on stderr.
+.PP
+\f3fs\f1
+lets the programmer set a ``watchpoint'' on any object in the freestore.
+When (if ever) a watched object is about to be deleted,
+the function 
+\f3fs_break\f1
+is called.
+Executing the function
+\f3fs_break\f1
+has no effect (its body is empty);
+a call to
+\f3fs_break\f1
+should be thought of as 
+\f3fs\f1
+``requesting'' that program execution break at the current point.
+If the programmer is debugging the program under a debugger, she
+should have previously set a breakpoint on
+\f3fs_break\f1
+in order that 
+\f3fs\f1's
+requests be satisfied.
+Setting a watchpoint on an object that does not yet exist
+results in 
+\f3fs_break\f1
+being called
+when the object is about to be created.
+.PP
+The entire freestore can also be watched.  Setting a "delete watch"
+results in 
+\f3fs_break\f1
+being called when 
+.I any
+object is about to be deleted,
+while setting a "new watch"
+results in
+\f3fs_break\f1
+being called when
+.I any 
+object is about to be created.
+.PP
+The complete set of freestore functions is as follows:
+.IP "\f4void fs_showall();\f1"
+Shows information for all objects currently in the freestore.
+.IP "\f4void fs_mark();\f1"
+Lays down a mark at the current time.
+.IP "\f4void fs_unmark();\f1"
+Deletes the last mark.
+.IP "\f4void fs_since();\f1"
+Shows information for all objects created since the last mark.
+.IP "\f4void fs_sincen(int i);\f1"
+Shows information for all objects created since object number \f3i\f1.
+.IP "\f4void fs_watch(int i);\f1"
+Sets a watch on object number \f3i\f1.
+.IP "\f4void fs_unwatch(int i);\f1"
+Deletes the watch on object number \f3i\f1.
+.IP "\f4void fs_watchall_d();\f1"
+Watches the freestore for any 
+.I delete
+operation.
+.IP "\f4void fs_unwatchall_d();\f1"
+Stops watching the freestore for
+.I delete
+operations.
+.IP "\f4void fs_watchall_n();\f1"
+Watches the freestore for any 
+.I new 
+operation.
+.IP "\f4void fs_unwatchall_n();\f1"
+Stops watching the freestore for 
+.I new
+operations.
+.IP "\f4void fs_break();\f1"
+Function with empty body, called whenever freestore wants to break execution.
+.IP "\f4void fs_status();\f1"
+Shows the current settings of marks and watches.
+.IP "\f4void fs_dbxinit();\f1"
+Prints a .dbxinit file which incorporates 
+\f3fs\f1's
+functionality into the button panel of
+\f3dbxtool(1)\f1.
+.IP "\f4void fs_help();"
+Prints this list.
+.SH SEE ALSO
+\f3CC(1C++)\f1
+.br
+``No More Memory Leaks," tutorial included in this documentation.
+.SH FILES
+.ta 1.5i
+fsipp		the instrumenting preprocessor
+.br
+libfs.a		the library archive
+.br
+fs.h		C++ prototypes of freestore functions
+.SH WARNINGS
+The ``alert'' modifier on object descriptions means that the object was allocated
+by a global 
+.I new 
+operator and is either in the process of being initialized, or
+is initialized but the line containing the call to 
+.I new 
+was not compiled with 
+.IR \-fs .
+.PP
+Programmers should always remember to set a breakpoint on the dummy function
+\f3fs_break\f1
+immediately upon loading any program linked with 
+\f3fs\f1
+into the debugger.
+.PP
+Watches and marks are lost when a program is reloaded into the debugger.
+.PP
+Some debuggers such as 
+\f3dbx(1)\f1
+ignore breakpoints when single stepping through a program.  
+With such debuggers, the programmer should be careful single stepping when
+there are watched objects on the freestore,
+since the program will not break at
+.IR fsbreak .
+.PP
+\f3fs\f1
+renames all the programmer's
+.I new
+and 
+.I delete
+operators to
+.I _new
+and 
+.IR _delete ,
+respectively.  If the programmer wishes to set a breakpoint on the definitions of any of these functions,
+she should use the latter names.
+Also, because of this renaming, if the debugger is currently stopped at the opening curly of a
+.I new 
+or 
+.I delete 
+operator,
+the programmer will have to issue a ``step
+.IR into '' 
+command
+(rather than a ``step 
+.IR over '' 
+command)
+in order to advance execution to the first line of the function body.
+Finally, 
+if the debugger is currently stopped at the closing curly of a
+.I new
+or
+.I delete
+operator,
+the programmer may have to issue anywhere from one to three extra ``step'' commands in order to effect a return 
+back to the caller.
+.PP
+The instrumenting preprocessor does not detect all syntax errors.
+If the programmer attempts to run syntactically invalid code through the instrumenting preprocessor,
+the latter may silently generate invalid C++ code.  When this latter code
+is subsequently run through the C++ translator, the resulting error messages may be obscure.
+.PP
+If not all the code comprising a program was compiled with 
+.BR \-fs ,
+then 
+\f3fs\f1
+may be missing certain symbolic information at runtime.
+Missing information is denoted by a question mark (?); in particular,
+``T[?]'' denotes ``array of T of unknown size.''
+The ``T'' itself will also be a question mark if the type of the array elements is unknown.
+.PP
+\f3fs\f1
+does its best to hide from the programmer those objects which are created by
+\f3fs\f1
+itself rather than by the application code, but it's not perfect.
+.PP
+In
+``\fBnew \fItype-expression\fR'',
+.I type-expression
+should have no side effects.  If it does have side effects (for example,
+\fBnew T<++i>\f1), this will not be detected, and the generated code will have incorrect behavior.
+.SH BUGS
+Source files compiled with 
+.B \-fs
+may generate some spurious "fsATTLCn not used" warnings.
+.PP
+\f3fs\f1
+learns about the creation 
+of an object only after the object's memory has been allocated.
+Further, 
+\f3fs\f1 
+learns the type of an object only after the call to
+.I new
+which
+created
+it has returned.  The exception to this is when the
+.I new
+used is a class (rather than global) operator; in that case,
+the object's type will temporarily be recorded as the name of the class defining the
+invoked 
+.I new 
+(which is either the actual type of the object, or an ancestor of the actual type).
+When the original call to 
+.I new 
+returns, 
+\f3fs\f1
+will learn the object's actual type (unless the use of
+.I new
+was not compiled with -fs).
+.PP
+On System V machines, a bug in the C compilation system frequently results
+in programs compiled with 
+.B \-fs \-g
+to produce 
+``ld: line nbr entry found for non-relocatable symbol''
+errors during linking.  
+The resulting program will be executable, but if it is run from within
+\f3sdb\f1(1),
+\f3fs\f1
+may display erroneous information.
+.PP
+In
+``\fBdelete \fIexpression\fR'',
+.I expression
+must be a simple variable name.
+(The workaround is to use a temporary variable.)
+.PP
+In
+``\fBnew \fItype-expression\fR'',
+.I type-expression
+cannot be a complicated type expression.
+(The workaround is to use a typedef.)
+.PP
+If neither the use nor the corresponding definition of a 
+.IR new / delete
+operator has been instrumented,
+\f3fs\f1
+will not detect the creation/deletion of any objects created/deleted by that use of the 
+operator.  
+This can result in 
+\f3fs_showall\f1
+displaying information for objects which no longer exist.

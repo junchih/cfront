@@ -1,0 +1,213 @@
+.  \"ident	"@(#)cls4:man/stream/fstream.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any
+.  \"actual or intended publication of such source code.
+.TH FSTREAM 3C++ "C++ Stream Library" " "
+.SH NAME
+fstream \- iostream and streambuf specialized to files
+.SH SYNOPSIS
+.nf
+.ft B
+.ta1i 2i
+#include <fstream.h>
+
+typedef long streamoff, streampos;
+class ios {
+public:
+	enum	seek_dir { beg, cur, end } ;
+	enum	open_mode { in, out, ate, app, trunc, nocreate, noreplace } ;
+	enum	io_state { goodbit=0, eofbit, failbit, badbit } ;
+	// \f2and lots of other stuff, see ios(3C++) ... \fP
+} ;
+
+class ifstream : istream {
+		ifstream() ;
+		ifstream(const char* name, int =ios::in, int prot =filebuf::openprot) ;
+		ifstream(int fd) ;
+		ifstream(int fd, char* p, int l) ;
+
+	void	attach(int fd) ;
+	void	close() ;
+	void	open(const char* name, int =ios::in, int prot=filebuf::openprot) ;
+	filebuf*	rdbuf() ;
+	void	setbuf(char* p, int l) ;
+};
+
+class ofstream : ostream {
+		ofstream() ;
+		ofstream(const char* name, int =ios::out, int prot =filebuf::openprot) ;
+		ofstream(int fd) ;
+		ofstream(int fd, char* p, int l) ;
+
+	void	attach(int fd) ;
+	void	close() ;
+	void	open(const char* name, int =ios::out, int prot=filebuf::openprot) ;
+	filebuf*	rdbuf() ;
+	void	setbuf(char* p, int l) ;
+};
+
+class fstream : iostream {
+		fstream() ;
+		fstream(const char* name, int mode, int prot =filebuf::openprot) ;
+		fstream(int fd) ;
+		fstream(int fd, char* p, int l) ;
+
+	void	attach(int fd) ;
+	void	close() ;
+	void	open(const char* name, int mode, int prot=filebuf::openprot) ;
+	filebuf*	rdbuf() ;
+	void	setbuf(char* p, int l) ;
+};
+.fi
+.ft R
+.SH DESCRIPTION
+\f(CWifstream\f1, \f(CWofstream\f1, and \f(CWfstream\f1
+specialize \f(CWistream\f1, \f(CWostream\f1, and \f(CWiostream\f1,
+respectively, to files.
+That is, the associated \f(CWstreambuf\fP will be a \f(CWfilebuf\f1.
+.PP
+In the following descriptions, assume
+.br
+\(em \f3f\f1 is any of \f(CWifstream\f1, \f(CWofstream\f1, or \f(CWfstream\f1.
+.br
+\(em \f3pfb\f1 is a \f(CWfilebuf*\f1.
+.br
+\(em \f3psb\f1 is a \f(CWstreambuf*\f1.
+.br
+\(em \f3name\f1 and \f3ptr\f1 are \f(CWchar*\f1s.
+.br
+\(em \f3i\f1, \f3fd\f1, \f3len\f1, and \f3prot\f1 are \f(CWint\f1s.
+.br
+\(em \f3mode\f1 is an \f(CWint\f1 representing an \f(CWopen_mode\fP.
+.SS "Constructors"
+The constructors for \f2x\f(CWstream\f1, where \f2x\f1 is either
+\f(CWif\f1,
+\f(CWof\f1 or \f(CWf\f1, are:
+.RS
+.TP
+\f2x\f3stream()\f1
+Constructs an unopened \f2x\f(CWstream\f1.
+.TP
+\f2x\f3stream(name, mode, prot)\f1
+Constructs an \f2x\f(CWstream\f1 and opens file \f3name\fP
+using \f3mode\f1 as the open mode and \f3prot\f1 as the protection mode.
+By default, \f3prot\fP is \f(CWfilebuf::openprot\fP, which is 0644.
+The error state (\f(CWio_state\fP) of the constructed \f2x\f(CWstream\f1
+will indicate failure in case the
+\f3open\f1 fails.
+.TP
+\f2x\f3stream(fd)\f1
+Constructs an \f2x\f(CWstream\f1 connected to file descriptor \f3fd\f1,
+which must be already open.
+.TP
+\f2x\f3stream(fd,ptr,len)\f1
+Constructs an \f2x\f(CWstream\f1 connected to file descriptor \f3fd\f1,
+and, in addition, initializes
+the associated \f(CWfilebuf\f1 to use the \f3len\f1 bytes
+at \f3ptr\f1 as the reserve area.
+If \f3ptr\f1 is null or \f3len\f1 is 0, the \f(CWfilebuf\f1
+will be unbuffered.
+.RE
+.SS "Member functions"
+.RS
+.TP
+\f3f.attach(fd)\f1
+Connects \f3f\f1 to the file descriptor \f3fd\f1.
+A failure occurs when \f3f\f1 is already connected to a file.
+A failure sets \f(CWios::failbit\f1 in \f3f\f1's error state.
+.TP
+\f3f.close()\f1
+Closes any associated \f(CWfilebuf\f1 and thereby breaks the connection
+of the \f3f\f1 to a file.  
+\f3f\f1's error state is cleared except on failure.
+A failure occurs when the call to \f3f.rdbuf()->close()\f1 fails.
+.TP
+\f3f.open(name,mode,prot)\f1
+Opens file \f3name\f1 and connects \f3f\f1 to it.
+If the file does not already exist,
+an attempt is made to create it with protection mode \f3prot\f1
+unless \f(CWios::nocreate\fP is set.
+By default, \f3prot\fP is \f(CWfilebuf::openprot\fP, which is 0644.
+Failure occurs if \f3f\f1 is already open,
+or the call to \f3f.rdbuf()->open()\f1 fails.
+\f(CWios::failbit\f1 is set in \f3f\f1's error status on failure.
+The members of \f(CWopen_mode\f1 are bits that may be or'ed together.
+(Because the or'ing returns an \f(CWint\fP, \f(CWopen()\fP takes an
+\f(CWint\fP rather than an \f(CWopen_mode\fP argument.)
+The meanings of these bits in \f3mode\f1 are 
+.RS
+.TP
+\f(CWios::app\f1
+A seek to the end of file is performed.
+Subsequent data written to the file is always added (appended)
+at the end of file.
+On some systems this is implemented in the operating system.
+In
+others it is implemented by seeking to the end of the file
+before each write.  \f(CWios::app\f1 implies \f(CWios::out\f1.
+.TP
+\f(CWios::ate\f1
+A seek to the end of the file is performed during the \f3open()\f1.
+\f(CWios::ate\f1 does not imply \f(CWios::out\f1.
+.TP
+\f(CWios::in\f1
+The file is opened for input.
+\f(CWios::in\f1 is implied by construction and opens of \f(CWifstream\f1s.
+For \f(CWfstream\f1s it indicates that input operations should be
+allowed if possible.
+It is legal to include \f(CWios::in\f1 in the modes
+of an \f(CWostream\f1 in which case it implies that the original
+file (if it exists) should not be truncated.
+.TP
+\f(CWios::out\f1
+The file is opened for output.
+\f(CWios::out\f1 is implied by construction and opens of \f(CWofstream\f1s.
+For \f(CWfstream\f1 it says that output operations are to
+be allowed.
+\f(CWios::out\fP may be specified even if \f3prot\fP
+does not permit output.
+.TP
+\f(CWios::trunc\f1
+If \f(CWios::out\f1 is not set, this flag has no effect.
+If \f(CWios::out\f1 is set, and
+if the file already exists, its contents will be truncated (discarded).
+This mode is implied when \f(CWios::out\fP is specified without \f(CWios:in\fP
+(including implicit specification for \f(CWofstream\fP)
+and neither \f(CWios::ate\fP nor \f(CWios::app\fP is specified.
+.TP
+\f(CWios::nocreate\f1
+If \f(CWios::out\f1 is not set, this flag has no effect.
+If \f(CWios::out\f1 is set, and
+if the file does not already exist, the \f3open()\fP
+will fail.
+.TP
+\f(CWios::noreplace\f1
+If \f(CWios::out\f1 is not set, this flag has no effect.
+If \f(CWios::out\f1 is set and
+the file already exists, the \f3open()\fP will fail.
+If \f(CWios::out\f1, \f(CWios::nocreate\f1, and
+\f(CWios::noreplace\f1 are set, the \f3open()\fP will fail.
+.RE
+.TP
+\f3pfb=f.rdbuf()\f1
+Returns a pointer to the \f(CWfilebuf\f1 associated with \f3f\fP.
+\f3fstream::rdbuf()\f1 has the same meaning as
+\f3iostream::rdbuf()\f1
+but is typed differently.
+.TP
+\f3psb=f.setbuf(p,len)\f1
+Has the usual effect of a \f3setbuf()\f1 (see \f2filebuf(3C++)\fP),
+offering space for a reserve area or requesting unbuffered I/O.
+Normally the returned \f3psb\f1 is \f3f.rdbuf()\f1, but it is 0
+on failure.
+A failure occurs if \f3f\f1 is open or the call to \f3f.rdbuf()->setbuf\f1
+fails.
+.RE
+.SH SEE ALSO
+filebuf(3C++),
+istream(3C++),
+ios(3C++),
+ostream(3C++),
+sbuf.pub(3C++)

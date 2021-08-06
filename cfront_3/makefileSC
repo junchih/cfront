@@ -1,0 +1,89 @@
+#ident	"@(#)local:lib/makefile	3.1" 
+###############################################################################
+#
+# C++ Standard Components, Release 3.0.
+#
+# Copyright (c) 1991, 1992 AT&T and Unix System Laboratories, Inc.
+# Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+#
+# THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and Unix System
+# Laboratories, Inc.  The copyright notice above does not evidence
+# any actual or intended publication of such source code.
+#
+###############################################################################
+
+CC=CC
+#CC=/apps/tools/sparc5/C++/3.0.3/CC
+#CC=xlC
+
+# Set this to the flavor of your operating system.
+# Set it to 0 for systems that are like UNIX System V, 
+# such as Amdahl UTS and HP-UX.  Set it to 1 for systems 
+# that are like Berkeley UNIX, such as SunOS.
+BSD=1
+#BSD=0
+
+# Here you should specify any special options you need
+# to pass to the CC command.
+#
+#HP-UX compiler CC 3.0.3 flags.
+#CCFLAGS= -I/home/bugati/ramak/stc/c++/SCincl
+#
+#HP-UX compiler CC 4.0 flags.
+CCFLAGS= -I/home/bugati/ramak/stc/c++/SCincl -D__ATT_SEMUN
+#
+#Solaris compiler CC 3.0.3 flags.
+CCFLAGS= -I/home/bugati/ramak/stc/c++/SCincl
+#
+#Solaris compiler CC 4.0 flags.
+#CCFLAGS= -I/home/bugati/ramak/stc/c++/SCincl -D__ATT_SEMUN
+#
+#IBM AIX compiler xlC flags.
+#CCFLAGS= -+ -I/stc/c++/SCincl -D__ATT_SEMUN
+
+############################################################
+# You shouldn't have to change anything below this line
+############################################################
+SHELL=/bin/sh
+
+all:	force
+	@-echo "You must make one of {sc3.0,sc3.0_p,sc3.0_eh,sc3.0_b,demos,clean}" 1>&2
+
+sc3.0:	aux/fnewer force
+	chmod +x ./aux/domake
+	./aux/domake -a $(CC) $(BSD) "$(CCFLAGS)"
+
+# The following line is used to make a "profiling" version of
+# the libraries in the C++ Standard Components.
+sc3.0_p:	aux/fnewer force
+	chmod +x ./aux/domake
+	./aux/domake -a $(CC) $(BSD) "$(CCFLAGS)" -p
+
+# The following line is used to make a "EH" version of
+# the libraries in the C++ Standard Components.
+sc3.0_eh:	aux/fnewer force
+	chmod +x ./aux/domake
+	./aux/domake -a $(CC) $(BSD) "$(CCFLAGS)" -x
+
+# The following line is used to make a "cfront-compatibility" version of
+# the libraries in the C++ Standard Components.
+sc3.0_b:	aux/fnewer force
+	chmod +x ./aux/domake
+	./aux/domake -a $(CC) $(BSD) "$(CCFLAGS)" --cfront_2.1
+
+demos:	aux/fnewer force
+	chmod +x ./aux/domake
+	./aux/domake -d $(CC) $(BSD) "$(CCFLAGS)"
+
+aux/fnewer:	aux/fnewer.c
+	$(CC) $(CCFLAGS) -o aux/fnewer aux/fnewer.c
+	rm -f fnewer.o
+
+clean:	force
+	chmod +x ./aux/domake
+	./aux/domake -c $(CC) $(BSD) "$(CCFLAGS)"
+
+clobber:	force
+	chmod +x ./aux/domake
+	./aux/domake -k $(CC) $(BSD) "$(CCFLAGS)"
+force:

@@ -1,0 +1,68 @@
+.\" ident	@(#)Array_alg:man/insert.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3insert\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+insert \- insert an element into a sorted array
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    \*(gt* insert(\*(gt val, \*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    \*(gt* insert_r(int (*rel)(const \*(gt*,const \*(gt*),\*(gt val,\*(gt* b,\*(gt* e);
+
+.Be
+.SH ASSUMPTIONS
+.PP
+(1) For the plain version, \*(gt\f4::operator<\f1
+defines a total ordering relation on \*(gt and the array is
+sorted w.r.t. that relation.
+.br
+(2) For the relational version, \f4rel\f1 defines 
+a total ordering relation on \*(gt and the array is
+sorted w.r.t. that relation.
+.br
+(3) \*(gt has \f4operator=\f1
+.SH DESCRIPTION
+.PP
+These functions assign the value \f4val\f1 to 
+the location in the sorted array that contains the 
+leftmost element greater than \f4val\f1 and returns
+a pointer to this location. Before making the
+assignment, all elements from that location to the 
+end of the array are moved one location to the right.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* insert(\*(gt val,\*(gt* b,\*(gt* e);\f1"
+Uses \f4\*(gt::operator<\f1 to define
+the ordering relation.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* insert_r(int (*rel)(const \*(gt*,const \*(gt*),\*(gt val,\*(gt* b,\*(gt* e);\f1"
+Uses \f4rel\f1 to define the ordering relation.
+.SH COMPLEXITY
+.PP
+If \f2N\f1 is the size of the array, then
+complexity is \f2O(N)\f1.
+At most \f2lgN\f1 tests of the ordering relation 
+and at most \f2N\f1 assignments are done.
+.SH NOTES
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3set_insert(.)\f1
+\f3Block(3C++)\f1
+.Be

@@ -1,0 +1,2307 @@
+README for Cfront 3.0.2
+December 1992
+
+
+This is the USL C++ Language System, Release 3.0.2.  This README
+describes the changes made since release 3.0.1.
+
+If you are a new user of release 3.0 you should read the release 3.0
+README before continuing with this README.  The file README.3.0
+contains the release 3.0 README.
+
+
+3.0.2 HIGHLIGHTS
+
+1.  Template Nested Types
+
+Previously sorried nested types (classes, typedefs, enums) have been
+incorporated into templates.
+
+2.  Dynamic Extensions Added to Ptlink
+
+Ptlink has been changed to recognize extensions other than ".c" on
+template instantiation files.  The list of extensions can be set via
+an environment variable.  For full details of this and other ptlink
+changes see below.
+
+3.  All Known +a1 Bugs Fixed
+
+We have tried to fix all +a1 bugs for this release.  There are a few
+cases of apparent +a1 bugs remaining, but these are usually caused by
+an ANSI C compiler doing tighter checking on cfront output that is
+erroneous for both +a0 and +a1.
+
+4.  Array/Aggregate Initialization With +a1 Reworked
+
+This change affects test cases like:
+
+        struct A {
+                int x[2];
+                int y;
+        };
+
+        A a[] = {{1}, 2};
+
+where cfront would generate a "1" for the array dimension, when in
+fact "2" is correct.  For +a1 we have attempted to implement ANSI C
+rules.  +a0 is unaffected because Classic C compilers differ in their
+treatment of aggregate initialization.
+
+5.  Pointer to Member Bugs Fixed
+
+We have fixed almost all known pointer to member bugs.
+
+6.  Cfront Versioning Mechanism
+
+We have added a scheme whereby a tentative definition is emitted for
+each cfront run:
+
+        char __cpp_version_302_xxxxxxxx;
+
+These are combined by the linker so that the executable has one bss
+symbol for each cfront version used to build the executable.  This
+versioning scheme is intended for future use where problems could
+arise if object files compiled with two different versions were
+combined.
+
+
+YACC BUG FOUND ON SOME PLATFORMS
+
+The parser in the bundled yacc provided with Sun OS 4.1.1 and 4.1.2
+dynamically allocates memory for stacks each time that it is called.
+Cfront calls yyparse() many times, once for each external declaration.
+The result is that approximately 5K bytes of memory are lost as each
+external declaration is processed.  This has a very significant impact
+on programs with large numbers (more than 250) external declarations.
+
+Users of Sun OS 4.1.1 and 4.1.2 can examine the beginning code of
+yyparse() in /usr/lib/yaccpar or in the generated src/y.tab.c
+following a "make munch" or "make patch".  The presence of the
+following statements are an indication of the problem:
+
+        yyv = (YYSTYPE*)malloc(yymaxdepth*sizeof(YYSTYPE));
+        yys = (int*)malloc(yymaxdepth*sizeof(int));
+
+Sun has said that they will soon have a patch available for this
+problem.  In the meantime, a passive fix has been provided in the
+source code for src/gram.y.  This code can be activated by changing
+all occurrences of "#if 0" to "#if 1" in src/gram.y.  This fix only
+applies to certain versions of the Sun OS;  applying it elsewhere is
+likely to cause crashes.
+        
+
+DETAILS OF 3.0.2 CHANGES
+
+========================= CC =========================
+
+1.  Fix bug with not escaping '>' when used with the eval command.
+Some shells would associate '>' with the eval command itself and not
+with the resulting command.
+
+2.  Make ISUF settable as an environment variable.
+
+3.  Fix set -x bug with directing stderr stream out of block just
+before calling ptlink.
+
+4.  Replace two instances of libC.a with lib${LIB_ID}.a before calling
+ptlink.
+
+5.  Fix bug where ISUF == .i and the user says:
+
+        CC x.o y.c z.a -o prog
+
+causing z.a to be passed to 'cc -c'.
+
+6.  Add -ispeed (increase inline cutoff to allow more inlines) and
+-ispace (decrease it to eliminate inlines except for very small ones).
+Setting -ispeed will in general increase program speed at the expense
+of increased space.
+
+7.  Add -gdump option to turn on cfront +g (dump out structs in C
+output even if not used).  +g is no longer turned on by -g.  -gdump
+imposes a performance penalty.
+
+8.  Add escape options to pass options through to the C compiler (-ec)
+and the linker (-el); typical usage is:
+
+        CC -ec -Qpath -ec /foo file.c
+
+which would be like calling cc with:
+
+        cc -Qpath /foo file.c
+
+9.  Add support for -L/-l before calling ptlink.
+
+10.  Add -gdem to unmangle struct member and local variable names
+(except where they would be ambiguous).
+
+========================= CFRONT +A1 =========================
+
+1.  Fix bug with extraneous 'const' coming out in C output.
+
+        template<class V, class S>
+        class DAVC {
+        public:
+                inline const V& operator*=(const S& rhs);
+                inline const V& operator*=(const V& rhs);
+                inline V operator*(const S& rhs) const;
+        };
+        template<class V, class S>
+        inline const V& DAVC<V, S>::operator*=(const V& rhs) {
+                return rhs;
+        }
+        template<class V, class S>
+        inline V DAVC<V, S>::operator*(const S& rhs) const {
+                V temp = (const V&) *this;
+                return temp *= rhs;
+        }
+        template<class V, class S>
+        const V& DAVC<V, S>::operator*=(const S& rhs) {
+                V& lhs = (V&) *this;
+                ecl(lhs, rhs);
+                return lhs;
+        }
+        template<class T> class D;
+        template <class T>
+        class D : public DAVC< D<T>, T >
+        {
+        public:
+                D(const T& a_t):t(a_t){}
+                friend void ecl(D<T>& v, const T& s);
+        protected:
+                T t;
+        };
+        main(){
+                D<double> kr(5.);
+        }
+
+2.  Fix bug with >= 2 'const' coming out in a row.
+
+        struct S {
+                const S *pcS;
+        };
+        typedef const S*S::*T;
+        void F3()
+        {
+                const T*const(*pacpcN)[6] = new (const T *const[3][6]);
+        }
+
+3.  Fix bad C bug with type of const temporaries.
+
+        struct A {};
+        A a;
+        const char& f1()
+        {
+                return *(new const char(0));
+        }
+        const char f2()
+        {
+                return *(new const char(0));
+        }
+        const A f3()
+        {
+                return *(new const A(a));
+        }
+        const char* f4()
+        {
+                return *(new const char*(0));
+        }
+
+4.  Rework aggregate initialization:
+
+        struct A { int a[3], b; } w[] = { { 1 }, 2 };
+
+5.  Fix bad C bug with ?: and inline of only one arm.
+
+        extern "C" void printf( char *, ...);
+        int   i, j;
+        inline void foo( int x) { i = x; }
+        inline int  bar( int y) { return y; }
+        main()
+        {
+                j = 2;
+                (j > 2) ? foo ( bar(11)) : foo ( bar(22));
+                printf( "i=%d\n", i);
+        }
+
+6.  Fix typedef const bug:
+
+        const int *p;
+        struct A {
+                typedef const int *Z;
+                static Z sp;
+        };
+        A::Z A::sp = p;         // good ANSI C
+        struct X {
+                typedef const int Z;
+                static Z *sp;
+        };
+        X::Z *X::sp = p;        // bad ANSI C
+
+7.  Fix bug with forward declarations not coming out soon enough.
+
+        typedef void (*fp)(struct A*);
+        int i = sizeof(struct A*);
+        void f(struct A*) {}
+        fp p = f;
+        struct A {};
+        A a;
+        void g()
+        {
+                typedef void (*fp)(struct B*);
+                int i = sizeof(struct B*);
+                void h(struct B*);
+                fp p = h;
+                struct B {};
+                B b;
+        }
+
+8.  Fix bug with initializer expansion:
+
+        #include "tc.h"
+        struct Str {
+                static int nbrOfStrs;
+                Str(int iv = nbrOfStrs++) {value = iv;}
+                int value;
+        };
+        int Str::nbrOfStrs = 0;
+        int pr_array[] = {0,1,2};
+        main()
+        {
+                Str strArray[3];
+                int cnt;
+                for(cnt = 0; cnt < 3; cnt++){
+                        if (strArray[cnt].value != cnt)
+                                return 1;
+                }
+                return 0;
+        }
+
+9.  Fix bug with initialization order:
+
+        #include "tc.h"
+        struct A {
+                int x;
+                A() {x = 37;}
+                ~A() {}
+                A(const A& a) {x = a.x;}
+        };
+        A a1;
+        const A a2 = a1;
+        int glob = 47;
+        int x = 53;
+        const int y = x + glob;
+        main()
+        {
+                A a1;
+                const A a2 = a1;
+                int x = 53;
+                const int y = x + glob;
+                if (::a2.x != 37)
+                        return 1;
+                if (a2.x != 37)
+                        return 2;
+                if (::y != 100)
+                        return 3;
+                if (y != 100)
+                        return 4;
+                return 0;
+        }
+
+10.  Fix union initialization bug.
+
+        union U {
+                int a;
+                int b;
+        };
+        U u1 = {37, 47};                // should be rejected
+        U u2[] = {1, 2, 3, 4, 5, 6};    // should have length 6
+
+11.  Fix for:
+
+        void f(...)
+        {
+                f(f());         // illegal
+        }
+
+12.  Fix bug with emission of 'char f;' with templates.
+
+        template <class T> void f(T) ;//{}
+        typedef void (*fp1)(int);
+        fp1 p1[] = {f, f, f};
+
+13.  Fix bug with 'auto' emission.
+
+        class Class {
+        public:
+                mf();
+        };
+        int f(auto int (Class::*)());
+        void g() {
+                f( & Class::mf);
+        }
+        main()
+        {
+                return 0;
+        }
+
+14.  Fix bug with type of 'this' with +d +p.
+
+        class A {
+                int p;
+        public:
+                A() : p(100) {}
+                ~A() {}
+        };
+        main()
+        {
+                A a;
+        }
+
+15.  Fix bug with pointer types passed to vec_new() and vec_delete().
+
+        int dlop_flg;
+        int dtor_flg;
+        class C {
+        public:
+                int *pi;
+                C *pC;
+                void operator delete(void *pv)
+                {
+                        ++dlop_flg;
+                        ::delete pv;
+                }
+                ~C() { ++dtor_flg; }
+        };
+        int main()
+        {
+                C *apC[1];
+                delete [] apC[0]->pC;
+                return 0;
+        }
+
+16.  Fix bug with not expanding typedefs:
+
+        typedef char T[10];
+        void f()
+        {
+                T buf = "";
+        }
+
+17.  Fix bug with const vectors.
+
+        struct A {
+                int x;
+                A() {x = 37;}
+                A(int i) {x = i;}
+        };
+        const A a[3] = {37, A(), a[0]};
+
+18.  Fix regression with:
+
+        struct Y {
+                int j;
+                Y() : j(0) {}
+                Y(int i) : j(i) {}
+        };
+        class X {
+                static const int i[3];
+                static const Y y[3];
+        };
+        const int X::i[] = {10, 20, 30}; // gets declared and initialized
+        const Y X::y[] = {Y(10), Y(20), Y(30)};   // only declared as extern
+        void main()
+        {
+                return 0;
+        }
+
+19.  Fix for cfront internal state bug.
+
+        typedef unsigned char T;
+        void F2()
+        {
+                T *const*pcpN = new (T *const[7]);
+                const T*const*pcpcN = new const T *const[7];
+        }
+
+20.  Disallow a non-inline function in an unnamed class.
+
+        struct {
+                void f();               // now illegal (must be inline)
+        } x;
+
+21.  Fix bug with if/then processing and inlines.
+
+        extern "C" void printf(const char*, ...);
+        class A {
+                int cnt;
+        public:
+                void fct() { cnt++; }
+        };
+        A x1;
+        extern int ID;
+        void error(char* mess)
+        {
+                (void)printf("error: %s\n",mess);
+        }
+        static inline void match(int t)
+        {
+                if (t) 
+                        x1.fct();
+                else
+                        error(0);
+        }
+        static void classHead()
+        {
+                match(ID);
+        }
+
+22.  Disallow casts to vector types.
+
+        typedef int T[29];
+        void f()
+        {
+                T x;
+                (T)x;           // illegal cast to vector
+        }
+
+23.  Fix bug with uncompilable C emitted.
+
+        extern "C" void printf(const char*, ...);
+        class xyz {
+        public:
+                xyz(const unsigned int a);
+                void func();
+                virtual ~xyz();
+        };
+        class sample: public xyz {
+                int a;
+        public:
+                sample():xyz(sizeof(a)) {}
+                ~sample();
+        };
+        void xyz::func()
+        {
+                static sample j;
+                printf("hello world\n");
+        }
+        xyz::~xyz() { }
+        main()
+        {
+                xyz a(9);
+                a.func();
+        }
+        xyz::xyz(const unsigned int) {}
+        sample::~sample() {}
+
+========================= CFRONT TEMPLATE =========================
+
+1.  Fix bug which caused cfront to hang on certain machine types.
+
+        template <class T> class A {
+        public:
+                void f();
+        };
+        typedef A<int> T;
+        class A<int> {
+        public:
+                int f();
+        } a;
+
+2.  Fix cfront crash:
+
+        struct O {};
+        struct P : O {} os;
+        template<class T, class V> struct X
+        {
+                friend int operator<<(O& os, const X<T,V>& r);
+        };
+        template<class T, unsigned n> struct Y : X<T,T> {};
+        int operator<<(O&, const Y<int,1u>&) { return 7; }
+        Y<int,1u> y;
+        int i = os << y;
+
+3.  Fix failure to compile:
+
+        template <class T> class B {};
+        template <class T> void F(B<T>&) {}
+        class D : public B<int> { } d;
+        void f()
+        {
+                F(d);
+        }
+
+4.  Fix 3.0 regression with function templates.
+
+        template <class T> void ftempl(T*) {}
+        class Base {} b;
+        class Derived : public Base {} d;
+        void foo()
+        {
+                ftempl(&b);     // 'ftempl(B*)' called       [*]
+                ftempl(&d);     // before fix: 'ftempl(B*)' called
+                                // but 'ftempl(D*)' called if
+                                // line [*] commented out
+                                // after fix: ftempl(D*) called regardless
+        }
+
+5.  Fix for 3.0 regression with function templates.
+
+        template <class T> void ftempl(T*) {}
+        class Base {} b;
+        class Derived : public Base {} d;
+        void foo()
+        {
+                ftempl(&d);
+                ftempl(&b);
+                // got "error: no standard conversion of Base* to
+                // struct Derived*"
+                // now calls 'ftempl(B*)'
+        }
+
+6.  Fix cfront crash.
+
+        template <class T> struct Block {
+                Block() {}
+                Block(const Block<T>& b) { ; }
+                ~Block() {}
+        };
+        template <class T> class Cast{};
+        struct Alf { 
+                Alf() {}
+                virtual ~Alf() {}
+        };
+        struct Cast<Alf> : public Alf {
+                Cast(const Alf& a) : Alf() {};
+        };
+        struct Bits {
+                Block<int> b;
+                Bits() {}
+                Bits(int) {}
+        };
+        int const_matters(Bits cnst2) { return 0; }
+        int type_check(Alf u2)
+        {
+                Bits cnst2 = 0;
+                int level;
+                if  ( level || type_check(Cast<Alf>(u2)))
+                {
+                        int return_value=const_matters(cnst2);
+                        return return_value;
+                } else
+                        return 0;
+        }
+
+7.  Fix bug with comparison of template class names.
+
+        class bar;
+        template <class S> class foo {
+                friend class bar;
+        private:
+                S priv;
+        };
+        class bar {
+        public:
+                bar(foo<int>& f) {f.priv = 10;}
+        };
+
+8.  Fix 3.0.1 regression with cfront crashing.
+
+        class D {
+        protected:
+                int size;
+        public:
+                template <class T> friend class X;
+        };
+        class DL : public D {
+        public:
+                DL(int elems) { size = elems; }
+        };
+
+9.  Fix crash:
+
+        Fix for crash that occurred on this example.
+
+        class A {
+        private:
+                operator<<(float);
+                template <class T> friend class M;
+        };
+
+        void foo()
+        {
+                A a;
+                a << 3.0;       // now gets proper error
+        }
+
+10.  Improve wording of error messages, e.g.
+
+old:
+
+        error detected during the instantiation of C <L14 , L3'c' >
+
+new:
+
+        error detected during the instantiation of C <4 , 'c' >
+
+11.  Improve same_class() function in cfront to better handle
+templates.
+
+        struct Z {};
+        template<class T, int n, class V> class B {
+        public :
+                B ( ) : x ( 99 ) { }
+                operator int ( ) ;
+                int x ;
+        } ;
+        B<double*,66,Z> :: operator int ( ) { return x ; }
+        template<class T, int n, class V> class L :
+                virtual public B<double*,66,Z> { } ;
+        template<class T, int n, class V> class R :
+                virtual public B<double*,66,Z> { } ;
+        template<class T, int n, class V> class J :
+                public L<double*,66,Z> , public R<double*,66,Z> { } ;
+        int main ( )
+        {
+                J<double*,66,Z> j ;
+                int i = j ;
+                if ( i != 99 )
+                        return 1 ;
+                return 0 ;
+        }
+
+12.  Fix bad C problem.
+
+        template <class S, class T> class X { };
+        template <class S, class T> class Y { X<S,T>* p; };
+        class C {
+        public:
+                typedef int TD;
+                Y<char, TD> y;
+        } c;
+
+13.  Fix problem with lone ';' emitted at global scope.
+
+        template <class T> void f(void (T::*)()) {}
+        struct A { void g(); };
+        void foo() { f(A::g); }
+
+14.  Fix crash with 'CC -c' of:
+
+        struct A { int operator<() { return 10; } };
+        template<class T> struct vector { int m(); };
+        template<class T> int vector<T>::m() { return T::operator<(); }
+        vector<A> a;
+        int i = a.m();
+
+15.  Fix bad encoding for 'X<4,iarr,carr>'.
+
+        template<int I, int *IP, char *CP> class X { };
+        int  iarr[10];
+        char carr[] = "hello";
+        X< 4, iarr, carr > x;
+
+16.  Improve error messages for errant template functions.
+
+        template <class T> void F(T o, T *p, T **pp) { *o; }
+        void f(int i, int *pi, int **ppi)
+        {
+                F(i,pi,ppi);    // error
+        }
+
+old:
+
+        error detected during the instantiation of F <int >
+
+new:
+
+        error detected during the instantiation of F (int , int *, int **)
+
+17.  Fix function matching bug with templates.
+
+        template <class T> class W {
+        public:
+                W( void (T::*pm)() );
+        };
+        struct S { void f(); };
+        W<S> w(&S::f);
+
+18.  Fix template bug with 'A<V,U>' incorrectly matching 'A<U,V>'.
+
+        template <class U, class V> struct A { A<V,U> f(); };
+        A<int,char> aic;
+        A<char,int> aci;
+        void foo() { aci = aic.f(); }
+
+19.  Fix bug with static copy of template class member function laid
+down before declaration of containing class.
+
+        #include <stddef.h>
+        #include <iostream.h>
+        class SPNCPP_Err {
+        public:
+                virtual void message(ostream&) const = 0;
+                virtual ~SPNCPP_Err() {}
+                void user_message() const;
+        };
+        extern void fake_throw(const SPNCPP_Err&);
+        typedef size_t UncheckedSubscript;
+        typedef int Dimension;
+        class SubscriptRangeErr : public SPNCPP_Err {
+        public:
+                SubscriptRangeErr(UncheckedSubscript i, UncheckedSubscript n) :
+                        bad_sub(i), nelts(n) {}
+                virtual void message(ostream&) const;
+        private:
+                const UncheckedSubscript bad_sub;
+                const UncheckedSubscript nelts;
+        };
+        class Subscript {
+        public:
+                Subscript() {}
+                Subscript(UncheckedSubscript i) : s(i) {}
+                operator UncheckedSubscript&() { return s; }
+                operator UncheckedSubscript() const { return s; }
+                UncheckedSubscript check(UncheckedSubscript n) const {
+                        if (s >= n) ::fake_throw(SubscriptRangeErr(s, n));
+                        return s;
+                }
+        private:
+                UncheckedSubscript s;
+        };
+        template<class T, UncheckedSubscript num>
+        class RigidArray1d {
+        public:
+                RigidArray1d() {}
+                virtual UncheckedSubscript num_elts() const { return num; }
+                virtual UncheckedSubscript stride(Dimension) const
+                        { return 1; }
+                const T& operator[](UncheckedSubscript i) const
+                        { return elts[i]; }
+                T& operator[](UncheckedSubscript i) { return elts[i]; }
+                const T& operator()(UncheckedSubscript i) const
+                        { return elts[i]; }
+                T& operator()(UncheckedSubscript i) { return elts[i]; }
+                const T& operator[](Subscript i) const
+                        { return (*this)[i.check(num)]; }
+                const T& operator[](int i) const
+                        { return (*this)[Subscript(i)]; }
+                const T& operator[](long int i) const
+                        { return (*this)[Subscript(i)]; }
+                T& operator[](Subscript i)
+                        { return (*this)[i.check(num)]; }
+                T& operator[](int i) { return (*this)[Subscript(i)]; }
+                T& operator[](long int i) { return (*this)[Subscript(i)]; }
+                const T& operator()(Subscript i) const { return (*this)[i]; }
+                const T& operator()(int i) const { return (*this)[i]; }
+                const T& operator()(long int i) const { return (*this)[i]; }
+                T& operator()(Subscript i) { return (*this)[i]; }
+                T& operator()(int i) { return (*this)[i]; }
+                T& operator()(long int i) { return (*this)[i]; }
+                virtual const T* first_datum() const { return elts; }
+                virtual T* first_datum() { return elts; }
+        private:
+                T elts[num];
+        };
+        void main() {
+                RigidArray1d<int, (const UncheckedSubscript) 10> x;
+        }
+
+20.  Fix bad ANSI C:
+
+        template <class T> void G(const T*) {}
+        void foo()
+        {
+                const int ci=23;
+                G(&ci);
+        }
+
+21.  Fix cfront malloc() bug with:
+
+        template <class T> struct A {};
+        struct A<long>;
+        struct A<int> { A<long>* p; };
+        struct A<long> { A<int>* p; };
+
+22.  Fix bad C:
+
+        template <class S, class T> class X { };
+        template <class S, class T> class Y
+        {
+                X<T,S> *p;
+        };
+        struct S { int i; };
+        typedef int TD1;
+        X<char,TD1> x1;
+        Y<int,TD1> y1;
+        void f2()
+        {
+                typedef S TD2;
+                X<char,TD2> x2;
+                Y<int,TD2> y2;
+        }
+        class C3 {
+        public:
+                typedef S* TD3a;
+                X<char,TD3a> x3;
+                Y<int,TD3a> y3;
+                typedef int* TD3b;
+        };
+        X<char,C3::TD3b> x3;
+        Y<int,C3::TD3b> y3;
+        C3 c3;
+
+23.  Fix cfront crash with:
+
+        template <int i> struct S { char ac[i+1]; };
+        template <class T> S<sizeof(T)> *f(T t) { return new S<sizeof t>; }
+
+24.  Fix access bug with:
+
+        class A5 {
+        private:
+                int operator<<(float);
+                template <class T> friend void foo5(T);
+        };
+        void foo5(int)
+        {
+                A5 a;
+                a << 3.0;       // access to << denied
+        }
+
+25.  Fix 3.0 regression with:
+
+        template <int n> struct B;
+        template <int n> struct A { A(B<n>&); };
+        template <int n> struct B { void f(); };
+        B<8> b8;
+        B<16> b16;
+        template <int n> void B<n>::f() { A<n> a(*this); }
+
+26.  Fix directed mode bug with:
+
+        template <class S, class T> class Map;
+        template <class S, class T> class Mapiter;
+        class Mapnodebase {
+        protected:
+                Mapnodebase *L_, *R_, *U_;
+                friend class Mapbase;
+                Mapnodebase() { }
+                virtual ~Mapnodebase();
+        };
+        class Mapbase {
+        public:
+        protected:
+                Mapnodebase *head_;
+                Mapbase() { head_ = 0; }
+                ~Mapbase() { }
+        };
+        template <class S, class T>
+        class Mapnode : public Mapnodebase {
+                Mapnode(const S&, const T&){};
+                ~Mapnode() { }
+                friend class Map<S,T>;
+                friend class Mapiter<S,T>;
+        };
+        template <class S, class T>
+        class Mapiter {
+                friend class Map<S,T>;
+        public:
+                Mapiter(const Map<S,T>&){}
+                ~Mapiter(){}
+                Mapiter<S,T>& operator=(const Mapiter<S,T>&);
+        };
+        template <class S, class T>
+        class Map : public Mapbase {
+                friend class Mapiter<S,T>;
+        public:
+                Map(){}
+                Map(const Map<S,T>&);
+                ~Map() {}
+                Map<S,T>& operator= (const Map<S,T>&);
+        };
+        template <class S, class T>
+        Map<S,T>::Map (const Map<S,T>& m)
+        {
+                operator= (m);
+        }
+        template <class S, class T>
+        Mapiter<S,T>&
+        Mapiter<S,T>::operator=(const Mapiter<S,T>& mi)
+        {
+                return *this;
+        }
+        Mapnodebase::~Mapnodebase() { 
+                delete L_; 
+                delete R_; 
+        }
+        class Fldid {
+        public:
+                int fldid;                      // Field identifier
+                Fldid(int id=0) { fldid = id;  }
+                ~Fldid()                  { }
+        };
+        int
+        main() {
+                Map<Fldid,int>  msgbuf;
+                return(0);
+        }
+
+27.  Fix problem with laying down template statics.
+
+        struct A {
+                static int FOO;
+        };
+        int A::FOO;
+        int main()
+        {
+                A a;
+                a.FOO = 1;
+                return 0;
+        }
+
+28.  Fix crash on:
+
+        struct N {
+                class B {};
+                enum {};
+                B init;
+                unsigned char m1, m2, m3, m4, m5;
+        };
+        template <class T> struct A { N::B b; };
+        A<char> a;
+
+========================= CFRONT MISCELLANEOUS =========================
+
+1.  Fix failure to call destructors with new placement.
+
+        #include <malloc.h>
+        extern "C" int printf(const char *, ...);
+        void *operator new(size_t s, char *h) { return (void*) malloc(s); }
+        void operator delete(void* ptr) { free(ptr); }
+        struct A {
+                A() { printf("A::A called\n"); }
+                ~A() { printf("A::~A called\n"); }
+        };
+        main()
+        {
+                char *c = 0;
+                A *ap = new(c) A[3];
+                delete [] ap;           // no destructor calls !
+                return 0;
+        }
+
+2.  Accept a local class declaration in a member function, which was
+rejected if the class name is the same as the enclosing class of the
+member function.
+
+        class A {
+                int f() {
+                        class A;
+                }
+        };
+
+3.  Fix casts of float literals to integral types.
+
+        enum { a = (char)0.1622e2 };
+        int x = a;
+        main() {
+                if ((char)0.1622e2 == x)
+                        exit(0);
+                exit(1);
+        }
+
+4.  Fix 3.0 regression with bad C.
+
+        struct Point {
+                Point();
+                Point(Point&);
+        };
+        struct Trans {
+                Point trans(Point);
+        };
+        void f(Point p, Trans *t)
+        {
+                Point tp = (t) ? t->trans(p) : p;       // bad C
+        }
+
+5.  Fix function matching bug where two conversions were wrongly
+detected.
+
+        class base 
+        {
+        public:
+                base();
+                base(const base&);
+                base& operator=(const base&);
+        };
+        class derived2 : public base {};
+        class derived1 : public base
+        {
+        public:
+                derived1();
+                derived1(const derived1&);
+                operator derived2() const;
+        };
+
+        void f(derived1& b)
+        {
+                base f = b;  // gives error
+        };
+
+6.  Fix regression with vector access.
+
+        class foo {
+        protected:
+                friend class bar;
+                foo();
+                ~foo();
+        };
+        class bar {
+        public:
+                bar();
+                ~bar();
+                foo x;                  // no error on this line
+                foo d[1];               // error -- protected member
+        };
+
+7.  Change error into sorry for bit fields within unions.
+
+8.  Fix performance regression with call through vtbl when object type
+is known.
+
+        struct A {
+                virtual void f();
+        };
+        void A::f()
+        {
+        }
+        main()
+        {
+                A a;
+                a.f();
+        }
+
+9.  Fix +d bug with undefined symbol being emitted by cfront.
+
+        extern int i;
+        struct S {
+                static int i;
+                struct Embedded {
+                        int f() { return i; }
+                };
+        };
+        {
+                struct S x;
+        };
+
+10.  Fix problem with calculating virtual table offsets for base
+classes.
+
+        #include <iostream.h>
+        class A
+        {
+        private:
+                int adata;
+        public:
+                A()     { adata = 1; cout << "A::A() called" << endl; }
+                virtual ~A()    { cout << "A::~A() called" << endl; }
+                void    f() {  
+                        cout << "A::f():  adata = " << adata << endl;
+                        k();
+                }
+                virtual void k() {
+                        cout << "A::k():  adata = " << adata << endl;
+                }
+        };
+        class B : public virtual A
+        {
+        private:
+                int     bdata;
+        public:
+                B()     { bdata = 3; cout << "B::B() called" << endl; }
+                ~B()    { cout << "B::~B() called" << endl; }
+                void    k() {
+                        cout << "B::k():  bdata = " << bdata << endl;
+                }
+        };
+        class C : public virtual A { };
+        class D : public C, public B { };
+        class E : public D { };
+        main()
+        {
+                cout << "A::A() called" << endl;
+                E *e = new E;
+                cout << "B::B() called" << endl;
+                cout << "A::f():  adata = 1" << endl;
+                e->f();
+                cout << "B::k():  bdata = 3" << endl;
+                return 0; 
+        }
+
+11.  Fix problem with enumerator overflow:
+
+        #include <limits.h>
+        enum E {a = INT_MAX, b};
+
+This now gets a cfront error.
+
+12.  Fix cfront crash when parsing function argument declarations with
+more than one class name argument.
+
+        void f(class A, class B);
+
+13.  Fix bug with no error reported for a static class member
+definition with incomplete type.
+
+        class A {
+        public:
+                static class B b;
+        };
+        B A::b;
+
+14.  Change an error to a warning in main() when if-then is the last
+statement and there is no return.
+
+        main() {
+                int x;
+                ...
+                if (x) return 34;
+        }
+
+15.  Fix 3.0 regression with:
+
+        struct entry { char *a; };
+        struct st_t { int entry; } st;
+        void func() { st.entry < 0; }
+
+16.  Fix bug with bad C:
+
+        struct String {
+                String(int);
+                String();
+                String(const String&);
+                String& operator=(const String&);
+        };
+        String s;
+        void f(const String arg, int x)
+        {
+                s = x ? arg : (String)0;
+        }
+        String tmp = s;
+
+17.  Add space after 'operator' for better error messages.
+
+        // [1]
+        typedef unsigned int size_t;
+        void *operator new(size_t);
+        void *operator new(size_t, char * = 0);
+        void f1() { int *pi = new int; }
+        // [2]
+        class A {} a;
+        int operator +(A,long);
+        int operator +(A,short);
+        void f2() { a + 1; }
+        // [3]
+        void operator delete(void*);
+        void operator delete(void*, char* = 0);
+        void f3(int *pi) { delete pi; }
+        // [4]
+        class B {} b;
+        int operator ->*(B,long);
+        int operator ->*(B,short);
+        void f4() { b ->* 1; }
+
+18.  Fix for new placement bug.
+
+        typedef unsigned int size_t;
+        void *operator new(size_t, char*);
+        void operator delete(void*);
+        struct A {
+                void* operator new(size_t, char* = 0);
+                void operator delete(void*);
+                A();
+                ~A();
+        };
+        char *c;
+        A *ap = new(c) A[2];    // used to call 'A::operator new'
+                                // will now call '::operator new'
+
+19.  Avoid cfront crash during error recovery.
+
+        class b;
+        class foo { b * operator->(); };
+        class c {};
+        class a { public: c& model_ref(); };
+        class b { public: a * model_entry(); };
+        extern void scan_design(c& C);
+        void bar(foo & f) { scan_design(f->model_ref()); }
+
+20.  Warn (error in later release) on casts from pointer to member to
+other than other pointer to member types or void type.
+
+        struct A {};
+        typedef void (A::*pmf)();
+        void f()
+        {
+                int(pmf(0));    // illegal
+        }
+
+21.  Fix pointer to member bug where '{0,0,0}' was printed:
+
+        struct A {
+                void f();
+        };
+        typedef void (A::*pmf)();
+        main()
+        {
+                int x;
+                if (x)
+                        pmf(A::f);
+                while (x)
+                        pmf(A::f);
+                for (;;)
+                        pmf(A::f);
+                do
+                        pmf(A::f);
+                while (x);
+        }
+
+22.  Fix bad C bug with ?:.
+
+        int x;
+        extern void f();
+        struct S {
+                static S &smf();
+                void mf() { x--; x--; x--; x--; }
+        };
+        void F5(int (**p)(const char *, ...))
+        {
+                x ? (void)S::smf() : (++x, delete [] p);
+                x ? (++x, delete [] p) : (void)S::smf();
+                x ? (void)S::smf() : (void)S::smf();
+        }
+
+23.  Fix +p bug with laying down tentative statics.
+
+        template <class T> struct A {
+                static int x;
+        };
+        template <class T> struct B {
+                static int x;
+        };
+        template <class T> int A<T>::x = 37;
+        template <class T> int B<T>::x = 47;
+        A<int> a;
+        B<int> b;
+        typedef A<int> _dummy_;
+
+24.  Fix pointer to member bug with:
+
+        struct A {
+                void f();
+        };
+        typedef void (A::*pmf)();
+        struct B {
+                int x;
+                pmf p1;
+                pmf p2;
+        };
+        B b[] = {37, A::f, A::f, 47, A::f, A::f};
+
+25.  Fix pointer to member bug with:
+
+        struct A {
+                void f();
+        };
+        typedef void (A::*pmf)();
+        struct B {
+                pmf p;
+                int x;
+        };
+        B b[] = {A::f, 37};
+
+26.  Fix bug with stray cast being emitted:
+
+        class A {
+        public:
+                A() {}
+                ~A() {}
+                virtual void V() = 0;
+        };
+        class B : public A {
+        public:
+                B() {}
+                ~B() {}
+                void V() {} 
+        };
+        class C : public A {
+        public:
+                C() {}
+                ~C() {}
+                void V() {}
+        };
+        class X {
+        public:
+                X() {}
+                ~X() {}
+                static B get_b();
+                static C get_c();
+                int set_x();
+        };
+        B
+        X::get_b()
+        {
+                B vt;
+                vt.V();
+                return vt;
+        }
+        C
+        X::get_c()
+        {
+                C vt;
+                vt.V();
+                return vt;
+        }
+        X::set_x()
+        {
+                B b = get_b();
+                return 0;
+        }
+
+27.  Fix bit field size/alignment problem for 68K architectures.
+
+        struct READ_DEF
+        {
+                unsigned long int y:32;
+                unsigned long int z:32;
+                unsigned long int x:16;
+                unsigned long int r:8;
+                unsigned long int s:8;
+        } READ;
+        enum LEN
+        {
+                LENGTH = (sizeof(struct READ_DEF)-2)
+        };
+
+LENGTH came back as 8 instead of 10 on the Sun-3.
+
+28.  Fix cfront global state bug with:
+
+        class   BaseNet {
+        public:
+                BaseNet(){}
+        };
+        class   Bus: public BaseNet
+        {
+                Bus(Bus& n):BaseNet(n) {}
+        };
+        class NIHCL { };
+        class   SubBus: public virtual NIHCL
+        {
+                virtual NIHCL   *foo() {return this;}
+        };
+
+29.  Fix cfront crash:
+
+        class Alf {
+        public:
+                Alf();
+        };
+        class Expr : public Alf {
+        public:
+                Expr(const Alf& );
+                Expr();
+        };
+        void f(const Alf* alf)
+        {
+                Expr init_expr (alf ? *alf : Expr());
+        }
+
+30.  Fix 3.0 regression with name return value:
+
+        class A {
+        public:
+                A(const A &src);
+        };
+        class B {
+        public:
+                static A s();
+        };
+        A int_s()
+        {
+                A s ( B::s() );         // gives bad operand error
+                return s;
+        }
+
+31.  Fix bad C bug on use of "x." on function pointer.
+
+        struct A {
+                static void f();
+        };
+        main()
+        {
+                void* p;
+                A a;
+                p = a.f;
+        }
+
+32.  Fix failure to call base constructor.
+
+        struct A {
+                A(const A&, int);
+        };
+        struct B : public A {
+                B(const A& a);
+        };
+        B::B(const A& a) : A(a, 47)
+        {
+        }
+
+33.  Fix bug with virtual base class name mangling.
+
+        class A1
+        {
+        public:
+                class B1 { };
+                class C1 : virtual public B1 { };
+        };
+        class A2
+        {
+        public:
+                class B2 { };
+                class C2 : virtual public A2::B2 { };
+        };
+        class A3
+        {
+        public:
+                void f() {
+                        class B3 { };
+                        class C3 : virtual public B3 { };
+                }
+        };
+
+34.  Disallow unions with members that have T::operator=() defined.
+
+        struct A {
+                void operator=(const A&);
+        };
+        union U {
+                A a;
+        };
+
+35.  Give +w warning on non-virtual destructor in second or virtual base
+class.
+        typedef unsigned char uchar;
+        struct A {
+                int x[59];
+        };
+        class X {
+        protected:
+                int d;
+        public:
+                int i;
+                ~X();
+        };
+        class Y: public virtual X {
+        public:
+                Y(int, int, uchar*, int, int);
+        };
+        class YY: public A, public X {
+        public:
+                YY(int, int, uchar*, int, int);
+        };
+        int main()
+        {
+                X *x = new Y(256,256,0,2,2);
+                delete x;
+                x = new YY(256,256,0,2,2);
+                delete x;
+                return 0;
+        }
+        X::~X() {}
+        Y::Y(int, int, uchar*, int, int) {}
+        YY::YY(int, int, uchar*, int, int) {}
+
+36.  Fix +d bug with failing to lay down struct.
+
+        struct A {
+                A() {}
+                A f() {return *(new A);}
+        };
+        template <class T>
+        struct B : public A {
+                B() {}
+                void f() {B x;}
+        };
+        B<int> b;
+
+37.  Fix cfront crash on {} initializer.
+
+        class Foo {
+                char *name;
+        public:
+                Foo(char*);
+        };
+
+        Foo bar[] =
+        {
+                {""}
+        };
+
+38.  Disallow illegal derived --> base conversions.
+
+        class L { };
+        class A : virtual public L { };
+        class B : private virtual L { };
+        class X : private A, public B { };
+        L *f(X *pX) { return pX; }      // error
+        L &g(X &rX) { return rX; }      // error
+        void h(L*);
+        void h2(X* p) {h(p);}
+
+39.  Fix for bug where error was invalidly given on function call.
+
+        struct X {
+                void (*f)();
+        };
+        void g(){}
+        const X x = {g};
+        main()
+        {
+                x.f();          // error
+                (*x.f)();       // OK
+        }
+
+40.  Fix bug with declaration parsing; 'int (e0)' is currently (3.0)
+treated as a cast but with +p is a declaration.
+
+        void main() 
+        {
+                int (e0),  *const volatile f0 = &e0;
+        }
+
+41.  Fix crash on undefined nested type as base class:
+
+        class Foo {
+                class Bar;
+        };
+        class X : public Foo::Bar{};
+
+42.  Propagate internal new() failure in _arr_map.c (in library) back
+to caller of new().
+
+        extern "C" {
+                void* malloc(unsigned int);
+                void free(void*);
+        };
+        void* operator new(unsigned int n)
+        {
+                void* p;
+                static int x = 0;
+                if (++x == 3)
+                        return 0;
+                p = malloc(n);
+                return p;
+        }
+        void operator delete(void* p)
+        {
+                free(p);
+        }
+        struct A {
+                A() {}
+                ~A() {}
+        };
+        main()
+        {
+                A* p1;
+                A* p2;
+                p1 = new A[23];
+                p2 = new A[47];
+                delete [] p2;
+                delete [] p1;
+        }
+
+43.  Fix failure to call static destructors.
+
+        class Foo {
+        public:
+                int n;
+                Foo(const int i = 0) {n = i; printf ("construct %d\n", i);}
+                ~Foo(void) {printf("destruct %d\n", n);}
+        };
+        extern const Foo a;
+        extern const Foo b;
+        extern Foo c;
+        const Foo a;
+        const Foo b(1);
+        Foo c(2);
+        main()
+        {
+                return 0;
+        }
+
+44.  Change sorry to error on 'non trivial declaration in switch
+statement' message.
+
+        void f()
+        {
+                int x;
+                switch (x) {
+                        case 20:
+                                if (x) {
+                        default:
+                                        const int y = 37;
+                                }
+                }
+        }
+
+45.  Fix bug that disallowed:
+
+        void f()
+        {
+                int x=1;
+                switch (x)
+                        case 66: switch (1) {case 1: ;}
+        }
+
+46.  Fix bug with virtual base classes and temporaries.
+
+        int ctor = 0;
+        struct VB { };
+        struct B1 : virtual public VB { };
+        struct B2 : virtual public VB {
+                virtual void Display() { }
+        };
+        struct D : public B1, public B2 {
+                D() { ctor++; }
+        };
+        void f() {
+                new D()->Display();
+        }
+        int main()
+        {
+                ctor = 0;
+                f();
+                if (ctor != 1)
+                        return 1;
+                return 0;
+        }
+
+47.  Fix bug with global scope operator used in inheritance list.
+
+        class A
+        {
+        public:
+                class B
+                {
+                };
+        };
+        class C
+        {
+        public:
+                class B : public A::B
+                {
+                };
+        };
+
+48.  Fix cfront crash:
+
+        void f()
+        {
+                "abc"/1;
+        }
+
+49.  Fix bug with :: qualification of reference member.
+
+        struct foo {
+                int &i;
+                foo();
+                inline int bar(void ) { return foo::i ; }
+        };
+
+50.  Fix parsing error on constructor calls.
+
+        struct A {
+                A();
+        };
+        void f()
+        {
+                A(), 37;                        // OK
+                (A(), 37);                      // syntax error
+        }
+
+51.  Fix incorrect error message on derived to base conversion.
+
+        class A {};
+        class B {};
+        class C : private A, public B {};
+        class D: public C {};
+        D obj;
+        void func(B x) {x=x;}
+        main ()
+        {
+                func(obj); 
+                B* b = &obj;
+        }
+
+52.  Fix bug where a class was deemed to be abstract.
+
+        class W {
+                virtual int f() = 0;
+                virtual int g() = 0;
+        };
+        class A : public virtual W {
+                int f();
+        };
+        class B : public virtual W {
+                int g();
+        };
+        class C : public A, public B { };
+
+        C c;    // C is not an abstract class since f(), g() are defined
+                // in the hierarchy of class C.
+
+53.  Fix bad C bug with failure to emit declaration of the global
+delete() operator.
+
+        class X
+        {
+        public:
+                void operator delete (void *);
+                static void f(X *x);
+        };
+        class Y
+        {
+        public:
+                static void f(Y *y);
+        };
+        void X::operator delete(void *obj) {}
+        void X::f(X *x) { ::delete x; }
+        void Y::f(Y *y) { ::delete y; } 
+
+54.  Eliminate warning about illegal pointer combinations.
+
+        void f()
+        {
+                typedef int iar[4];
+                iar localitem;
+                iar *iap = &localitem;
+                iap = &localitem;
+        }
+
+55.  Fix bug where invalid reference to vector was allowed as an
+argument.
+
+        void f2(int (&x)[10]);
+        int x[10], *y;
+        void g2() {
+                f2(x); 
+                f2(y);
+        }
+
+56.  Tighten checking of void* arithmetic.
+
+        typedef void* addr;
+        void write( void * value);
+        class xx { } p;
+        const addr operator* ( xx );
+        extern long *q ;
+        void foo()
+        {
+                write( *p + *q);        // now gives error
+        }
+
+57.  Fix bad C bug with passing a derived class object (with virtual
+derivation) to a base class formal.
+
+        extern "C" void exit(int);
+        class Foo {
+        public:
+                int foostuff;
+                Foo () {
+                        foostuff = 1 ;
+                };
+        };
+        class Bar: public virtual Foo {};
+        void my (const Foo& x)  {
+                if (x.foostuff != 1)
+                        exit(1);
+        };
+        void testing (Bar arg) {
+                Bar local;
+                my(local);                //correct 
+                my (arg);                 //bad code
+        }
+        main ()
+        {
+                Bar pass_arg;
+                testing(pass_arg);
+                exit(0);
+        }
+
+58.  Fix bug with destructor called on temporary that was never
+constructed.
+
+        #include <assert.h>
+        class thing {
+                int store;
+        public:
+                operator int() const;
+                thing();
+                ~thing();
+                thing another_thing();
+        };
+        thing::operator int() const {
+                return 0;
+        };
+        thing thing::another_thing() {
+                thing *x;
+                x = new thing;
+                return *x;
+        };
+        thing::thing() {
+                store = 1099;
+        };
+        thing::~thing() {
+                assert (store == 1099);
+        };
+        main () {
+                thing t;
+                if (t && t.another_thing())  // <--bad code here
+                { }
+        };
+
+59.  Fix bug with nested class name mangling (test case too large to
+include).
+
+60.  Fix bug with ?: and temporary cleanup (test case too large to
+include).
+
+61.  Fix failure to call 'vec_new':
+
+        struct Instruction {
+                Instruction();
+                union {
+                        unsigned index;
+                } operand;
+        };
+        void f() { Instruction* a = new Instruction[1]; }
+
+62.  Fix crash on:
+
+        struct F {
+                F(int);
+                friend int operator>=(F,F);
+                friend int operator<(F,F);
+        };
+        inline void foo(F &prev, F next) {
+                if (prev<0)
+                        prev = next;
+                else if (next<prev)
+                        prev = next;
+        }
+
+63.  Fix bug with incorrect rejection of:
+
+        class base 
+        {
+        public:
+                virtual void fun(int) = 0;
+                virtual void fun(float) = 0;
+        };
+        class der1: public virtual base {
+        public:
+        };
+        class der2: public virtual base 
+        {
+        public:
+                void fun(int);
+                void fun(float);
+        };
+        class good : public virtual der1, public virtual der2 {};
+        main()
+        {
+                good g;
+        }
+
+64.  Fix bad C bug with:
+
+        class String {
+        public:
+                String() { length = 8; }
+                int length;
+        };
+        main()
+        {
+                String s8[1] = { String() };
+                return s8[0].length + 10;
+        }
+
+========================= DEMANGLER =========================
+
+1.  Fix special case of pointer to member:
+
+        B__pt__17_XCM1AFv_vLM0_0_0 --> B<(void (A::*const)(void))0>
+
+2.  Change MAXSTACK from 10 to 100 to handle an infinite instantiation
+sequence with very long mangled names.
+
+3.  Fix strlen(buf) bug where buf was a stack object that was never
+initialized.
+
+4.  Add "pyr" to list of machines that prepend underscores to external
+names.
+
+========================= DOCUMENTATION =========================
+
+1.  Change manual page headers to support the SVR4 apropos(1) command.
+
+2.  Add description of detach() to the manual pages for filebuf and
+fstream.
+
+3.  Add description of ios::hardfail behavior to the manual page for
+ios.
+
+4.  Expand description of the stdio flag in the manual page for ios.
+
+5.  Add description of return values for ios::bitalloc and ios::xalloc
+to the manual page for ios.
+
+6.  Correct the description of the return value of a successful
+allocate() to 0 in the sbuf.prot manual page.
+
+7.  Add the definition
+      
+        streambuf*  setbuf(unsigned char* p, int len);
+
+to the sbuf.prot manual page.
+
+8.  Expand the description of strstreambuf(ptr, n, pstart) in the
+ssbuf manual page.
+
+9.  Expand the description of strstream(cp, n, mode) in the strstream
+manual page.
+
+10.  Include up-to-date manual pages for CC and c++filt.
+
+========================= LIBRARIES =========================
+
+1. Add a function definition for istream::get(unsigned char*, int, char),
+which was missing in the previous releases.
+
+        char* DATA = "Hello:World:!";
+        unsigned char uc[24];
+        strstream temp(DATA, (int)strlen(DATA)+1, ios::in);
+        istream is(temp.ios::rdbuf());
+        is.get( uc, 24, ':' );
+        is.get();
+
+2. Add a detach() function to ifstream. It can be called before the
+destruction of the ifstream so that the associated file descriptor
+won't be closed.
+
+        int file_d;
+        int j;
+        if ((file_d = ::open("/tmp/foobar", 0644)) < 0)
+                exit(1);
+        else {
+                ifstream f(file_d);
+                ...
+                f.detach();
+        }
+        ifstream g(file_d);
+
+3. Fix bug in lib/stream/strstream.c in which strstreambuf::seekoff()
+could not seek relative to ios::end.
+
+        char *buf = "Hello there.";
+        strstream foo(buf, strlen(buf), ios::in);
+        c = foo.get();
+        foo.seekg(-3,ios::end);
+        c = foo.get();
+        if ( c == EOF )
+                printf(" FAILED \n");
+
+4. Fix bug in lib/stream/streambuf.c in which streambuf::snextc()
+would not return EOF when the end of input was reached.
+
+        strstream s("abc", 3, ios::in);
+        int c;
+        c = s.rdbuf()->snextc();
+        c = s.rdbuf()->snextc();
+        c = s.rdbuf()->snextc();
+        c = s.rdbuf()->snextc();
+        if (c != EOF)
+                printf(" FAILED \n");
+
+5. Fix lib/stream/out.c so that the value 0 will be formatted as 00
+during insertion when the base is octal.
+
+        char buf[512];
+        strstream temp(buf, 512, ios::in|ios::app);
+        iostream io2 (temp.rdbuf());
+        int i = 0;
+        io2.unsetf(ios::basefield);
+        io2 << setbase(10) << setiosflags(ios::showbase) << i << ' ' ;
+        io2 << setbase(8) << setiosflags(ios::showbase) <<  i << ' ' ;
+        io2 << setbase(16) << setiosflags(ios::showbase) << i << ' ' ;
+        io2 << setbase(0) << setiosflags(ios::showbase) << i << '\0' ;
+        if (strcmp(buf, "0 00 0x0 0"))
+                exit(1);
+
+6. Allocate enough space for formatting floating point numbers in
+lib/stream/flt.c.
+
+        cout.setf(ios::fixed, ios::floatfield);
+        cout << -1.0 << endl;
+        cout << -2147483648.0 << endl;  // In previous releases, it might
+                                        // cause core dump on some machines.
+
+7. Fix bug in lib/stream/flt.c in which insertion of floating point
+numbers generated wrong output when ios::uppercase was turned on.
+
+        cout.flags(0);
+        cout.setf(ios::fixed, ios::floatfield);
+        cout.setf(ios::showpos, ios::showpos);
+        cout.precision(8);
+        cout.fill('@');
+        cout.setf(ios::uppercase,ios::uppercase);
+        cout << 0.0 << endl;    // print garbage in previous releases
+                                // in 3.0.2, output is: +0.00000000
+
+8. Fix bug in lib/stream/flt.c in which the flag ios::internal didn't
+work for insertion of doubles.
+
+        cout.flags(0);
+        cout.setf(ios::scientific, ios::floatfield);
+        cout.setf(ios::showpos, ios::showpos);
+        cout.setf(ios::uppercase,ios::uppercase);
+        cout.precision(8);
+        cout.setf(ios::internal,ios::adjustfield);
+        cout.fill('@');
+        cout.width(25);
+        cout << -19.1234567 << endl;
+        // output is: -@@@@@@@@@@1.91234567E+01
+
+9. Fix bug in lib/stream/intin.c in which the failbit was not turned on
+when an incomplete hex number (e.g. 0x or 0X) was extracted.
+
+        char buf[512];
+        strcpy(buf, "0x");
+        strstream temp(buf, 512, ios::in|ios::app);
+        iostream io2 (temp.rdbuf());
+        int i;
+        io2.unsetf(ios::basefield);
+        io2 >> i;
+        if ((io2.rdstate()&ios::failbit)!=ios::failbit)
+                exit(1);
+
+10. Change the default base to ios::basefield in lib/stream/stream.c
+so that the conventional C++ integral representation can be processed
+correctly during extraction.
+
+        strstreambuf sb;
+        int i;
+        write(sb,"0x1f 0123 456\n")
+        istream is(&sb);
+        is >> i;
+        if (i != 0x1f)
+                exit(1);
+        is >> i;
+        if (i != 0123)
+                exit(2);
+        is >> i;
+        if (i != 456)
+                exit(3);
+
+11.  When an incomplete hex number (e.g., 0x or 0X) is extracted, the
+failbit is not turned on.
+
+        void f()
+        {
+                char iobuf[512];
+                strcpy(iobuf, "0x");
+                strstream temp4a (iobuf, 512, ios::in|ios::app);
+                iostream io2 (temp4a.rdbuf());
+                io2.unsetf(ios::basefield);
+                int i;
+                io2 >> i;
+                if (!io2) exit(1);
+        }
+
+12.  Add the following new setting to the global Makefile for building
+the iostream library on those systems which support variable argument
+passing:
+
+        VSPRINTF="-DVSPRINTF=vsprintf"
+
+The preprocessor definition must be turned on in order for the form()
+function in the iostream library to work correctly.
+
+13.  Change line 51 of swap.s.386 for the task library from 'cmpw' to
+'cmpl'.
+
+14.  Propagate '-D$(OS)' in the makefile down to the task directory.
+
+15.  Fix core dump of the task library on 386 machines.
+
+16.  Fix bug with:
+
+        ifstream ifs(fname);
+        ifs.setbuf(0,-1);
+        ifs.read(buf,1021);
+        if (!ifs.good())
+                cout << "read fails!" << endl;
+        cout << "gcount=" << ifs.gcount() << endl;
+
+========================= PTLINK =========================
+
+1.  Add -ptmpathname option to dump out a "link map" showing what
+actions the link simulator took. [also CC]
+
+2.  Add -ptk option to force ptlink to temporarily continue trying to
+instantiate in the face of instantiation errors. [also CC]
+
+3.  Add "countdown" feature to -ptv to show what template classes are
+left to instantiate at each iteration.
+
+4.  Add '-D$(OS)' to the makefile when building tools/pt/ptcomp.
+
+5.  Fix problem on the IBM RS/6000 with '.' occurring before names in
+nm output.
+
+6.  Add -pth option to force repository filenames to be < 14
+characters (hashed) even if the OS supports long names.  This is
+useful in building archives. [also CC]
+
+7.  Fix doincl() in ptlink to do less aggressive type lookup from
+unmangled names.  For this case:
+
+        A<B,C>::f(D,E)
+
+extract only the headers for A, B, and C, and no longer D and E.  For
+this case (function template):
+
+        f(D,E)
+
+continue to extract the headers for D and E.  Including types for
+function arguments to class templates sometimes caused the
+instantiation file to vary for different subsets of needed members.
+This in turn caused forced re-instantiation.
+
+8.  Fix failure to check for NULL before deleting tf_cache[] entry.
+
+9.  Add dynamic extensions as follows:
+
+        a.  There are two kinds of file lookup.  The first type is
+        used to find header files that describe template arguments.
+        At present these are looked up in the map file.  If found, the
+        header listed there is used, else a forward declaration is
+        generated:
+
+                struct X;
+
+        for the type in the instantiation file.  This will not change.
+        There is no issue of extensions because an entry in the map
+        file means that a bound pathname was encountered, i.e. the
+        extension is set.
+
+        b.  The second type of lookup is for template types
+        themselves.  Here both the declaration and implementation
+        files need to be determined.  If both @dec and @def entries
+        are found in the map file they are used.
+
+        c.  If exactly one of @dec and @def is found in the map file,
+        it is used to supply the basename, and then the -I settings
+        are iterated over as an outer loop, and one of:
+
+                char* hdr_ext[] = {".h", ".H", ".hxx", ".HXX",
+                    ".hh", ".HH", ".hpp",0};
+
+                char* src_ext[] = {".c", ".C", ".cxx", ".CXX",
+                    ".cc", ".CC", ".cpp",0};
+
+        is used as the inner loop.  The first file that is found is
+        used.  This algorithm means that ptlink will attempt to
+        exhaust all extensions in each -I directory before moving to
+        the next.  If no file is found go to step (d).
+
+        d.  If neither @dec nor @def entries are found in the map
+        file, then the file basename for a template type T will be
+        "T".  The algorithm in (c) is applied independently to get the
+        declaration and implementation file names.  If either is not
+        found, a warning is given and no header is #included in the
+        instantiation file.
+
+        e.  Case preservation of extensions will no longer be done.
+
+        f.  The list of extensions will be set in CC:
+
+                PTHDR=${PTHDR=".h,.H,etc."}
+
+        etc. and passed in to ptlink via internal options.  A user may
+        not use a CC option to set the list but may set PTHDR and
+        PTSRC in the environment.
+
+        g.  Any item in the set of extensions that does not begin with
+        "." or has more than 4 total characters will cause a warning
+        and will be ignored.
+
+        h.  If by hook or crook ptlink fires up with no extension list
+        at all (this should never happen) it will use INC_EXT and
+        SRC_EXT found in pt.h and give a warning.
+
+        i.  The instantiation file, header cache file, and checksum
+        file will continue to use extensions set in pt.h.  There is no
+        issue of dynamic lookup here.
+
+10.  Add -ptd (skip actual linking and dump list of instantiation
+objects to a file if any were recompiled or the file does not exist)
+and -pti (ignore ptlink) options so that makefiles of this form can be
+written:
+
+        appl:   appl.o ilist
+                CC -pti -o appl `cat ilist` appl.o
+
+        appl.o: appl.c Vector.h A.h C.h
+                CC -c appl.c
+
+        ilist:  always
+                CC -ptdilist appl.o
+
+        always:
+
+11.  Change slightly the way ptlink does link simulations, to better
+support archive libraries with partially-instantiated template classes
+in them.  Exact algorithm is:
+
+        a.  In the link simulator objects are encountered either
+        standalone or while traversing an archive.  Standalone objects
+        are always "linked" while archive objects are linked if
+        symbols from them are needed.
+
+        b.  Just before adding such objects, a new function okobj() is
+        called.
+
+        c.  For each T/D/B (text/data/bss) symbol in the object to be
+        added, okobj() checks to see if it is already in the link
+        simulator symbol table and is of type T/D/B, i.e. already
+        defined.
+
+        d.  If the complete pass in (c) does not reveal any
+        already-defined symbols, then the object can be "linked".
+
+        e.  Otherwise, for each symbol of type T/D/B in the object to
+        be added, if the symbol was previously undefined, then it is
+        marked as undefined and undefinable.  In other words, no
+        future object can resolve the symbol.  This step is necessary
+        to preserve archive semantics.
+
+12.  Add ##### on warnings to give them more visibility.
+
+13.  Optimization such that if the -I setting changes but the
+resulting files in the header cache do not, then recompilation is no
+longer forced.  As part of this change, all header cache files are
+given hard paths.
+

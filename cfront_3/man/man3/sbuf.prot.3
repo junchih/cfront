@@ -1,0 +1,431 @@
+.  \"ident	"@(#)cls4:man/stream/sbuf.prot.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any
+.  \"actual or intended publication of such source code.
+.TH SBUF.PROT 3C++ "C++ Stream Library" " "
+.SH NAME
+streambuf \- interface for derived classes
+.SH SYNOPSIS
+.nf
+.ta1i 2i
+.ft B
+#include <iostream.h>
+
+typedef long streamoff, streampos;
+class ios {
+public:
+	enum	seek_dir { beg, cur, end };
+	enum	open_mode { in, out, ate, app, trunc, nocreate, noreplace } ;
+	// \f2and lots of other stuff, see ios(3C++) ... \fP
+} ;
+
+class streambuf {
+public:
+		streambuf() ;
+		streambuf(char* p, int len);
+	void	dbp() ;
+protected:
+	int	allocate();
+	char*	base();
+	int	blen() const;
+	char*	eback();
+	char* 	ebuf();
+	char*	egptr();
+	char*	epptr();
+	void	gbump(int n);
+	char*	gptr();
+	char*	pbase();
+	void	pbump(int n); 
+	char*	pptr();
+	void	setg(char* eb, char* g, char* eg);
+	void	setp(char* p, char* ep);
+	void	setb(char* b, char* eb, int a=0);
+	int	unbuffered() const;
+	void	unbuffered(int);
+
+	virtual int 	doallocate();
+	virtual	~streambuf() ;
+public:
+	virtual int	pbackfail(int c);
+	virtual int	overflow(int c=EOF);
+	virtual int	underflow();
+	virtual streambuf*
+		setbuf(char* p, int len);
+	virtual streampos
+		seekpos(streampos, int =ios::in|ios:out);
+	virtual streampos
+		seekoff(streamoff, seek_dir, int =ios::in|ios:out);
+	virtual int	sync();
+};
+.fi
+.ft R
+.SH DESCRIPTION
+\f(CWstreambuf\f1s implement the buffer abstraction described in
+\f2sbuf.pub\f1(3C++).
+However, the \f(CWstreambuf\f1 class itself contains
+only basic members for manipulating the characters and normally
+a class derived from \f(CWstreambuf\f1 will be used.
+This man page describes the interface needed by programmers who are
+coding a derived class.
+Broadly speaking there are two kinds of member functions described here.
+The non-virtual functions are provided for manipulating a \f(CWstreambuf\f1
+in ways that are appropriate in a derived class.
+Their descriptions reveal details of the implementation that would
+be inappropriate in the public interface.
+The virtual functions permit the derived class to specialize the
+\f(CWstreambuf\f1 class in ways appropriate to the specific sources
+and sinks that it is implementing.
+The descriptions of the virtual functions explain the obligations of the
+virtuals of the derived class.  If the virtuals behave as specified,
+the \f(CWstreambuf\f1 will behave as specified in the
+public interface.  However, if the virtuals do not behave as
+specified, then the \f(CWstreambuf\f1 may not behave properly,
+and an \f(CWiostream\f1 (or any other code) that relies on proper
+behavior of the \f(CWstreambuf\f1 may not behave properly either.
+.PP
+In the following descriptions assume:
+.br
+\(em \f3sb\f1 is a \f(CWstreambuf*\f1.
+.br
+\(em \f3i\f1 and \f3n\f1 are \f(CWint\f1s.
+.br
+\(em \f3ptr\f1, \f3b\f1, \f3eb\f1, \f3p\f1, \f3ep\f1, \f3eb\f1, \f3g\f1,
+and \f3eg\f1 are \f(CWchar*\f1s.
+.br
+\(em \f3c\f1 is an \f(CWint\f1 character (positive or \f(CWEOF\f1)).
+.br
+\(em \f3pos\f1 is a \f(CWstreampos\f1. (See \f2sbuf.pub\f1(3C++).)
+.br
+\(em \f3off\f1 is a \f(CWstreamoff\f1.
+.br
+\(em \f3dir\f1 is a \f(CWseekdir\f1.
+.br
+\(em \f3mode\f1 is an \f(CWint\f1 representing an \f(CWopen_mode\fP.
+.SS "Constructors:"
+.RS
+.TP
+\f3streambuf()\f1
+Constructs
+an empty buffer corresponding to an empty sequence.
+.TP
+\f3streambuf(b,len)\f1
+Constructs an empty buffer and then sets up the reserve area
+to be the \f3len\f1 bytes starting at \f3b\f1.
+.RE
+.SS "The Get, Put, and Reserver area"
+.PP
+The protected members of 
+\f(CWstreambuf\f1
+present an interface to derived classes organized around
+three areas (arrays of bytes) managed cooperatively by
+the base and derived classes.
+They are the \f2get area\fP, the \f2put area\fP, and the \f2reserve area\fP
+(or buffer).
+The get and the put areas are normally disjoint, but they
+may both overlap the reserve area, whose primary purpose is
+to be a resource in which
+space for the put and get areas can be allocated.
+The get and the put areas are changed as characters are put into and
+gotten from the buffer, but the reserve area normally remains
+fixed.
+The areas are defined by a collection of \f(CWchar*\f1 values.
+The buffer abstraction is described in terms of pointers that point
+between characters, but the \f(CWchar*\f1 values must point at
+\f(CWchar\f1s.
+To establish a correspondence the \f(CWchar*\f1 values should be thought
+of as pointing just before the byte they really point at.
+.SS "Functions to examine the pointers"
+.RS
+.TP
+\f3ptr=sb->base()\f1
+Returns a pointer to the first byte of the reserve area.
+Space between \%\f3sb->base()\f1
+and \%\f3sb->ebuf()\f1 is the reserve area.
+.TP
+\f3ptr=sb->eback()\f1
+Returns a pointer to a lower bound on
+\%\f3sb->gptr()\f1.
+Space between \%\f3sb->eback()\f1 and \%\f3sb->gptr()\f1 is available
+for putback.
+.TP
+\f3ptr=sb->ebuf()\f1
+Returns a pointer to the byte after the last byte of the reserve area.
+.TP
+\f3ptr=sb->egptr()\f1
+Returns a pointer to the byte after the last byte of the get area.
+.TP
+\f3ptr=sb->epptr()\f1
+Returns a pointer to the byte after the last byte of the put area.
+.TP
+\f3ptr=sb->gptr()\f1
+Returns a pointer to the first byte of the get area.
+The available characters are those between \%\f3sb->gptr()\f1
+and \%\f3sb->egptr()\f1.
+The next character fetched will
+be \%\f3*(sb->gptr())\f1 unless \%\f3sb->egptr()\f1 is less than
+or equal to \%\f3sb->gptr()\f1.
+.TP
+\f3ptr=sb->pbase()\f1
+Returns a pointer to the put area base.
+Characters between \%\f3sb->pbase()\f1 and \%\f3sb->pptr()\f1
+have been stored into the buffer and not yet consumed.
+.TP
+\f3ptr=sb->pptr()\f1
+Returns a pointer to the first byte of the put area.
+The space between \%\f3sb->pptr()\f1
+and \%\f3sb->epptr()\f1 is the put area and characters will be stored
+here.
+.RE
+.SS "Functions for setting the pointers"
+.PP
+Note that to indicate that a particular area (get, put, or reserve)
+does not exist, all the associated pointers should be set to zero.
+.RS
+.TP
+\f3sb->setb(b, eb, i)\f1
+Sets \f3base()\f1 and \f3ebuf()\f1 to \f3b\f1 and \f3eb\f1 respectively.
+\f3i\f1 controls whether the area will be subject to
+automatic deletion.
+If \f3i\f1 is non-zero, then
+\f3b\f1 will be deleted when \f3base\f1 is changed by
+another call of \f3setb()\f1, or when the destructor is called for
+\f3*sb\f1.
+If \f3b\f1 and \f3eb\f1
+are both null then we say that there is no reserve area.
+If \f3b\f1 is non-null, there is a reserve area even if
+\f3eb\f1 is less than \f3b\f1 and so the reserve area
+has zero length.
+.TP
+\f3sb->setp(p, ep)\f1
+Sets \f3pptr()\f1 to \f3p\f1, \f3pbase()\f1 to \f3p\f1, and \f3epptr()\f1
+to \f3ep\f1.
+.TP
+\f3sb->setg(eb, g, eg)\f1
+Sets \f3eback()\f1 to \f3eb\f1, \f3gptr()\f1 to \f3g\f1, and \f3egptr()\f1
+to \f3eg\f1.
+.RE
+.SS "Other non-virtual members"
+.RS
+.TP
+\f3i=sb->allocate()\f1
+Tries to set up a reserve area.
+If a reserve area already exists or if \%\f3sb->unbuffered()\f1
+is nonzero, \f3allocate()\f1 returns 0 without doing anything.
+If the attempt to allocate space fails, \f3allocate()\f1
+returns \f(CWEOF\f1, otherwise (allocation succeeds)
+\f3allocate()\f1 returns 1.
+\f3allocate()\f1 is not called by any non-virtual member function
+of \f(CWstreambuf\f1.
+.TP
+\f3i=sb->blen()\f1
+Returns the size (in \f(CWchar\fPs) of the current reserve area.
+.TP
+\f3dbp()\f1
+Writes directly on file descriptor 1 
+information in ASCII about the state of the
+buffer.  It is intended for debugging and nothing
+is specified about the form of the output.  It is considered part
+of the protected interface because the information it prints can
+only be understood in relation to that interface, but it is a public
+function so that it can be called anywhere during debugging.  
+.TP
+\f3sb->gbump(n)\f1
+Increments \f3gptr()\f1 by \f3n\f1
+which may be positive or negative.
+No checks are made on whether the new
+value of \f3gptr()\f1 is in bounds.
+.TP
+\f3sb->pbump(n)\f1
+Increments \f3pptr()\f1 by \f3n\f1
+which may be positive or negative.
+No checks are made on whether the new
+value of \f3pptr()\f1 is in bounds.
+.sp
+.nf
+.in -.5i
+\f3sb->unbuffered(i)\f1
+\f3i=sb->unbuffered()\f1
+.in
+.fi
+There is a private variable known as \f3sb\f1's buffering state.
+\%\f3sb->unbuffered(i)\f1 sets the value of this variable
+to \f3i\f1 and \%\f3sb->unbuffered()\f1 returns the current value.
+This state is independent of the actual
+allocation of a reserve area.  Its primary purpose is to
+control whether a reserve area is allocated automatically
+by \f3allocate\f1.
+.RE
+.SS "Virtual member functions"
+.PP
+Virtual functions may be redefined in
+derived classes to specialize the behavior of \f(CWstreambuf\f1s.
+This section describes the behavior that these virtual functions
+should have in any derived classes;
+the next section describes the behavior that these functions
+are defined to have in base class \f(CWstreambuf\fP.
+.RS
+.TP
+\f3i=sb->doallocate()\f1
+Is called when \f3allocate()\f1 determines
+that space is needed.
+\f3doallocate()\f1 is required to call \f3setb()\f1 to provide a reserve
+area or to return \f(CWEOF\f1 if it cannot.  It is only called
+if \%\f3sb->unbuffered()\f1 is zero and \%\f3sb->base()\f1 is zero.
+.TP
+\f3i=overflow(c)\f1
+Is called to consume characters.
+If \f3c\f1 is not \f(CWEOF\f1,
+\f3overflow()\fP also must either save \f3c\f1 or consume it.  
+Usually it is called when the put area is full and
+an attempt is being made to store a new character, but
+it can be called at other times.
+The normal action is to consume the characters
+between \f3pbase()\f1 and \f3pptr()\f1,
+call \f3setp()\f1 to establish a new put area, and
+if \f3c\f(CW!=EOF\f1 store it (using \f3sputc()\f1).
+\%\f3sb->overflow()\f1
+should return \f3EOF\f1 to indicate an error; otherwise it should
+return something else.
+.TP
+\f3i=sb->pbackfail(c)
+Is called when \f3eback()\f1 equals \f3gptr()\f1 and an attempt 
+has been made to putback \f3c\f1.
+If this situation can be dealt with (e.g., by repositioning
+an external file), \f3pbackfail()\f1 should return \f3c\f1;
+otherwise it should return \f(CWEOF\f1.
+.TP
+\f3pos=sb->seekoff(off, dir, mode)\f1
+Repositions the get and/or put pointers  (i.e., the abstract
+get and put pointers, not \f3pptr()\f1 and \f3gptr()\f1).  The
+meanings of \f3off\f1 and \f3dir\f1
+are discussed in 
+\f2sbuf.pub\f1(3C++).
+\f3mode\f1 specifies whether the put pointer (\f(CWios::out\f1 bit set) or
+the get pointer (\f(CWios::in\f1 bit set) is to be modified.
+Both bits may be set in which case both pointers should be affected.
+A class derived from \f(CWstreambuf\f1 is not required to
+support repositioning.
+\f3seekoff()\f1 should return \f(CWEOF\f1 if 
+the class does not support repositioning.
+If the class does support repositioning,
+\f3seekoff()\f1 should return the new position or \f(CWEOF\f1 on error.
+.TP
+\f3pos=sb->seekpos(pos, mode)\f1
+Repositions the \f(CWstreambuf\fP get and/or put pointer to \f3pos\f1.
+\f3mode\f1 specifies which pointers are affected as for \f3seekoff()\f1.
+Returns \f3pos\f1 (the argument) or \f(CWEOF\f1 if the class does
+not support repositioning or an error occurs.
+.TP
+\f3sb=sb->setbuf(ptr, len)\f1
+Offers the array at \f3ptr\f1 with \f3len\f1 bytes to
+be used as a reserve area.
+The normal interpretation is that
+if \f3ptr\f1 or \f3len\f1 are zero then this is a request
+to make the \f3sb\f1 unbuffered.
+The derived class may use this area or not as it chooses.
+It may accept or ignore the request for unbuffered state as it
+chooses.
+\f3setbuf()\f1 should return \f3sb\f1 if it honors the request.
+Otherwise it should return 0.
+.TP
+\f3i=sb->sync()\f1
+Is called to give the derived class
+a chance to
+look at the state of the areas, and synchronize
+them with any external representation.
+Normally \f3sync()\f1 should
+consume any characters that have been stored into the put area,
+and if possible give back to the source any characters in the get area
+that have not been fetched.
+When \f3sync()\f1 returns there should not
+be any unconsumed characters, and the get area should be empty.
+\f3sync()\f1 should return \f3EOF\f1 if some kind of failure occurs.
+.TP
+\f3i=sb->underflow()\f1
+Is called to supply characters for fetching, i.e.,
+to create a condition in which the get area is not empty.
+If it is called when there are characters in the get area
+it should return the first character.
+If the get area is empty, it should create a nonempty get area 
+and return the next character (which it should also
+leave in the get area).
+If there are no more characters available,
+\f3underflow()\f1
+should return \f(CWEOF\f1 and leave an empty get area.
+.RE
+.PP
+The default definitions of the virtual functions:
+.RS
+.TP
+\f3i=sb->streambuf::doallocate()\f1
+Attempts to allocate a reserve area using \f(CWoperator new\f1.
+.TP
+\f3i=sb->streambuf::overflow(c)\f1
+Is compatible
+with the old stream package, but that behavior is not
+considered part of the specification of the iostream package.
+Therefore, \f3streambuf::overflow()\f1 should be treated as if 
+it had undefined behavior.  That is, derived classes should
+always define it.
+.TP
+\f3i=sb->streambuf::pbackfail(c)
+Returns \f(CWEOF\f1.
+.TP
+\f3pos=sb->streambuf::seekpos(pos, mode)\f1
+Returns \%\f3sb->seekoff(streamoff(pos),ios::beg,mode)\f1.
+Thus to define seeking in a derived class, it is frequently
+only necessary to define 
+\f3seekoff()\f1 and use the inherited \f3streambuf::seekpos()\f1.
+.TP
+\f3pos=sb->streambuf::seekoff(off, dir, mode)\f1
+Returns \f(CWEOF\f1.
+.TP
+\f3sb=sb->streambuf::setbuf(ptr, len)\f1
+Will honor the request when there is no reserve area.
+.TP
+\f3i=sb->streambuf::sync()\f1
+Returns 0 if the get area is empty and there are no unconsumed
+characters.  Otherwise it returns \f(CWEOF\f1.
+.TP
+\f3i=sb->streambuf::underflow()\f1
+Is compatible
+with the old stream package, but that behavior is not
+considered part of the specification of the iostream package.
+Therefore, \f3streambuf::underflow()\f1 should be treated as if 
+it had undefined behavior.  That is, it should always be defined
+in derived classes.
+.RE
+.SH CAVEATS
+The constructors are public for compatibility with the
+old stream package.
+They ought to be protected.
+.PP
+The interface for unbuffered actions is awkward.
+It's hard to write \f3underflow()\f1 and \f3overflow()\f1
+virtuals that behave properly
+for unbuffered \f(CWstreambuf()\f1s without special casing.
+Also there is no way for the virtuals to react sensibly to
+multi-character gets or puts.
+.PP
+Although the public interface to \f(CWstreambuf\f1s
+deals in characters and bytes,
+the interface to derived classes deals in \f(CWchar\f1s.
+Since a decision had to be made on the types of the real data
+pointers, it seemed easier to reflect that choice in the
+types of the protected members than to duplicate all
+the members with both plain and unsigned char versions.
+But perhaps all these uses of \f(CWchar*\f1 ought to have been
+with a typedef.
+.PP 
+The implementation contains a variant
+of  \f3setbuf()\f1 that accepts a third argument.
+It is present only for compatibility
+with the old stream package.
+.SH SEE ALSO
+sbuf.pub(3C++),
+streambuf(3C++),
+ios(3C++),
+istream(3C++),
+ostream(3C++)

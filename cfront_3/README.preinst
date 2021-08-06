@@ -1,0 +1,66 @@
+preinst - preinstantiate C++ templates into a single object file
+
+SYNOPSIS
+--------
+    preinst [cpp options] [-o ofile] [-C c++compiler] [-s skiplist] 
+	[-Opgv] [-pg] [files ...]
+
+DESCRIPTION
+-----------
+    This command takes a set of template specialization .c files 
+    (produced by ptlink), and instantiates all of the templates 
+    into a single object file.
+
+    This can be used to avoid the compile time of instantiating each 
+    template individually, at the cost of giving up the dependency 
+    checks done by ptlink.
+
+    preinst will attempt to instantiate all of the members of
+    the specified templates, as if \f3-pta\f1 was on.  This will 
+    cause instantiation errors if there are any templates that 
+    cannot be fully instantiated.
+
+    preinst will also fail if any of the header files used by the
+    templates conflict; that is, if they can not both be included in
+    the same compilation unit.
+
+FLAGS
+-----
+    -I path -D macro=value -U macro -p -g -pg -O
+
+    These flags are passed through to the C++ compiler when the
+    preinstantiation file is compiled.
+
+    -o ofile - The results of the compile will be left in ofile.
+	The default is inst.o.
+
+    -C compiler - Directs preinst to compile the specializations 
+	with the specified C++ compiler.  The default is CC.
+
+    -v - Causes preinst to print a list of the templates being 
+	preinstantiated.
+
+    -s skiplist - skiplist is a file containing regular expression 
+	patterns; any template that matches any pattern in the skiplist
+	will not be preinstantiated.  This can be used to filter out 
+	templates that cannot be fully instantiated.  For instance, if 
+	the file contains a single line of the form:
+
+		[lL]ist_of_p
+
+	This will cause any template that matches that pattern to be 
+	skipped, including List_of_p, List_of_piter, and Const_list_of_piter.
+
+EXAMPLE
+-------
+    preinst -Imydirectory ptrepository/*.c
+
+    Instantiates all of the templates specified by ptrepository/*.c,
+    with the result left in inst.o.
+
+NOTE
+----
+    It is the user's responsibility to rerun preinst when there is any
+    possibility that any of the specializations may be out of date.
+
+    Chaos will result if the files were not produced by ptlink.

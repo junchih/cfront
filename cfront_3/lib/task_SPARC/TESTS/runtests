@@ -1,0 +1,99 @@
+#!/bin/ksh
+# regular expressions to pick out hex numbers
+DELIM="[ 	:,=.]"
+#To avoid changing short words, let's say hex numbers are at least 4 digits
+HEXNUM="[0-9a-fA-F]\{4,\}"
+# These must match the ones in the makeVfiles script!
+# 1st one has 0x prefix, so don't need other delimiters
+HEXRE1="0[xX]${HEXNUM}"
+# following ones doesn't have prefix, so look for delimiters
+HEXRE2="^${HEXNUM}${DELIM}"
+HEXRE3="${DELIM}${HEXNUM}$"
+HEXRE4="${DELIM}${HEXNUM}${DELIM}"
+
+POSTFIX=""
+PREFIX=""
+GG=
+DECIDE=0
+DEST=/dev/null
+SHOWDIFFS=0
+
+while test -n '$1'
+do
+	case $1 in
+	-gg|-GG|-gG|-Gg) GG=1; shift;continue;;
+	-go|-gO|-GO|-Go) POSTFIX="$POSTFIX gO"; shift; continue;;
+	-og|-Og|-OG|-oG) POSTFIX="$POSTFIX O"; shift; continue;;
+	-oo|-OO|-oO|-oO) POSTFIX="$POSTFIX OO"; shift; continue;;
+	-all) GG=1; POSTFIX="gO O OO"; shift; continue;;
+		#With -DEBUG, show diffs when test fails
+	-DEBUG) SHOWDIFFS=1; shift; continue;;
+	-SH) GG=1; PREFIX=SH; shift; continue;;
+	-*)	echo "$0:  Invalid option $1"
+		echo "Usage:  $0 [-gg] [-go] [-og] [-oo] [-DEBUG] files"
+		exit;;
+	*)	break;;
+	esac
+done
+
+#Some trickiness here to get an iteration for a null postfix.
+#Must put null postfix in explicitly, then skip the iteration if
+#it's not meant to be run.
+
+for pf in "" $POSTFIX
+do
+
+if test $DECIDE = 0
+#Should we do an iteration for pf = ""?
+then
+	DECIDE=1
+	if test $GG
+	then
+		:;	# yes, we should
+	elif test "$POSTFIX"
+	then
+		continue; #no, skip it
+	else
+		:; # yes, by default
+	fi
+fi
+
+	for test in $*
+	do
+		(ulimit -t 10; ${PREFIX}${test}${pf}.E > ${test}.out 2>&1)
+		# filter out disclaimer comments and convert hex numbers to
+		# "HEX" before comparing output to .V file.
+		# Also change 16 to 30 for BSD where SIGUSR1 = 30 instead of 16
+		if test ${SHOWDIFFS} = "1"
+		then	DEST=/usr/tmp/$$.${test}
+		fi
+		if test $BSD
+		then
+			sed -e "/^#/d" ${test}.out |
+			sed -e "s/16/30/" |
+			sed -e "s/${HEXRE1}/HEX/g" |
+			sed -e "s/${HEXRE2}/HEX /g" |
+			sed -e "s/${HEXRE3}/ HEX/g" |
+			sed -e "s/${HEXRE4}/ HEX /g" |
+			diff -b - ${test}.V >${DEST} 2>&1
+		else
+			sed -e "/^#/d" ${test}.out |
+			sed -e "s/${HEXRE1}/HEX/g" |
+			sed -e "s/${HEXRE2}/HEX /g" |
+			sed -e "s/${HEXRE3}/ HEX/g" |
+			sed -e "s/${HEXRE4}/ HEX /g" |
+			diff -b - ${test}.V >${DEST} 2>&1
+		fi
+		if test $? -eq 0
+		then echo "${PREFIX}${test}${pf}.E passed"
+		else
+			echo "${PREFIX}${test}${pf}.E failed"
+			if test ${SHOWDIFFS} = "1"
+			then
+				echo "diff output:  diff -b ${PREFIX}${test}${pf}.out ${test}.V"
+				cat ${DEST}
+			fi
+		fi
+		rm -f ${test}.out
+	done
+done

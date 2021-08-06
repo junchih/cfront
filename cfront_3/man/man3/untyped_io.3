@@ -1,0 +1,144 @@
+.\" ident	@(#)G2++:g2++lib/man/untyped_io.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3untyped_io\fP \f3G2++(3C++)\fP " "
+.SH NAME
+untyped_io \- G2++ untyped insertion and extraction
+.SH SYNOPSIS OF g2++.h
+.Bf
+#include <String.h>
+
+class istream;     // see \f3iostream(3C++)\fP
+class ostream;     // see \f3iostream(3C++)\fP
+
+//  Navigable syntax trees
+
+struct G2NODE{
+    String  name;  // see \f3String(3C++)\fP
+    String  val;   // see \f3String(3C++)\fP
+    G2NODE* child;
+    G2NODE* next;
+};
+struct G2BUF{
+    ...
+    G2NODE* root;
+    ...
+};
+
+//  Stream insertion and extraction
+
+ostream& operator<<(ostream& os,const G2BUF& buf);
+istream& operator>>(istream& is,G2BUF& buf);
+
+//  Stream searching
+
+String g2seek(istream& is);
+String g2seek(istream& is,const String& name);
+
+.Be
+.SH DESCRIPTION
+Untyped I/O routines can be
+used to read, write, and seek G2++ records (see \f3G2++(4C++)\f1)
+without advance knowledge of their structure.
+The operators map between records in streams 
+and \f2navigable syntax trees\f1 of type \f4G2BUF\f1.
+The structure of a syntax tree is isomorphic 
+to that of the corresponding G2++ record.
+.SS "Navigable syntax trees"
+A navigable syntax tree is a dynamically-allocated, 
+linked structure, consisting of one or more nodes of 
+type \f4G2NODE\f1.  The root node, which is accessed via
+\f4G2BUF::root\f1, contains the record name 
+in its \f4name\f1 field.  If the record is flat, e.g.,
+.Bf
+
+        id      Bob
+
+.Be
+then the \f4value\f1 field will be non-empty (it will
+contain \f4"Bob"\f1) and the \f4child\f1 and \f4next\f1 
+fields will contain null pointers.
+If the record contains an indented group,
+.Bf
+
+        person
+                id      Bob
+                age     11
+
+.Be
+the value field of the root node will contain the empty String 
+and the \f4child\f1 pointer will point to 
+a node containing the name of the first indented group
+(\f4id\f1).  \f4next\f1 pointers trace the chain 
+of siblings within an indented group.
+The client navigates a syntax tree by starting 
+at the root and following \f4child\f1 
+and \f4next\f1 pointers.
+.sp
+.SS "Stream insertion and extraction"
+Absolutely no interpretation of names or values is performed
+by these operators; the ASCII characters making
+up the names and values are simply copied without 
+truncation between the stream and the nodes of the syntax tree.
+.IP "\f4ostream& operator<<(ostream& os,const G2BUF& buf);\f1"
+Stream insertion.  
+Starts at \f4buf.root\f1 and performs a pre-order, 
+left-to-right traversal of the syntax tree, building
+a G2++ record as it goes.  Inserts
+the resulting record into the output stream \f4os\f1.  
+.IP "\f4istream& operator>>(istream& is,G2BUF& buf);\f1"
+Stream extraction.
+Searches input stream \f4is\f1 until
+it encounters the next G2++ record, regardless of type.
+Reads the record and constructs a syntax tree isomorphic 
+to the record in \f4buf\f1.
+If the stream is exhausted before a record 
+is found, the return value will test as null.
+.SS "Stream searching"
+These operations scan an input stream without actually
+reading a record.  
+They leave the stream properly positioned for
+either an untyped extraction (see above) 
+or a typed extraction (see \f3typed_io(.)\f1).
+.IP "\f4String g2seek(istream& is);\f1"
+Searches input stream \f4is\f1 until
+it encounters the next G2++ record, regardless of type.
+Returns the name of the record
+as the function result.
+If the stream is exhausted before another record 
+is found, returns the empty String.
+.IP "\f4String g2seek(istream& is,const String& name);\f1"
+Searches input stream \f4is\f1 until
+it encounters a record of type \f4name\f1 (the \f2type\f1 of
+a record is its highest level name \- see \f3G2++(4C++)\f1).
+Returns the name of the record as the function result.
+If the stream is exhausted before a record with the
+desired name is found, returns the empty String.
+.SH BUGS
+There is currently no way to modify the structure of an 
+navigable syntax tree.  Clients may only navigate the trees
+by following pointers, and they may change the values of
+\f4name\f1 and \f4value\f1 fields.
+.SH NOTES
+Untyped I/O is used by applications that lack
+\f2a priori\f1 knowledge of record types.  For example,
+tools that manipulate files of G2++ records must
+be implemented using untyped I/O.  Applications that deal with 
+known record types ordinarily use typed insertion and 
+extraction (see \f3typed_io(.)\f1).
+.SH SEE ALSO
+.Bf
+\f3G2++(4C++)\f1
+\f3g2++comp(1C++)\f1
+\f3intro(.)\f1
+\f3String(3C++)\f1
+\f3typed_io(.)\f1
+.Be

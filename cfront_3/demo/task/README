@@ -1,0 +1,39 @@
+ident	"@(#)cls4:demo/task/README	1.1"
+/*******************************************************************************
+ 
+C++ source for the C++ Language System, Release 3.0.  This product
+is a new release of the original cfront developed in the computer
+science research center of AT&T Bell Laboratories.
+
+Copyright (c) 1991 AT&T and UNIX System Laboratories, Inc.
+Copyright (c) 1984, 1989, 1990 AT&T.  All Rights Reserved.
+
+THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE of AT&T and UNIX System
+Laboratories, Inc.  The copyright notice above does not evidence
+any actual or intended publication of such source code.
+
+*******************************************************************************/
+This directory contains example tasking programs.
+    triv:	A trivial tasking program with tasks that pass
+		an object around via queues.
+
+    regtest:	A somewhat less trivial tasking program that also has
+		tasks passing an object around via queues.  It includes
+		extraneous code to check that registers are being
+		restored correctly across task switches.	
+
+    shared:	Similar to regtest, but uses SHARED tasks (tasks that
+		share the same stack space), and does not have the
+		extraneous register-checking code.
+
+    alph:	A program with 2 tasks communicating via semaphores.
+
+    sigtest:	A program to illustrate the signal-handling features
+		of the task library.  Two tasks communicate and synchronize
+		with signals and semaphores.
+
+Compile with:  make compile
+Compile and run with:  make run
+Files suffixed .V contain the expected output for each program.
+Note:  the makefile sets the library search path to be ../..,
+that is, the compiler (linker) looks in ../.. for libtask.a.

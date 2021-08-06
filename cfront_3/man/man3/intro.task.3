@@ -1,0 +1,90 @@
+.  \"ident	"@(#)cls4:man/task/TASK.INTRO.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved        
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any           
+.  \"actual or intended publication of such source code.
+.TH TASK.INTRO 3C++ "C++ Task Library" " "
+.SH NAME
+task \- coroutines, multiple threads of control, C++ task library
+.SH SYNOPSIS
+\f3
+.nf
+#include <task.h>
+
+class object;
+class sched : public object;
+class timer : public sched;
+class task  : public sched;
+.sp
+class qhead : public object;
+class qtail : public object;
+.sp
+class Interrupt_handler : public object;
+.sp
+class histogram;
+class randint;
+class urand : public randint;
+class erand : public randint;
+
+.fi
+\f1
+.sp-1.5v
+.SH DESCRIPTION
+The C++ task library provides facilities for writing programs
+with multiple threads of control
+within one UNIX system process.
+Each thread of control is a \f(CWtask\fP or coroutine.
+Each \f(CWtask\fP is an instance of a user-defined class derived from class
+\f(CWtask\fP,
+and the main program of the \f(CWtask\fP is the constructor of its class.
+A \f(CWtask\fP can be suspended and resumed without interfering with its 
+internal state.
+Each \f(CWtask\fP runs until it explicitly gives up the processor;
+there is no pre-emption.
+.P
+Most classes in the task system are derived from the base class
+\f(CWobject\fP.
+The base class
+\f(CWsched\fP
+is responsible for scheduling and for the functionality
+that is common to \f(CWtask\fPs and \f(CWtimer\fPs.
+Class \f(CWsched\fP is meant to be used strictly as a base class,
+that is, it is illegal to create objects of class \f(CWsched\fP.
+Class \f(CWtask\fP must also be used only as a base class.
+The programmer must derive a class from class \f(CWtask\fP,
+and provide a constructor to serve as the \f(CWtask\fP's main program.
+The task system can be used for writing event-driven simulations.
+\f(CWtask\fPs execute in a simulated time frame.
+Objects of class \f(CWtimer\fP provide a facility
+for implementing time-outs and other time-dependent phenomena.
+Classes \f(CWtask\fP, \f(CWtimer\fP, \f(CWsched\fP, and \f(CWobject\fP
+and their public member functions are described on the task(3C++)
+manual page.
+.P
+Classes \f(CWqhead\fP and \f(CWqtail\fP
+enable a wide range of message-passing and data-buffering schemes
+to be implemented simply.
+These classes are described on the queue(3C++) manual page.
+.P
+Class \f(CWInterrupt_handler\fP 
+provides an interface for writing classes that can wait
+for external events using UNIX system signals.
+These classes are described on the interrupt(3C++) manual page.
+.P
+Class \f(CWhistogram\fP aids data gathering.
+Classes \f(CWrandint\fP, \f(CWurand\fP, and \f(CWerand\fP
+provide random number generation.
+These four classes are described on the tasksim(3C++) manual page.
+.SH SEE ALSO
+task(3C++), queue(3C++), interrupt(3C++), tasksim(3C++)
+.br
+Stroustrup, B. and Shopiro, J. E.,
+"A Set of C++ Classes for Co-routine Style Programming,"
+in
+.I "AT&T C++ Language System Release 2.0 Library Manual."
+.br
+Shopiro, J. E.,
+"Extending the C++ Task System for Real-Time Control,"
+in
+.I "AT&T C++ Language System Release 2.0 Library Manual."

@@ -1,0 +1,74 @@
+.  "\ident	"@(#)cls4:man/complex/CPLX.INTRO.3	1.1"
+.TH CPLX.INTRO 3C++ "C++ Complex Math Library" " "
+.SH NAME
+complex \- introduction to C++ complex mathematics library
+.SH SYNOPSIS
+\f3#include <complex.h>
+.br
+class	complex;\fP
+.SH DESCRIPTION
+This section describes functions and operators found
+in the C++ Complex Mathematics Library,
+.IR libcomplex.a.
+These functions are not automatically loaded by the C++ compiler,
+.IR CC (1);
+however, the link editor searches this library under the
+\f3\-lcomplex\fP
+option.
+Declarations for these functions may be found in
+the
+\f3#include\fP
+file
+.BR <complex.h> .
+When compiling programs using the complex library,
+users must provide the \f(CW-lm\fP option on the \f(CWCC\fP
+command line to link the math library.
+.P
+The Complex Mathematics library implements the data type of
+complex numbers as a class, \f(CWcomplex\fP.
+It overloads the standard input, output, arithmetic, assignment, and
+comparison operators, discussed in the manual pages for cplxops(3C++).
+It also overloads the standard exponential, logarithm, power,
+and square root functions, discussed in cplxexp(3C++),
+and the trigonometric functions of
+sine, cosine, hyperbolic sine, and hyperbolic cosine,
+discussed in cplxtrig(3C++),
+for the class \f(CWcomplex\fP.
+Routines for converting between Cartesian and polar coordinate
+systems are discussed in cartpol(3C++).
+Error handling is described in cplxerr(3C++).
+.SH FILES
+INCDIR/complex.h
+.br
+LIBDIR/libcomplex.a
+.SH SEE ALSO
+cartpol(3C++),
+cplxerr(3C++),
+cplxops(3C++),
+cplxexp(3C++),
+and
+cplxtrig(3C++).
+.br
+Stroustrup, B., "Complex Arithmetic in C++," C++ Language System
+Release 2.0 Library Manual.
+.SH DIAGNOSTICS
+Functions in the Complex Mathematics Library (3C++) may return
+the conventional values
+\f3(0, 0)\fP, \f3(0, \(+-HUGE)\fP, \f3(\(+-HUGE, 0),\fP
+or
+\f3(\(+-HUGE, \(+-HUGE)\fP,
+when the function is undefined for the
+given arguments or when the value is not representable.
+\f3(HUGE\fP
+is the largest-magnitude single-precision floating-point number and
+is defined in the file \f3<math.h>\fP.
+The header file \f3<math.h>\fP is included
+in the file \f3<complex.h>\fP.)  In these cases,
+the external variable
+.I errno\^
+[see
+.IR intro (2)]
+is set to the value
+.SM EDOM
+or
+.SM ERANGE\*S.

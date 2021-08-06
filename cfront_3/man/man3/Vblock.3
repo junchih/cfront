@@ -1,0 +1,84 @@
+.\" ident	@(#)G2++:g2++lib/man/Vblock.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Vblock\fP \f3G2++(3C++)\fP " "
+.SH NAME
+Vblock \- Similar to Block
+.SH SYNOPSIS OF Vblock.h
+.Bf
+
+    template <class \*(gt> class Vblock{
+    public:
+
+	//  similar to Block(3C++)
+
+    };
+
+.Be
+.SH DESCRIPTION
+.PP
+A Vblock is just like a Block (see \f3Block(3C++)\f1), 
+except that (for technical
+reasons having to do with G2++) some of its member 
+functions are virtual.  If a G2++ record definition
+(see \f3G2++(4C++)\f1) specifies an array, 
+the corresponding declaration generated
+by \f3g2++comp(1C++)\f1 in the \f4.h\f1 file will 
+contain a Vblock (see the \f3EXAMPLE\f1).
+.SH EXAMPLE
+When compiled by \f3g2++comp(1C++)\f1, the following
+record definition
+.Bf
+
+    \fIusr.g\fP
+
+	usr
+		name	*
+		proj
+			*(100)	LONG
+
+
+.Be
+generates a \f4.h\f1 file containing the following:
+.Bf
+
+    \fIusr.h\fP
+
+	...
+
+	typedef struct USR{
+		String	name;
+		Vblock<LONG>	proj;
+		USR();
+	}USR;
+
+.Be
+A client program may manipulate the \f4proj\f1
+field just as though it were a Block, e.g.,
+.Bf
+
+	#include "usr.h"
+	main(){
+
+	    USR u;
+
+	    for(int i=0;i<100;i++){
+		u.proj.reserve(i);
+		u.proj[i] = i;
+	    }
+	}
+.Be
+.SH SEE ALSO
+.Bf
+\f3Block(3C++)\f1
+\f3g2++comp(1C++)\f1
+\f3typed_io(G2++(3C++))\f1
+.Be

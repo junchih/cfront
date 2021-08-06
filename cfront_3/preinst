@@ -1,0 +1,101 @@
+#!/bin/sh
+#
+#   preinst - a shell script to pre-instantiate C++ templates.
+#	This command instantiates multiple templates into a single
+#	dot-o file. It works by reading a series of .c's produced by ptlink,
+#	copying all #includes into a special header, copying the remainder
+#	into a special dot-c, and then compiling the dotc.  Since every
+#	ptlink file defines the symbol "_dummy_", we change each occurrence
+#	of that symbol into a unique name.
+#
+#	Author: Dennis Mancl (dmm@mozart.att.com), 8/25/93
+#	based on a C++ program by Rob Murray
+
+CC_cmd=CC
+cppopts=
+ccopts=
+vflag=0
+skiplist=
+ofile=inst.o
+
+USAGE="$0 [cppoptions] [-o ofile] [-C c++compiler] [-s skiplist] [-Opgv] [files ...]"
+
+set -- `getopt C:D:I:U:o:gpOXvs: $*`
+
+if [ $? != 0 ]
+then
+	echo $USAGE
+	exit 2
+fi
+
+for i in $*
+do
+	case $i in
+	-C)	CC_cmd=$2; shift 2;;
+	-D|-I|-U)	cppopts="$cppopts $1 $2"; shift 2;;
+	-p|-g|-O)	ccopts="$ccopts $1"; shift;;
+	-v)	vflag=1; shift;;
+	-s)	skiplist=$2; shift 2;;
+	-o)	ofile=$2; shift 2;;
+	--)	shift; break;;
+	esac
+done
+
+tmpc=_preinst$$.c
+tmph=_preinst$$.h
+tmpt=_preinst$$.t
+tmpo=_preinst$$.o
+
+trap 'rm -f $tmpt $tmpc $tmph; exit' 1 2 3 15
+
+echo "@all" >$tmpt
+echo "#include \"$tmph\"" >$tmpc
+
+# save the #include lines in _preinst$$.h
+# save the declaration lines in _preinst$$.c
+count=0
+for i in $*
+do
+	grep '_dummy_' $i >/dev/null
+	if [ $? != 0 ]
+	then
+		echo "Warning: file $i wasn't created by ptlink" 1>&2
+		continue
+	fi
+	
+	if [ $vflag = 1 ]
+	then
+		grep '^/\*.*\*/$' $i | sed -e 's/^\/\* //' -e 's/ \*\/$//'
+	fi
+	
+	grep '^#include' $i >>$tmph
+	grep -v '^#include' $i | sed -e "s/_dummy_/_dummy_$count/" >>$tmpc
+	count=`expr $count + 1`
+done
+
+# eliminate duplicate lines in _preinst$$.h
+awk 'BEGIN { max = 0 }
+{
+	found = 0
+	for (i = 0; i < max; i++) {
+		if ($0 == str[i]) {
+			found = 1
+			break
+		}
+	}
+	if (found == 0) {
+		print $0
+		str[max] = $0
+		max = max + 1
+	}
+}' <$tmph >/tmp/tmph$$
+mv /tmp/tmph$$ $tmph
+
+# perform the compile
+$CC_cmd -c +T$tmpt $cppopts $ccopts $tmpc
+if [ $tmpo != $ofile ]
+then
+	mv $tmpo $ofile
+fi
+rm $tmpt $tmpc $tmph
+

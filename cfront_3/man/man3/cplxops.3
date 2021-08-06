@@ -1,0 +1,128 @@
+.  "\ident	"@(#)cls4:man/complex/cplxops.3	1.1"
+.TH CPLXOPS 3C++ "C++ Complex Math Library" " "
+.SH NAME
+complex_operators:  operators for the C++ complex math library
+.SH SYNOPSIS
+.nf
+.ta 1i 2.5i
+.B #include <complex.h>
+\f3
+ class complex {
+
+ public:
+	friend complex	operator+(complex, complex);
+	friend complex	operator\-(complex);
+	friend complex	operator\-(complex, complex);
+	friend complex	operator*(complex, complex);
+	friend complex	operator/(complex, complex);
+
+	friend int	operator==(complex, complex);
+	friend int	operator!=(complex, complex);
+
+	void	operator+=(complex);
+	void	operator\-=(complex);
+	void	operator*=(complex);
+	void	operator/=(complex);
+.br
+ };
+.fi
+\fP
+.SH DESCRIPTION
+The basic arithmetic operators,
+comparison operators,
+and assignment operators
+are overloaded for complex numbers.
+The operators have their conventional precedences.
+In the following descriptions for \f(CWcomplex\fP operators,
+ \(em \f3x\fP, \f3y\fP, and \f3z\fP are of type \f(CWcomplex\fP.
+.P
+Arithmetic operators:
+.TP 15
+\f3z = x + y\fP
+Returns a \f(CWcomplex\fP which is the
+arithmetic sum of complex numbers \f2x\fP and \f2y\fP.
+.P
+.TP 15
+\f3z = \-x\fP
+Returns a \f(CWcomplex\fP which is the
+arithmetic negation of complex number \f2x\fP.
+.P
+.TP 15
+\f3z = x \- y\fP
+Returns a \f(CWcomplex\fP which is the
+arithmetic difference of complex numbers \f2x\fP and \f2y\fP.
+.P
+.TP 15
+\f3z = x * y\fP
+Returns a \f(CWcomplex\fP which is the
+arithmetic product of complex numbers \f2x\fP and \f2y\fP.
+.P
+.TP 15
+\f3z = x / y\fP
+Returns a \f(CWcomplex\fP which is the
+arithmetic quotient of complex numbers \f2x\fP and \f2y\fP.
+.P
+Comparison operators:
+.P
+.TP 15
+\f3x == y\fP
+Returns non-zero if complex number \f2x\fP is equal to complex number \f2y\fP;
+returns 0 otherwise.
+.P
+.TP 15
+\f3x != y\fP
+Returns non-zero if complex number \f2x\fP is not equal to complex number \f2y\fP;
+returns 0 otherwise.
+.P
+Assignment operators:
+.P
+.TP 15
+\f3x += y\fP
+Complex number \f2x\fP is assigned the value of the
+arithmetic sum of itself and complex number \f2y\fP.
+.P
+.TP 15
+\f3x \-= y\fP
+Complex number \f2x\fP is assigned the value of the
+arithmetic difference of itself and complex number \f2y\fP.
+.P
+.TP 15
+\f3x *= y\fP
+Complex number \f2x\fP is assigned the value of the
+arithmetic product of itself and complex number \f2y\fP.
+.P
+.TP 15
+\f3x /= y\fP
+Complex number \f2x\fP is assigned the value of the
+arithmetic quotient of itself and complex number \f2y\fP.
+.SH WARNING
+The assignment operators do not produce a value
+that can be used in an expression.
+That is,
+the following construction is syntactically invalid,
+.RS
+.br
+\f(CWcomplex    x, y, z;
+.br
+.
+.br
+x = ( y += z );\fP
+.br
+.RE
+whereas,
+.RS
+.br
+\f(CWx = ( y + z );
+
+.br
+x = ( y == z );\fP
+.br
+.RE
+are valid.
+.SH SEE ALSO
+CPLX.INTRO(3C++),
+cartpol(3C++),
+cplxerr(3C++),
+cplxexp(3C++),
+and
+cplxtrig(3C++).

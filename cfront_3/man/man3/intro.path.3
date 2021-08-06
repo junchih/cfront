@@ -1,0 +1,69 @@
+.\" ident	@(#)Path:man/intro.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3intro\fP \f3Path(3C++)\fP " "
+.SH NAME
+intro \- introduction to the Path component
+.SH DESCRIPTION
+The facilities of \f3Path(3C++)\f1 contain
+most of the functionality users need
+when manipulating UNIX path names and UNIX search paths.
+Functionality includes:
+automatic path canonicalization, path relativization,
+wildcard expansion, path completion, and
+searching in search paths.
+\f3Path(3C++)\f1 also contains a replacement for
+the assorted temporary path name construction
+facilities of \f3mktemp(3)\f1, \f3tempnam(3)\f1, and
+\f3tmpnam(3)\f1.  
+Finally, \f3Path(3C++)\f1 provides an interface to 
+the Korn shell \f3test(1)\f1 predicate that works 
+regardless of whether the user is running the Korn shell.
+.PP
+There are four manual entries:
+.IP "\f3Path(.)\f1"
+UNIX path names.  Automatic canonicalization,
+path relativization, wildcard expansion, path completion.
+.br
+.IP "\f3Search_path(.)\f1"
+Constructing and searching in UNIX search paths.
+.br
+.IP "\f3Tmppath(.)\f1"
+A replacement for 
+\f3mktemp\f1(3), \f3tempnam\f1(3), and \f3tmpnam(3)\f1.
+.br
+.IP "\f3ksh_test(.)\f1"
+Interface to the Korn shell \f3test(1)\f1 predicate.
+Works regardless of whether or not 
+the user is running \f3ksh(1)\f1.
+.br
+.SH SEE ALSO
+.Bf
+\f3access(2)\fP,
+\f3basename(1)\fP,
+\f3dirname(1)\fP,
+\f3getenv(3C)\fP,
+\f3getwd(3C)\fP,
+\f3intro(2)\fP,
+\f3ksh(1)\fP,
+\f3ksh_test(.)\fP,
+\f3List(3C++)\fP,
+\f3mktemp(3)\fP ,
+\f3Objection(3C++)\fP,
+\f3Path(.)\fP,
+\f3Search_path(.)\fP,
+\f3stat(2)\fP,
+\f3String(3C++)\fP,
+\f3tempnam(3)\fP,
+\f3tmpfile(3)\fP,
+\f3tmpnam(3)\fP,
+\f3Tmppath(.)\fP.
+.Be

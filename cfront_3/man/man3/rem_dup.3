@@ -1,0 +1,110 @@
+.\" ident	@(#)Array_alg:man/rem_dup.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3rem_dup\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+rem_dup \- remove duplicate elements from an array
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    \*(gt* rem_dup(\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    \*(gt* rem_dup_c(\*(gt* b1,\*(gt* e1,\*(gt* b2);
+    template <class \*(gt>
+    \*(gt* rem_dup_r(int (*rel)(const \*(gt*,const \*(gt*),\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    \*(gt* rem_dup_rc(int (*rel)(const \*(gt*, const \*(gt),\*(gt* b1,\*(gt* e1,\*(gt* b2);
+
+.Be
+.SH ASSUMPTIONS
+.PP
+.br
+(1) For the non-relational versions, \*(gt\f4::operator==\f1
+defines an equivalence relation on \*(gt
+.br
+(2) For the relational versions, \f4rel\f1 defines an
+equivalence relation on \*(gt.
+.br
+(3) For the copy versions, the output array does not overlap
+the input array
+.br
+(4) For the copy versions, the output array has enough
+cells to hold the result
+.br
+(5) \*(gt has \f4operator=\f1
+.SH DESCRIPTION
+.PP
+These functions move the unique elements 
+(those elements that are not equal to one another) 
+to the left and return a pointer to the cell just beyond
+the cell containing the last unique element.
+.PP
+If \f4b\f1 and \f4p\f1 are, respectively, the
+pointer to the beginning of the output array and 
+the function result, 
+then \f4b\f1 and \f4p\f1 delimit a
+conceptually "new" array in which duplicates have
+been removed.  The algorithms used by all functions
+in this group are stable; that is, the relative order of
+unique elements is preserved.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* rem_dup(\*(gt* b,\*(gt* e);\f1"
+Uses \f4\*(gt::operator==\f1 for the uniqueness test.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* rem_dup_c(\*(gt* b1,\*(gt* e1,\*(gt* b2);\f1"
+Like \f4rem_dup\f1 except that the input array
+is preserved and the result is written to a new
+array beginning at location \f4b2\f1.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* rem_dup_r(int (*rel)(const \*(gt*,const \*(gt*),\*(gt* b,\*(gt* e);\f1"
+Like \f4rem_dup\f1 except that it
+uses \f4rel\f1 to test for uniqueness.
+That is, if \f4p\f1 and \f4q\f1 are pointers 
+into the array, then \f4*p\f1 and \f4*q\f1
+will be treated as duplicates 
+if \f4rel(p,q)==0\f1.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4\*(gt* rem_dup_rc(int (*rel)(const \*(gt*,const \*(gt*),\*(gt* b1,\*(gt* e1,\*(gt* b2);\f1"
+Like \f4rem_dup_r\f1 except that the input array
+is preserved and the result is written to a new
+array beginning at location \f4b2\f1.
+.SH COMPLEXITY
+.PP
+If N is the size of the array, then
+complexity is \f2O(N*N)\f1 for all versions.  
+More precisely,
+.IP "\f3non-copy versions\f1"
+At most \f2N*N/2\f1 uniqueness tests and 
+at most \f2N\-2\f1 assignments
+are done.
+.IP "\f3copy versions\f1"
+At most \f2N*N/2\f1 uniqueness tests 
+and \f2N\f1 assignments are done.
+.SH NOTES
+.PP
+\f4rem_dup\f1 is quadratic and should not be used with 
+large (more than 16 or so elements) array.  Large arrays 
+should be first sorted with \f4sort\f1 or \f4sort_s\f1 
+and then passed through \f4unique\f1.
+.SH NOTES
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3unique(.)\f1
+\f3Block(3C++)\f1
+.Be

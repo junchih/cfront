@@ -1,0 +1,560 @@
+.\" ident	@(#)Set:man/Set.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Set\fP \f33C++\fP " "
+.SH NAME
+Bag, Set, Set_of_p \- parameterized unordered collections
+.SH SYNOPSIS OF Set.h
+.Bf
+
+#include <Map.h>         // see \f3Map(3C++)\fP
+#include <Pool.h>        // see \f3Pool(3C++)\fP
+#include <List.h>        // see \f3List(3C++)\fP
+
+class ostream;
+
+//  Auxiliary types
+
+typedef
+    \f2implementation_dependent_integral_type\fP
+    Set_or_Bag_hashval;
+
+//  Template classes for Bag_pair, Bag, Set, and Set_of_p:
+
+    template <class \*(gt> struct Bag_pair{
+	\*(gt value;
+	unsigned count;
+    };
+
+    template <class \*(gt> class Bag{
+    public:
+
+    //  Constructors, destructor
+
+	Bag();
+	Bag(const \*(gt& t1);
+	Bag(const \*(gt& t1, const \*(gt& t2);
+	Bag(const \*(gt& t1, const \*(gt& t2, const \*(gt& t3);
+	Bag(const \*(gt& t1, const \*(gt& t2, const \*(gt& t3,
+              const \*(gt& t4);
+	~Bag();
+
+    //  Copy and assign
+
+	Bag(const Bag<\*(gt>& b);
+	Bag<\*(gt>& operator=(const Bag<\*(gt>& b);
+
+    //  Length
+
+	unsigned size()const;
+	unsigned size_unique()const;
+	operator const void*()const;
+
+    //  Membership
+
+	const Bag_pair<\*(gt>* contains(const \*(gt& t)const;
+	unsigned count(const \*(gt& t)const;
+
+    //  Select an arbitrary element
+
+	const Bag_pair<\*(gt>* select()const;
+
+    //  Insert and remove elements
+
+	const Bag_pair<\*(gt>* insert(const \*(gt& t,
+              int count = 1);
+	unsigned remove(const \*(gt& t, int count=1);
+	unsigned remove_all(const \*(gt& t);
+	unsigned remove_all();
+
+    //  Relations
+
+	int operator==(const Bag<\*(gt>& b)const;
+	int operator!=(const Bag<\*(gt>& b)const;
+	int operator<=(const Bag<\*(gt>& b)const;
+	int operator<(const Bag<\*(gt>& b)const;
+	int operator>=(const Bag<\*(gt>& b)const;
+	int operator>(const Bag<\*(gt>& b)const;
+
+    //  Algebra
+
+	Bag<\*(gt> operator|(const Bag<\*(gt>& b)const;
+	Bag<\*(gt> operator&(const Bag<\*(gt>& b)const;
+	Bag<\*(gt> operator\(mi(const Bag<\*(gt>& b)const;
+	Bag<\*(gt> operator^(const Bag<\*(gt>& b)const;
+
+	Bag<\*(gt>& operator|=(const Bag<\*(gt>& b);
+	Bag<\*(gt>& operator&=(const Bag<\*(gt>& b);
+	Bag<\*(gt>& operator\(mi=(const Bag<\*(gt>& b);
+	Bag<\*(gt>& operator^=(const Bag<\*(gt>& b);
+
+    //  Stream insertion
+
+	\f2friend\fP ostream& operator<<(ostream& os,
+              const Bag<\*(gt>& b);
+
+    //  Performance analysis
+
+	void histogram(
+              Map<Set_or_Bag_hashval,unsigned>& m)const;
+
+    //	Very simple hash function
+
+	static Set_or_Bag_hashval hash(const \*(gt&);
+    };
+    template <class \*(gt> class Bagiter{
+    public:
+	Bagiter<\*(gt>(const Bag<\*(gt>& b);
+	const Bag_pair<\*(gt>* next();
+	int next(const Bag_pair<\*(gt>*& p);
+	void reset();
+	const Bag<\*(gt>* the_bag()const;
+    };
+
+    template <class \*(gt> class Set{ 
+    public:
+        // Similar to Bag<\*(gt>
+    };
+    template <class \*(gt> class Setiter{ 
+    public:
+	Setiter(const Set<\*(gt>& s);
+	const \*(gt* next();
+	int next(const \*(gt*& p);
+	void reset();
+	const Set<\*(gt>* the_set()const;
+    };
+
+    template <class \*(gt> class Set_of_p{ 
+    public:
+        // Similar to Set<\*(gt>
+    };
+    template <class \*(gt> class Set_of_piter{ 
+    public:
+	Set_of_piter(const Set_of_p<\*(gt>& s);
+	\*(gt* next();
+	int next(\*(gt*& p);
+	void reset();
+	const Set_of_p<\*(gt>* the_set_of_p()const;
+    };
+
+.Be
+.SH DESCRIPTION
+.PP
+A \f4Bag<\*(gt>\f1
+is an unordered homogeneous collection
+whose \f2elements\f1 are objects of type \*(gt.
+A \f4Set<\*(gt>\f1
+is a Bag in which no two elements are equal.
+In either case, \*(gt can be any type having:
+.RS
+.TP 
+.PD 0
+\(bu \f4\*(gt()\f1
+.TP 
+\(bu \f4\*(gt(\*(gt&)\f1
+.TP 
+\(bu \f4operator==\f1 defining an equivalence relation on \*(gt
+.TP 
+\(bu \f4operator=\f1
+.PD
+.RE
+A \f4Set_of_p<\*(gt>\f1, also known as a \f2pointer set\f1,
+is a set whose elements are \f2uninterpreted pointers\f1
+to objects of type \*(gt.
+\*(gt can be any type that is
+guaranteed to be aligned on even byte boundaries
+and, the objects pointed to are not involved
+in pointer set operations.  For example, if an object
+pointed to by a pointer set element is deleted,
+the pointer set operations will continue to function
+as if nothing had happened.
+\f4Set_of_p<\*(gt>\f1 offers a more efficient implementation 
+of pointer sets than \f4Set<\*(gt>\f1 
+when \*(gt is a pointer type.
+Each of these classes has a companion \f2iterator\f1 
+class whose instances may be used for iterating over 
+elements in unspecified order.
+.PP
+The implementation of \f4Set<\*(gt>\f1 and \f4Bag<\*(gt>\f1 
+is based on hashing.  
+To optimize time complexity,
+a \f2perfect\f1 hash function 
+(a function for which different arguments yield different 
+results) should be used
+(see \f3COMPLEXITY\f1).
+To integrate a user-defined hash function into a Set or Bag structure,
+the function should be defined as either
+\f4Set_or_Bag_hashval Set<\*(gt>::hash(const \*(gt&)\f1
+or \f4Set_or_Bag_hashval Bag<\*(gt>::hash(const \*(gt&)\f1.
+If there is no such hash function provided, a default hash function
+which always returns zero will be
+used and it will result in all elements being stored internally
+in a single list.
+.SS "Auxiliary types"
+.IP "\f4typedef\f1"
+.IC "\f4    \f2implementation_dependent_integral_type\fP\f1"
+.IC "\f4    Set_or_Bag_hashval;\f1"
+This type denotes an unsigned integral type
+which is ordinarily \f4unsigned long\f1
+but may be shorter or longer in some implementations.
+It is used as the return type of user-defined hash
+functions.
+.IP "\f4Mapdeclare<Set_or_Bag_hashval,unsigned>\f1"
+Defines the type \f4Map<Set_or_Bag_hashval,unsigned>\f1 which
+is returned by the function \f4histogram()\f1.  See
+\f3Map(3C++)\f1.
+.SH " "
+.SH "struct Bag_pair<\*(gt>"
+.SH " "
+Some Bag operations (and Bag iterators\(emsee below) 
+return pointers to constant objects of this type.
+.IP "\f4\*(gt value;\f1"
+The element value.
+.IP "\f4unsigned count;\f1"
+The number of occurrences.
+.SH " "
+.SH "class Bag<\*(gt>"
+.SH " "
+.SS "Constructors, destructor"
+.sp +0.5v
+.IP "\f4Bag();\f1"
+.hS
+.IP "\f4Bag(const \*(gt& t1);\f1"
+.hS
+.IP "\f4Bag(const \*(gt& t1, const \*(gt& t2);\f1"
+.hS
+.IP "\f4Bag(const \*(gt& t1, const \*(gt& t2, const \*(gt& t3);\f1"
+.hS
+.IP "\f4Bag(const \*(gt& t1, const \*(gt& t2, const \*(gt& t3,\f1"
+.IC "\f4    const \*(gt& t4);\f1"
+Constructors for Bags of zero, one, two, three,
+or four elements, respectively.
+.IP "\f4~Bag();\f1"
+Destructor.
+All iterators currently attached to the Bag will be informed
+of the Bag's destruction (see \f4Bagiter<\*(gt>::the_bag()\f1).
+.SS "Copy and assign"
+.IP "\f4Bag(const Bag<\*(gt>& b);\f1"
+.hS
+.IP "\f4Bag<\*(gt>& operator=(const Bag<\*(gt>& b);\f1"
+Copying or assigning a \f4Bag<\*(gt>\f1 creates a
+copy of its value.
+.SS "Length"
+.IP "\f4unsigned size()const;\f1"
+The number of elements in the Bag
+(counting multiple occurrences).
+.IP "\f4unsigned size_unique()const;\f1"
+The number of unique elements in the Bag.
+.IP "\f4operator const void*()const;\f1"
+Returns non-zero if the Bag contains 
+one or more elements.  Most useful in contexts
+where implicit conversion will take place, 
+e.g., \f4while(b)...\f1.
+.SS "Membership"
+.IP "\f4const Bag_pair<\*(gt>* contains(const \*(gt& t)const;\f1"
+If an element \f4t\f1 is in the Bag, returns a pointer to 
+the corresponding Bag_pair; otherwise, returns zero.
+.IP "\f4unsigned count(const \*(gt& t)const;\f1"
+Returns the number of elements with the value \f4t\f1.
+.SS "Select an arbitrary element"
+.IP "\f4const Bag_pair<\*(gt>* select()const;\f1"
+Returns a pointer to an arbitrary Bag_pair.
+.SS "Insert and remove elements"
+.IP "\f4const Bag_pair<\*(gt>* insert(const \*(gt& t, int count = 1);\f1"
+Inserts \f4count\f1 elements with the value \f4t\f1
+into the Bag.  Returns a pointer to the Bag_pair if
+the Bag actually changed and zero otherwise (no change 
+will occur if \f4count\f1 is nonpositive).  
+.IP "\f4unsigned remove(const \*(gt& t, int count=1);\f1"
+Removes \f4count\f1 elements with 
+the value \f4t\f1 from the Bag.  If the number
+of elements with this value is less than \f4count\f1,
+then all such elements are removed.
+Returns the number of elements actually removed.
+.IP "\f4unsigned remove_all(const \*(gt& t);\f1"
+Removes all elements with the value \f4t\f1 from
+the Bag.  Returns the number of elements actually removed.
+.IP "\f4unsigned remove_all();\f1"
+Removes all elements in the Bag.  
+Returns non-zero 
+if the Bag actually changed (no change will occur
+for an empty Bag).
+.SS "Relations"
+All of the following operators 
+return non-zero if the relation is true.
+.sp +0.5v
+.IP "\f4int operator==(const Bag<\*(gt>& b)const;\f1"
+.hS
+.IP "\f4int operator!=(const Bag<\*(gt>& b)const;\f1"
+Equality and inequality relations.
+Two Bags are equal if they contain exactly the 
+same elements.
+.IP "\f4int operator<=(const Bag<\*(gt>& b)const;\f1"
+Sub-bag relation.  
+True if all of the elements of this Bag are
+also contained in \f4b\f1.
+.IP "\f4int operator<(const Bag<\*(gt>& b)const;\f1"
+Proper sub-bag relation.
+True if all of the elements of this Bag are
+also contained in \f4b\f1 and, in addition,
+\f4b\f1 has other elements.
+.IP "\f4int operator>=(const Bag<\*(gt>& b)const;\f1"
+Super-bag relation.  True if all of the elements
+of \f4b\f1 are also contained in this Bag.
+.IP "\f4int operator>(const Bag<\*(gt>& b)const;\f1"
+Proper super-bag relation.  
+True if all of the elements \f4b\f1 are
+also contained in this Bag and, in addition,
+this Bag has other elements.
+.SS "Algebra"
+.sp +0.5v
+.IP "\f4Bag<\*(gt> operator|(const Bag<\*(gt>& b)const;\f1"
+Bag union 
+(the elements that are in this Bag or in \f4b\f1).
+.IP "\f4Bag<\*(gt> operator&(const Bag<\*(gt>& b)const;\f1"
+Bag intersection
+(the elements that are in both this Bag and \f4b\f1).
+.IP "\f4Bag<\*(gt> operator\(mi(const Bag<\*(gt>& b)const;\f1"
+Bag difference
+(the elements that are in this Bag but not in \f4b\f1).
+.IP "\f4Bag<\*(gt> operator^(const Bag<\*(gt>& b)const;\f1"
+Bag symmetric difference 
+(the elements that are in this Bag or in \f4b\f1, but in not both).
+.IP "\f4Bag<\*(gt>& operator|=(const Bag<\*(gt>& b);\f1"
+.hS
+.IP "\f4Bag<\*(gt>& operator&=(const Bag<\*(gt>& b);\f1"
+.hS
+.IP "\f4Bag<\*(gt>& operator\(mi=(const Bag<\*(gt>& b);\f1"
+.hS
+.IP "\f4Bag<\*(gt>& operator^=(const Bag<\*(gt>& b);\f1"
+Assignment versions of the above.
+.SS "Stream insertion"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os,const Bag<\*(gt>& b);\f1"
+Inserts an ASCII representation of \f4b\f1 into ostream
+\f4os\f1.  
+The representation has the form
+\f2{ (n1,t1)(n2,t2)(n3,t3) ... }\f1 where \f2ti\f1
+is an element value and \f2ni\f1 is its multiplicity.
+.SS "Performance analysis"
+.sp +0.5v
+.IP "\f4void histogram(Map<Set_or_Bag_hashval,unsigned>& m)const;\f1"
+Returns (via the argument \f4m\f1) 
+a \f3Map(3C++)\f1 from hash values to 
+collision list lengths.
+The shape of this ``histogram'' indicates the goodness
+of the hash function; for perfect hash functions,
+collision list lengths are never greater than \f21\f1.  
+.SH " "
+.SH "class Bagiter<\*(gt>"
+.SH " "
+For every class \f4Bag<\*(gt>\f1, there is a 
+class \f4Bagiter<\*(gt>\f1 whose objects, 
+called \f2iterators\f1, are used for iterating 
+over elements.
+The order in which elements are returned by an
+iterator is purposely unspecified.
+Several iterators may be active simultaneously over 
+a single Bag.  If an element is inserted into a Bag,
+it may or may not be seen by an active iterator.
+The behavior of all iterator operations except \f4the_bag()\f1
+is undefined when the Bag to which the iterator is
+attached ceases to exist.
+.IP "\f4Bagiter(const Bag<\*(gt>& b);\f1"
+Creates a \f4Bagiter<\*(gt>\f1 to iterate over the
+elements of \f4b\f1.
+.IP "\f4const Bag_pair<\*(gt>* next();\f1"
+Returns a pointer to the next
+\f4Bag_pair<\*(gt>\f1; returns \f20\f1 if all pairs
+have been returned.
+.IP "\f4int next(const Bag_pair<\*(gt>*& p);\f1"
+Assigns a pointer to the next \f4Bag_pair<\*(gt>\f1 
+(if there is one) to \f4p\f1 and 
+returns non-zero if the value of \f4p\f1 is meaningful.
+.IP "\f4void reset();\f1"
+Resets the iterator so that it can be reused.
+.IP "\f4const Bag<\*(gt>* the_bag()const;\f1"
+Returns a pointer to the Bag being iterated over, or
+zero if there is no such Bag 
+(this can happen if the Bag is destroyed).
+.SH " "
+.SH "class Set<\*(gt>"
+.hS
+.SH "class Setiter<\*(gt>"
+.SH " "
+The description of \f4Bag<\*(gt>\f1 and \f4Bagiter<\*(gt>\f1 
+hold, \f2mutatis mutandis\f1, 
+for \f4Set<\*(gt>\f1 and \f4Setiter<\*(gt>\f1 
+with the following exceptions:
+.RS
+\(bu\ The functions \f4Set<\*(gt>::contains()\f1, 
+\f4Set<\*(gt>::select()\f1,
+\f4Set<\*(gt>::insert()\f1,
+and the two versions of \f4Setiter<\*(gt>::next()\f1
+return \f4const \*(gt*\f1 
+rather than \f4const Bag_pair<\*(gt>*\f1.
+.br
+\(bu\ If \f4n>1\f1, \f4Set<\*(gt>::insert(e,n)\f1 
+gives the same result as \f4Set<\*(gt>::insert(e,1)\f1.
+.br
+\(bu\ If \f4n>1\f1, \f4Set<\*(gt>::remove(e,n)\f1 
+gives the same result as \f4Set<\*(gt>::remove(e,1)\f1.
+.br
+\(bu\ \f4Set<\*(gt>::remove_all(t)\f1 gives the same result 
+as \f4Set<\*(gt>::remove(t)\f1.
+.br
+\(bu\ \f4Set<\*(gt>::size_unique()\f1 gives the same result 
+as \f4Set<\*(gt>::size()\f1.
+.br
+\(bu\ The format of the ASCII representation produced by
+the stream insertion operator has the form
+\f2{ t1,t2,t3,... }\f1 where \f2ti\f1
+is an element value.
+.RE
+.SH " "
+.SH "class Set_of_p<\*(gt>"
+.hS
+.SH "class Set_of_piter<\*(gt>"
+.SH " "
+The description of \f4Set<\*(gt>\f1 and
+\f4Setiter<\*(gt>\f1 
+hold, \f2mutatis mutandis\f1, 
+for \f4Set_of_p<\*(gt>\f1
+and \f4Set_of_piter<\*(gt>\f1, 
+with the following exceptions:
+.RS
+\(bu\ A Set_of_p cannot contain a null pointer
+(inserting the null pointer has no effect).
+.br
+\(bu\ \f4Set_of_p<\*(gt>::contains()\f1, 
+\f4Set_of_p<\*(gt>::select()\f1,
+\f4Set_of_p<\*(gt>::insert()\f1,
+and the two versions of \f4Set_of_piter<\*(gt>::next()\f1
+return \f4\*(gt*\f1 rather than \f4const \*(gt*\f1.
+.br
+\(bu\ If a Set function takes an argument of type
+\f4const \*(gt&\f1, the corresponding Set_of_p or Set_of_piter
+function takes an argument of type \f4const \*(gt*\f1.
+.br
+\(bu\ Since hashing is not used, all remarks 
+concerning hashing can be ignored. 
+In particular, 
+the function \f4histogram()\f1 is not available.
+.br
+\(bu\ The format of the ASCII representation produced by
+the stream insertion operator is identical to that
+produced by \f4Set<\*(gt>::operator<<\f1
+(the elements are de-referenced for printing).
+.RE
+.SH COMPLEXITY
+\f4Set<\*(gt>\f1, \f4Bag<\*(gt>\f1, 
+and \f4Set_of_p<\*(gt>\f1 were designed
+to achieve minimum across-the-board order estimates
+for time complexity.
+Naturally, speed was achieved at a cost of space.  
+Even so, space
+complexity for all three classes remains \f2O(N)\f1.
+Operations are further accelerated by cacheing the results
+of each search of the internal data structure.  
+Thus, for example, testing for containment
+and then deleting an element requires only a single search.
+Similarly, iteration 
+is accelerated by cacheing.  
+In view of this, expect degraded performance 
+if you do anything to destroy the utility of the cache,
+for example
+.Bf
+
+    if(x.contains(a) && x.contains(b)) x.remove(a);
+
+.Be
+Similarly, iterators 
+maintain private caches, 
+but these are invalidated by operations
+that modify the object to which the iterator 
+is attached.
+.IP "\f4Set_of_p<\*(gt>\f1" 
+Time complexity of operations
+involving a single element (e.g., \f4insert()\f1,
+\f4remove()\f1, \f4contains()\f1) 
+is \f2O(1)\f1; the time for
+operations involving all the elements in the set 
+(e.g., iteration)
+is \f2O(N)\f1, where \f2N\f1 
+is the size of the set.  The time for operations
+involving two sets (e.g., the algebraic and relational
+operations) is \f2O(N+M)\f1, where \f2N\f1
+and \f2M\f1 are the sizes of the two sets.
+Space complexity is approximately \f2O(N)\f1.
+.IP "\f4Set<\*(gt>\f1"
+Time complexity depends
+on the average length of collision lists.  For
+a perfect hash function 
+(one which hashes unique
+keys to unique hash values), 
+time complexity is
+\f2O(1)\f1, \f2O(N)\f1, and \f2O(N+M)\f1 (as above),
+with a somewhat higher constant multiplier,
+owing, for example, to the copying overhead of
+operations like \f4insert\f1.  
+For a less-than-perfect hash function, the time complexity 
+must be multiplied by the average length of collision lists; 
+if \f2L\f1 is the average list length, then average complexity
+is \f2O(L)\f1, \f2O(N*L)\f1, and \f2O(L*(N+M))\f1,
+respectively.  Space complexity is also \f2O(N)\f1,
+also with a somewhat higher constant multiplier.
+.IP "\f4Bag<\*(gt>\f1"
+Time complexity is roughly
+equal to that of \f4Set<\*(gt>\f1.  Space complexity
+is \f2O(N)\f1, where \f2N\f1 is the number of unique
+elements (multiple occurrences are not actually stored).
+.SH NOTES
+.PP
+Iterators for certain other container classes, 
+like \f3List(3C++)\f1, yield pointers to their
+elements, allowing the elements to be modified in place.
+Bag and Set iterators,
+on the other hand,
+yield \f2pointers to constants\f1 because it is dangerous 
+to modify their elements in place
+(since the location of an element within the internal data 
+structure is a function of its hash value,
+changing an element in place corrupts 
+the data structure).
+The only time it is safe to cast away the constant is when
+default hash function is used, since an element's storage location in such 
+a Set or Bag is independent of its value.
+.PP
+If you need integer sets, \f3Bits(3C++)\f1 may be
+more efficient, both in time and space, than \f4Set<int>\f1.
+For small sets where linear time complexity is not
+a problem, consider using Block Algorithms
+(see \f3Array_alg(3C++)\f1 and \f3Block(3C++)\f1).
+.SH BUGS
+The elements pointed
+to by a pointer set must reside on even byte boundaries.
+(That is, the low order bit of every pointer in a pointer set must be zero.)
+Violating this restriction will result in unpredictable behavior.
+Since character pointers do not in general satisfy this
+restriction, pointer sets can not be used to keep track of 
+arbitrary character strings.
+However, pointer sets can always be used to keep track of dynamically
+allocated objects (including dynamically allocated character strings), 
+since pointers obtained from \f4operator new\fR always 
+are guaranteed to satisfy the most stringent alignment restrictions.
+.SH SEE ALSO
+.Bf
+\f3Bits(3C++)\f1
+\f3Block_alg(3C++)\f1
+\f3iostream(3C++)\f1
+\f3List(3C++)\f1
+\f3Map(3C++)\f1
+\f3Pool(3C++)\f1
+.Be

@@ -1,0 +1,21 @@
+# regular expressions to pick out hex numbers
+DELIM="[ 	:,=.]"
+#To avoid changing short words, let's say hex numbers are at least 4 digits
+HEXNUM="[0-9a-fA-F]\{4,\}"
+# These must match the ones in the runtests script!
+# 1st one has 0x prefix, so don't need other delimiters
+HEXRE1="0[xX]${HEXNUM}"
+# following ones doesn't have prefix, so look for delimiters
+HEXRE2="^${HEXNUM}${DELIM}"
+HEXRE3="${DELIM}${HEXNUM}$"
+HEXRE4="${DELIM}${HEXNUM}${DELIM}"
+
+for test in $*
+do
+	# Change all hex numbers to "HEX";
+	${test}.E |
+	sed -e "s/${HEXRE1}/HEX/g" |
+	sed -e "s/${HEXRE2}/HEX /g" |
+	sed -e "s/${HEXRE3}/ HEX/g" |
+	sed -e "s/${HEXRE4}/ HEX /g" > ${test}.V
+done

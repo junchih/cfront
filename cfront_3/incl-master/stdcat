@@ -1,0 +1,70 @@
+#!/bin/sh
+#ident	"@(#)cls4:incl-master/stdcat	1.1"
+###############################################################################
+#
+# C++ source for the C++ Language System, Release 3.0.  This product
+# is a new release of the original cfront developed in the computer
+# science research center of AT&T Bell Laboratories.
+#
+# Copyright (c) 1991 AT&T and UNIX System Laboratories, Inc.
+# Copyright (c) 1984, 1989, 1990 AT&T.  All Rights Reserved.
+#
+# THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE of AT&T and UNIX System
+#	
+# Laboratories, Inc.  The copyright notice above does not evidence
+# any actual or intended publication of such source code.
+#
+###############################################################################
+
+# usage: stdcat [-s] filename
+# cats the standard C include file which goes by the name "filename"
+# -s = silent mode (used to get exit status only)
+
+PATH=/bin:/usr/bin:/usr/ccs/bin:$PATH
+silent=0
+if test "$1" = "-s"
+then
+	silent=1
+	shift
+fi
+
+if test -n "$STDINCL"
+then
+	if test $silent -eq 1
+	then
+		cat $STDINCL/$1 >/dev/null 2>&1
+		E=$?
+	else
+		cat $STDINCL/$1
+		E=$?
+	fi
+else
+
+	trap '/bin/rm -f $$.c $$.i; exit' 1 2 3 15
+
+	echo "#include <$1>" > $$.c
+	cc -E $$.c > $$.i 2>/dev/null
+	E=$?
+	if test $E -eq 0
+	then
+		if test $silent -eq 1
+		then
+			cat `grep "^#" $$.i | fgrep "$1" | awk '{ print $3; exit }' | sed 's/\"//g'` >/dev/null 2>&1
+			E=$?
+		else
+			cat `grep "^#" $$.i | fgrep "$1" | awk '{ print $3; exit }' | sed 's/\"//g'`
+			E=$?
+		fi
+	else
+		if test $silent -eq 0
+		then
+			echo "No such standard C include file \"$1\"" >/dev/tty
+		fi
+	fi
+
+	/bin/rm -f $$.c $$.i
+fi
+
+exit $E
+
+

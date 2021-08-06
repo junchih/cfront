@@ -1,0 +1,199 @@
+#ident	"@(#)ctrans:makefile	1.7.13.39"
+###############################################################################
+#			Copyright (c) 1984 AT&T
+#	  		  All Rights Reserved  	
+#
+#	THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+#	
+#	The copyright notice above does not evidence any   	
+#	actual or intended publication of such source code.
+#
+###############################################################################
+############################################################################
+#       make -  makes the headers (include files) for your machine
+#       make clean - removes all .o files generated in these procedures
+#       make clobber - removes all header files in incl, cleans up .o's
+############################################################################
+
+# If your platforms system headers (/usr/include) support C++,
+# and you want to use them instead of us building them, set this
+# to "use_sys".  Currently, the following will allow this:
+# HPUX (OS=hpux8.0), Solaris (OS=solaris) IRIX 5.0 (OS=sgi-svr4),
+# Starserver FT (svr4FT) and the DEC Alpha (dec_alpha).
+#
+# *** NOTE: Regardless of which you decide make sure you set OS!! ***
+#
+# Have us build the headers
+HEADERS=build_them
+# Use the system headers 
+#HEADERS=use_sys
+#
+# This makefile will generate C++ header files for the following 
+# operating systems.  Please pick the one closest to yours.
+#
+# svr2 is system V release 2
+#OS=svr2
+# svr3 is system V release 3
+#OS=svr3
+# svr4 is system V release 4 and svr4.2 (destiny)
+#OS=svr4
+# A Starserver FT running svr4
+#OS=svr4FT
+# A DEC Alpha (64 bit)
+#OS=dec_alpha
+# 3b2mips is for the mips based 3b2 running system V release 4
+#OS=3b2mips
+# sun is for SunOS. If you choose sun the scripts will apply
+# a heuristic to determine whether you're running os3, os4 or os4.1.
+# To override the heuristic you may choose sunos3, 4 or 4.1 explicitly
+# Choose solaris for sunos5
+#OS=sun
+#OS=sunos3
+#OS=sunos4
+OS=sunos4.1
+#OS=solaris
+# hpux8.0 is for HP-UX 8, HP-UX 9, HP-UX 10, ...
+#OS=hpux8.0
+# hpux is for HP
+#OS=hpux
+# bsd2 is for BSD 4.2
+#OS=bsd2
+# bsd3 is for BSD 4.3
+#OS=bsd3
+# uts is for Amdahl/uts
+#OS=uts
+# sgi-svr4 is for a Silicon Graphics machine running SVR4
+#OS=sgi-svr4
+# pyramid is for a Pyramid machine running SVR3 in att universe
+#OS=pyramid
+
+# location of the standard c include files on your machine:
+STDINCL=/usr/include
+
+# change this to a 1 if you're not on system V and you want
+# your c++ headers to use symbolic links.
+#
+# NOTE: Do NOT set this if you are choosing solaris or sgi-svr4
+# as your OS
+SYMBOLICLINK=0
+
+# command used to copy a directory tree of newly built header files
+# from the incl-master directory to the top level 
+CPIO	= cpio -pdlm
+#CPIO	= cpio.sh -pdlm
+
+# these directories are used for installation via "make install"
+INSTALL		= cp
+INSTALL_BIN	= /usr/bin
+INSTALL_LIB	= /usr/lib
+INSTALL_INC	= /usr/include/CC
+
+# you shouldn't have to change anything beyond this line
+#######################################################
+
+#Some systems don't predefine $(MAKE)
+MAKE=make
+
+#Force the use of the "normal" shell (i.e. disable csh)
+SHELL=/bin/sh
+
+LIBS= libC.a libcomplex.a libtask.a \
+	lib++.a libGraph.a libGA.a libfs.a libg2++.a \
+	libC_p.a lib++_p.a libGraph_p.a libGA_p.a libfs_p.a libg2++_p.a 
+LIBFILES= fsipp hier2 incl2 publik2
+TOOLS= CC c++filt cfront dem demangle fscpp g2++comp hier incl.sh \
+	ncsl ncsldiff ptlink ptcomp publik
+
+all:   incl-master/incl
+	rm -rf incl.temp && mkdir incl.temp
+	cd incl-master/incl && find . \( -type d -o -type f \) -print |$(CPIO) ../../incl.temp
+	if test $(SYMBOLICLINK) -eq 1 ; then \
+		ln -s $(STDINCL) incl.temp/cc ; \
+	fi
+	mv incl.temp incl
+
+
+incl-master/incl:
+	cd incl-master && \
+	$(MAKE) STDINCL=$(STDINCL) OS=$(OS) \
+		SYMBOLICLINK=$(SYMBOLICLINK) VERBOSE=0 $(HEADERS) && \
+	cd ..
+
+clean:	
+	rm -fr incl.temp 
+	cd incl-master && $(MAKE) clean
+
+clobber: clean
+	rm -fr incl
+	cd incl-master && $(MAKE) clobber
+
+install:	incl-master/incl
+	@ # checking for the existence of the directories
+	@for i in $(INSTALL_BIN) $(INSTALL_LIB) $(INSTALL_INC) ; do \
+	   if test ! -d $$i ; then \
+		echo "can't find directory $$i"; \
+		exit 1; \
+	   fi; \
+	done
+	@echo "installing patch/munch in $(INSTALL_BIN)"
+	@ # copy the files
+	@if test -f patch ; then \
+	   $(INSTALL) patch $(INSTALL_BIN); \
+	   chmod +x $(INSTALL_BIN)/patch; \
+	   echo " patch installed in $(INSTALL_BIN)"; \
+	else \
+	   $(INSTALL) munch $(INSTALL_BIN); \
+	   chmod +x $(INSTALL_BIN)/munch; \
+	   echo " munch installed in $(INSTALL_BIN)"; \
+	fi
+	@echo "installing libraries in $(INSTALL_LIB)"
+	@ # copy the files
+	@for i in $(LIBS) ; do \
+	  if test -f $$i ; then \
+	  	$(INSTALL) $$i $(INSTALL_LIB); \
+		if [ -f /bin/ranlib -o -f /usr/bin/ranlib ] ; then \
+		      ranlib $(INSTALL_LIB)/$$i; \
+		fi; \
+		echo " $$i installed in $(INSTALL_LIB)"; \
+	  fi; \
+	done
+	@echo "installing tools in $(INSTALL_BIN)"
+	@ # copy the files
+	@for i in $(TOOLS) ; do \
+	  if test -f $$i ; then \
+	  	$(INSTALL) $$i $(INSTALL_BIN); \
+	  	chmod +x $(INSTALL_BIN)/$$i; \
+		echo " $$i installed in $(INSTALL_BIN)"; \
+	  fi; \
+	done
+	@echo "installing tools in $(INSTALL_LIB)"
+	@ # copy the files
+	@for i in $(LIBFILES); do \
+	  if test -f $$i ; then \
+	  	$(INSTALL) $$i $(INSTALL_LIB); \
+	  	chmod +x $(INSTALL_LIB)/$$i; \
+		echo " $$i installed in $(INSTALL_LIB)"; \
+	  fi; \
+	done
+	@ # fix the environment variables in fscpp, hier, incl.sh, and publik
+	@echo "fixing environment variables in fscpp, hier, incl.sh, and publik"
+	@for i in fscpp hier incl.sh publik; do \
+	  cp $(INSTALL_BIN)/$$i /tmp/$$i.x; \
+	  sed -e "s;/libdir;$(INSTALL_LIB);" \
+	      -e "s;/usr/include/CC;$(INSTALL_INC);" \
+	      -e "s;CC-CC;CC-$(INSTALL_BIN)/CC;" /tmp/$$i.x \
+	   >$(INSTALL_BIN)/$$i; \
+	  rm /tmp/$$i.x; done
+	@ # fix the environment variables in CC
+	@echo "fixing environment variables in CC"
+	@cp $(INSTALL_BIN)/CC /tmp/CC.x
+	@sed -e "s;CCROOTDIR-/usr/bin;CCROOTDIR-$(INSTALL_BIN);" \
+	    -e "s;CCLIBDIR-/usr/lib;CCLIBDIR-$(INSTALL_LIB);" \
+	    -e "s;I-/usr/include/CC;I-$(INSTALL_INC);" /tmp/CC.x \
+	 >$(INSTALL_BIN)/CC
+	@rm /tmp/CC.x
+	@echo "installing include files in $(INSTALL_INC)"
+	cd incl; find . -print | $(CPIO) $(INSTALL_INC)
+	@echo "install complete"
+
+always:	

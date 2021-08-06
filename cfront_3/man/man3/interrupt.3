@@ -1,0 +1,120 @@
+.  \"ident	"@(#)cls4:man/task/interrupt.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved        
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any           
+.  \"actual or intended publication of such source code.
+.TH INTERRUPT 3C++ "C++ Task Library" " "
+.SH NAME
+Interrupt_handler \- signal handling for the C++ task library
+.SH SYNOPSIS
+\f3
+.nf
+#include <task.h>
+
+class Interrupt_handler : public object {
+	virtual void	interrupt();
+public:
+			Interrupt_handler(int);
+			~Interrupt_handler();
+	objtype		o_type();
+	int		pending();
+};
+.fi
+\f1
+.SH DESCRIPTION
+.P
+Class \f(CWInterrupt_handler\fP allows \f(CWtask\fPs to wait
+for external events in the form of UNIX system signals.
+Class \f(CWInterrupt_handler\fP is derived from class \f(CWobject\fP
+so that \f(CWtask\fPs can wait for \f(CWInterrupt_handler\fP objects.
+Class \f(CWobject\fP is described on the task(3C++) manual page.
+.P
+The public member functions supplied in the task system class
+\f(CWInterrupt_handler\fP are listed and described below.
+The following symbols are used:
+.RS 10
+.TP 4
+.B ih
+an \f(CWInterrupt_handler\fP object
+.TP 4
+.B i
+an \f(CWint\fP
+.TP 4
+.B eo
+an \f(CWobjtype\fP enumeration
+.RE
+.TP
+.B "Interrupt_handler ih( i );"
+Constructs a new \f(CWInterrupt_handler\fP object, \f3ih\fP,
+which is to wait for a signal number \f3i\fP.
+(See signal(2).)
+Once an \f(CWInterrupt_handler\fP object has been established for
+a particular signal,
+when that signal occurs, the private, virtual
+.B interrupt()
+function is called at real time.
+When it returns, control will resume at the point where the current
+\f(CWtask\fP was interrupted.
+That is, signals do not cause the current \f(CWtask\fP to be pre-empted.
+When the currently running \f(CWtask\fP is suspended,
+a special, built-in task, the
+.I "interrupt alerter"
+will be scheduled.
+This \f(CWtask\fP alerts the \f(CWInterrupt_handler\fP
+(and any others that have received interrupts since the
+.I interrupt alerter
+last ran), and thereby makes any \f(CWtask\fPs waiting for
+those \f(CWInterrupt_handler\fPs runnable.
+As long as any \f(CWInterrupt_handler\fP exists,
+the scheduler will wait for an interrupt,
+rather than exiting when the
+.I run chain
+becomes empty.
+.TP
+.B "void interrupt()
+The private virtual function
+.B Interrupt_handler::interrupt()
+is a null function, but because it is virtual,
+the programmer can specify the action to be taken at interrupt time
+by defining an
+.B interrupt()
+function in a class derived from \f(CWInterrupt_handler\fP.
+.TP
+.B "eo = ih.o_type()"
+Returns the class type of the object
+(\f(CWobject::INTHANDLER\fP).
+.B o_type()
+is a virtual function.
+.TP
+.B "i = ih.pending()"
+Returns TRUE except the first time it is called after a signal occurs.
+.SH DIAGNOSTICS
+See task(3C++).
+.SH BUGS
+.P
+UNIX System V Releases 3.1 and 3.2 (SVR3.1 and SVR3.2) for the Intel 386 machine
+will not call a signal handler when the current \f(CWtask\fP is running on
+a stack in the free store,
+that is, when the current \f(CWtask\fP has a DEDICATED stack.
+If you need to use the signal handling mechanisms on that configuration,
+you cannot use tasks which have DEDICATED stacks.
+In this case, compile the task library with _SHARED_ONLY defined,
+which will make SHARED the default mode for \f(CWtasks\fP.
+(Note:  it is insufficient to declare all \f(CWtask\fPs as SHARED without
+compiling a _SHARED_ONLY version of the task library,
+because the internal system \f(CWtask\fP,
+the \f2interrupt alerter\fP,
+is DEDICATED by default.)
+.SH SEE ALSO
+TASK.INTRO(3C++), task(3C++), queue(3C++), tasksim(3C++), signal(2)
+.br
+Stroustrup, B. and Shopiro, J. E.,
+"A Set of C++ Classes for Co-routine Style Programming,"
+in
+.I "AT&T C++ Language System Release 2.0 Library Manual."
+.br
+Shopiro, J. E.,
+"Extending the C++ Task System for Real-Time Control,"
+in
+.I "AT&T C++ Language System Release 2.0 Library Manual."

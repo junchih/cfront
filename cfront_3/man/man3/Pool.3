@@ -1,0 +1,260 @@
+.\" ident	@(#)Pool:man/Pool.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Pool\fP \f33C++\fP " "
+.SH NAME
+Pool, Vpool \- special-purpose memory allocators
+.SH SYNOPSIS OF Pool.h
+.Bf
+#include <stddef.h>
+
+class Pool{
+public:
+
+//  Constructors, destructor
+
+    Pool(size_t n);         // see stddef.h
+    ~Pool();
+
+//  Copy and assign
+
+    private: 
+        Pool(const Pool& p);
+        Pool& operator=(const Pool& p); 
+    public:
+
+//  Allocate and free elements
+
+    void* alloc();
+    void free(void* vp);
+    void purge();
+};
+
+struct Vpool_stats { ... }; // see below
+
+class Vpool{
+public:
+
+//  Constructors, destructor
+
+    Vpool(size_t max, size_t expected);
+    ~Vpool();
+
+//  Copy and assign
+
+    private: 
+        Vpool(const Vpool& p);
+        Vpool& operator=(const Vpool& p); 
+    public:
+
+//  Allocate, reallocate, and free elements
+
+    void* alloc();
+    void* realloc(void* vp, size_t n);
+    void* realloc_inplace(void* vp, size_t n);
+    void purge();
+
+//  Performance analysis
+
+    Vpool_stats stats()const;
+};
+
+struct Vpool_stats{
+    unsigned count;
+    double mem_util;
+    size_t mem_alloced;
+    size_t mem_inuse;
+    size_t mem_waste;
+    size_t mem_savings;
+    size_t chunk_size;
+};
+.Be
+.SH DESCRIPTION
+Pools and Vpools are special-purpose storage managers which sit between
+the client's program and the built-in operators \f4new\fP and \f4delete\fP.
+Pools and Vpools provide superior time and space performance for certain
+kinds of common storage allocation problems.
+Pools provide superior performance for those cases when many objects
+of a common size (e.g., instances of a given class) are allocated and freed within a program;
+VPools provide superior performance for those cases when many objects of a common
+.I maximum
+size (e.g., Unix path names) are allocated and reallocated within a program.
+.PP
+Every Pool and Vpool (collectively, "pool") 
+consists of a set of currently allocated \f2storage elements\f1,
+residing in some currently allocated \f2internal memory\fP.
+A storage element is a contiguous region of memory
+aligned on the same boundary as memory returned by
+\f3malloc(3C)\f1 so that it may contain an object of any type.
+The function \f4alloc\fP is used to allocate a storage element from a pool's internal memory,
+and (for Pools) \f4free\fP is used to return the storage element to the internal memory, thus
+making it available for future \f4alloc\fPs.
+If insufficient internal memory exists to allocate a storage element,
+a pool increases its internal memory by a large chunk by calling \f4operator new\fP.
+The function \f4purge\fP can be used to return all of a pool's internal memory
+to the C++ freestore (simultaneously freeing all the pool's currently allocated storage elements).
+Thus, the total amount of internal memory held by a given pool is (roughly) equal to the
+maximum amount of memory ever required since the last \f4purge\fP 
+(or construction, if there were no \f4purge\fPs).
+.SH " "
+.SH "Pool"
+.SH " "
+All elements of the same Pool have the same size,
+but different Pools may have different size elements.
+.SS "Constructors, destructor"
+.IP "\f4Pool(size_t n);\f1"
+A Pool whose elements will each be \f4n\f1 bytes in size.
+The Pool initially has no internal memory.
+.IP "\f4~Pool();\f1"
+Destructor.  
+Calls \f4purge()\fP.
+.SS "Copy and assign"
+Pools cannot be copied or assigned.
+.SS "Allocate and free elements"
+.IP "\f4void* alloc();\f1"
+Allocates a new element from internal memory (enlarging the latter if necessary),
+and returns a pointer to it.
+.IP "\f4void free(void* vp);\f1"
+If \f4vp\f1 is a pointer that was obtained 
+from \f4alloc()\f1, the element it points to
+is returned to internal memory.  Otherwise, the behavior is undefined.
+.IP "\f4void purge();\f1"
+Returns all of this Pool's internal memory to the freestore,
+simultaneously freeing all the elements in this Pool.
+.sp
+.SH " "
+.SH "Vpool"
+.SH " "
+All elements of the same Vpool have the same maximum size.
+Different Vpools may have different maximum sizes.
+The most recently allocated element of a Vpool may be realloced to 
+a size smaller than the maximum (in order to save space).
+Information useful in tuning Vpool performance
+can be obtained from function \f4stats()\f1
+in the form of a \f4Vpool_stats\f1 structure (see below).  
+.SS "Constructors, destructor" 
+.IP "\f4Vpool(size_t max, size_t expected);\f1"
+A Vpool whose elements will each initially have \f4max\f1 bytes, 
+and an expected size (after reallocation) of \f4expected\f1 bytes.  
+The Pool initially has no internal memory.
+The second argument is used to optimize memory utilization
+(see \f3COMPLEXITY\f1).
+.IP "\f4~Vpool();\f1"
+Destructor.  
+Calls \f4purge()\fP.
+.SS "Copy and assign"
+Vpools cannot be copied or assigned.
+.SS "Allocate, reallocate, and free elements"
+.IP "\f4void* alloc();\f1"
+Allocates a new element from internal memory (enlarging the latter if necessary),
+and returns a pointer to it.
+.IP "\f4void* realloc(void* vp, size_t n);\f1"
+If \f4vp\f1 is a pointer to the \f2most recently\f1
+allocated element obtained from \f4alloc()\f1, and
+\f4vp\f1 has not already been reallocated,
+then moves the element to a new (or possibly the same) location,
+giving it a size of \f4n\f1
+bytes, and returns a pointer to the new location.
+Otherwise returns 0 without affecting the Vpool.
+.IP "\f4void* realloc_inplace(void* vp, size_t n);\f1"
+Like \f4realloc\f1, except that it never moves the element.
+When possible (i.e., when the memory pointed to by \f4vp\f1 is not pinned),
+\f4realloc\f1 should be used instead of \f4realloc_inplace\f1,
+since the former leads to greater memory utilization.
+(See \f3COMPLEXITY\f1.)
+.IP "\f4void purge();\f1"
+Returns all of this Vpool's internal memory to the freestore,
+simultaneously freeing all the elements in this Vpool.
+(Notice that although individual elements in a Vpool cannot be freed,
+.I all 
+the elements can be freed by calling \f4purge\fP.)
+.SS "Performance analysis"
+.IP "\f4Vpool_stats stats()const;\f1"
+Returns a structure containing statistics about this Vpool.
+.sp
+.SH " "
+.SH "struct Vpool_stats"
+.SH " "
+Vpool statistics.
+.IP "\f4count;\f1"     
+The number of elements currently in the Vpool.
+.IP "\f4mem_util;\f1"    
+The current memory utilization.  Equal to
+\f4mem_inuse/(mem_inuse+mem_waste)\f1.
+.IP "\f4mem_alloced;\f1" 
+The total internal memory currently allocated to the Vpool.
+.IP "\f4mem_inuse;\f1"   
+The number of bytes currently holding elements.
+.IP "\f4mem_waste;\f1"   
+The number of bytes currently wasted due to fragmentation.
+.IP "\f4mem_savings;\f1" 
+The number of bytes which have been saved as a result of 
+reallocing in this Vpool.
+.IP "\f4chunk_size;\f1"  
+The underlying memory chunk size.
+.SH COMPLEXITY
+For Pools, memory is internally allocated in 
+chunks that are typically about 1000 bytes each, 
+and utilization is 100%.
+For Vpools, memory is internally allocated in the smallest 
+sized chunks of between 1000 and 10,000 bytes
+which will guarantee memory utilization of at least 80%.
+The guarantee of 80% is for the case when
+only \f4realloc_inplace\fP is used;
+if \f4realloc\fP is used, memory utilization will be much better.
+It is important when using \f4realloc_inplace\fP
+(and not so important when using \f4realloc\fP) that 
+the user specify an accurate expected reallocation size; 
+in general it is better to 
+\f2under\f1estimate
+rather than overestimate the expected size.  
+For both kinds of pools, once a memory chunk is allocated to a 
+particular pool, that chunk is only released when 
+\f4purge()\f1 is called, or when the pool is destroyed.
+.PP
+Constructing either kind of pool takes constant time.
+Allocating an element takes constant time, and is done
+inline except when a new chunk must be added to the pool.
+Freeing an element within a Pool
+is done inline in constant time.
+Purging either kind of pool 
+(and hence destroying either kind of pool)
+takes time proportional to the
+number of memory chunks currently allocated by the pool.
+In a Vpool, \f4realloc\fP
+takes time proportional to the new size of the element, and
+\f4realloc_inplace\fP takes constant time.
+.SH NOTES
+Individual Vpool elements cannot be freed.  This was traded-off
+for the ability to reallocate elements.
+.SH EXAMPLE
+If a program is spending lots of time \f4new\fPing and \f4delet\fPing
+instances of some class T (e.g., nodes of a linked list), then the following will
+usually significantly speed up the program:
+.Bf
+
+    #include <Pool.h>
+
+    class T{
+        ...
+        static Pool mypool;
+        void* operator new(size_t){
+            return mypool.alloc();
+        }
+        void operator delete(void* vp){
+            mypool.free(vp);
+        }
+    };
+
+    Pool T::mypool(sizeof(T));
+.Be
+.SH SEE ALSO
+\f3malloc(3C)\f1.

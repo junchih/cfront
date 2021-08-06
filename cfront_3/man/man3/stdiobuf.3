@@ -1,0 +1,43 @@
+.  \"ident	"@(#)cls4:man/stream/stdiobuf.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any
+.  \"actual or intended publication of such source code.
+.TH STDIOBUF 3C++ "C++ Stream Library" " "
+.SH NAME
+stdiobuf \- iostream specialized to stdio FILE
+.SH SYNOPSIS
+.ft B
+.ta1i 2i
+.nf
+#include <iostream.h>
+#include <stdiostream.h>
+#include <stdio.h>
+
+class stdiobuf : public streambuf {
+		stdiobuf(FILE* f);
+	FILE*	stdiofile();
+};
+.fi
+.ft R
+.SH DESCRIPTION
+Operations on a
+\f(CWstdiobuf\f1
+are reflected on the associated
+\f(CWFILE\f1.
+A \f(CWstdiobuf\f1 is constructed in unbuffered mode,
+which causes all operations
+to be reflected immediately in the \f(CWFILE\f1.
+\f3seekg()\f1s and \f3seekp()\fPs are translated into \f3fseek()\f1s.
+\f3setbuf()\f1 has its usual meaning;
+if it supplies a reserve area, buffering will be turned back on.
+.SH CAVEATS
+\f(CWstdiobuf\fP is intended to be used when mixing C and C++ code.
+New C++ code should prefer to use \f(CWfilebuf\fPs,
+which have better performance.
+.SH SEE ALSO
+filebuf(3C++),
+istream(3C++),
+ostream(3C++),
+sbuf.pub(3C++)

@@ -1,0 +1,217 @@
+.  \"ident	"@(#)cls4:man/stream/filebuf.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any
+.  \"actual or intended publication of such source code.
+.TH FILEBUF 3C++ "C++ Stream Library" " "
+.SH NAME
+filebuf \- buffer for file I/O.
+.SH SYNOPSIS
+.ft B
+.nf
+.ta1i 2i
+#include <iostream.h>
+
+typedef long streamoff, streampos;
+class ios {
+public:
+	enum	seek_dir { beg, cur, end };
+	enum	open_mode { in, out, ate, app, trunc, nocreate, noreplace } ;
+	// \f2and lots of other stuff, see ios(3C++) ...\fP
+} ;
+
+#include <fstream.h>
+
+class filebuf : public streambuf {
+public:
+	static const int openprot ; /* default protection for open */
+
+		filebuf() ;
+		filebuf(int d);
+		filebuf(int d, char*  p, int len) ;
+
+	filebuf*	attach(int d) ;
+	filebuf*	close();
+	int	fd();
+	int	is_open();
+	filebuf*	open(char *name, int omode, int prot=openprot) ;
+	streampos	seekoff(streamoff, seek_dir, int omode) ;
+	streampos	seekpos(streampos, int omode) ;
+	streambuf*	setbuf(char* p, int len) ;
+	int	sync() ;
+};
+.fi
+.ft R
+.SH DESCRIPTION
+\f(CWfilebuf\f1s
+specialize
+\f(CWstreambuf\f1s
+to use a file as a source or sink of characters.
+Characters are consumed by doing
+writes to the
+file, and are produced by doing
+reads.
+When the file is seekable, 
+a \f(CWfilebuf\f1 allows seeks.
+At least 4 characters of putback are guaranteed.
+When the file permits reading and writing, the \f(CWfilebuf\fP permits
+both storing and fetching.
+No special action is required between gets and puts (unlike stdio).
+A \f(CWfilebuf\f1 that is connected to a file descriptor is said
+to be \f2open\f1.
+Files are opened by default with a protection mode of \f(CWopenprot\fP,
+which is 0644.
+.PP
+The \f2reserve area\fP (or buffer, see \f2sbuf.pub(3C++)\fP and
+\f2sbuf.prot(3C++)\fP)
+is allocated automatically if one is not specified explicitly
+with a constructor or a call to \f3setbuf()\fP.
+\f(CWfilebuf\fPs can also be made \f2unbuffered\fP
+with certain arguments to the constructor or \f3setbuf()\fP,
+in which case a system call is made for each character
+that is read or written.
+The \f2get\fP and \f2put\fP pointers into the reserve area
+are conceptually tied together; they behave as a single pointer.
+Therefore, the descriptions below refer to a single get/put pointer.
+.PP
+In the descriptions below, assume:
+.br
+\(em \f3f\f1 is a \f(CWfilebuf\f1.
+.br
+\(em \f3pfb\f1 is a \f(CWfilebuf*\f1.
+.br
+\(em \f3psb\f1 is a \f(CWstreambuf*\f1.
+.br
+\(em \f3i\f1, \f3d\f1, \f3len\f1, and \f3prot\f1 are \f(CWint\f1s.
+.br
+\(em \f3name\f1 and \f3ptr\f1 are \f(CWchar*\f1s.
+.br
+\(em \f3mode\f1 is an \f(CWint\f1 representing an \f(CWopen_mode\fP.
+.br
+\(em \f3off\f1 is a \f(CWstreamoff\f1.
+.br
+\(em \f3p\f1 and \f3pos\f1 are \f(CWstreampos\f1's.
+.br
+\(em \f3dir\f1 is a \f(CWseek_dir\f1.
+.PP
+Constructors:
+.TP
+\f3filebuf()\f1
+Constructs an initially closed \f(CWfilebuf\f1.
+.TP
+\f3filebuf(d)\f1
+Constructs a \f(CWfilebuf\f1 connected to file descriptor \f3d\f1.
+.TP
+\f3filebuf(d, p, len)\f1
+Constructs a \f(CWfilebuf\f1 connected to file descriptor \f3d\f1
+and initialized to use the reserve area starting at \f3p\f1 and containing
+\f3len\f1 bytes.
+If \f3p\f1 is null or \f3len\f1 is zero or less,
+the \f(CWfilebuf\f1 will be unbuffered.
+.PP
+Members: 
+.TP
+\f3pfb=f.attach(d)
+Connects \f3f\f1
+to an open file descriptor, \f3d\f1.
+\f3attach()\fP normally returns \f3&f\f1,
+but returns 0 if \f3f\f1 is already open.
+.TP
+\f3pfb=f.close()
+Flushes any waiting output, closes the file descriptor, and disconnects
+\f3f\f1.
+Unless an error occurs, \f3f\f1's error state will be cleared.
+\f3close()\fP returns \f3&f\fP
+unless errors occur, in which case it returns \f(CW0\f1.
+Even if errors occur,
+\f3close()\f1 leaves the file descriptor and \f3f\f1
+closed.
+.TP
+\f3i=f.fd()\f1
+Returns \f3i\f1, the file descriptor \f3f\f1 is connected to.
+If \f3f\f1 is closed, \f3i\f1 is \f(CWEOF\f1.
+.TP
+\f3i=f.is_open()\f1
+Returns non-zero when \f3f\f1 is connected to a file descriptor,
+and zero otherwise.
+.TP
+\f3pfb=f.open(name, mode, prot)\f1
+Opens file \f3name\f1 and connects \f3f\f1 to it.
+If the file does not already exist,
+an attempt is made to create it with protection mode \f3prot\f1,
+unless \f(CWios::nocreate\fP is specified in \f3mode\fP.
+By default, \f3prot\fP is \f(CWfilebuf::openprot\fP, which is 0644.
+Failure occurs if \f3f\f1 is already open.
+\f3open()\fP normally returns \f3&f\f1,
+but if an error occurs it returns 0.
+The members of \f(CWopen_mode\f1 are bits that may be or'ed together.
+(Because the or'ing returns an \f(CWint\fP, \f(CWopen()\fP takes an
+\f(CWint\fP rather than an \f(CWopen_mode\fP argument.)
+The meanings of these bits in \f3mode\f1 are described in detail 
+in \f2fstream(3C++)\fP.
+.TP
+\f3p=f.seekoff(off, dir, mode)\f1
+Moves the get/put pointer as designated by \f3off\f1 and \f3dir\f1.
+It may fail if the file that \f3f\f1 is attached to 
+does not support seeking, or if the attempted motion
+is otherwise invalid (such as attempting to seek to a position
+before the beginning of file).
+\f3off\f1 is interpreted as a count
+relative to the place in the file specified by \f3dir\f1
+as described in \f2sbuf.pub\f1(3C++).
+\f3mode\f1 is ignored.
+\f3seekoff()\fP returns
+\f3p\f1, the new position, or \f(CWEOF\f1 if
+a failure occurs.
+The position of the file after a failure is undefined.
+.TP 
+\f3p=f.seekpos(pos, mode)\f1
+Moves the file to a position \f3pos\f1
+as described in \f2sbuf.pub\f1(3C++).
+\f3mode\f1 is ignored.
+\f3seekpos()\fP normally returns \f3pos\f1,
+but on failure it returns \f(CWEOF\f1. 
+.TP
+\f3psb=f.setbuf(ptr, len)\f1
+Sets up the reserve area as \f3len\f1 bytes beginning at \f3ptr\f1.
+If \f3ptr\f1 is null or \f3len\f1 is less than or equal to 0,
+\f3f\f1 will be unbuffered.
+\f3setbuf()\fP normally returns \f3&f\f1.
+However, if \f3f\f1 is open and a buffer has been allocated, no changes
+are made to the reserve area or to the buffering status,
+and \f3setbuf()\fP returns 0.
+.TP
+\f3i=f.sync()\f1
+Attempts to force the state of the get/put pointer of \f3f\f1 to agree
+(be synchronized) with
+the state of the file \f3f.fd()\f1.
+This means it may write characters to the file if some have been buffered for
+output or attempt to reposition (seek) the file if characters have
+been read and buffered for input.
+Normally, \f3sync()\fP returns 0,
+but it returns \f(CWEOF\f1 if synchronization is not possible.
+.sp
+Sometimes it is necessary to guarantee that certain
+characters are written together.
+To do this, the program should use
+\f3setbuf()\f1
+(or a constructor)
+to guarantee that the reserve area is at least as large as
+the number of characters that must be written together.
+It can then call \f3sync()\f1,
+then store the characters, 
+then call \f3sync()\f1 again.
+.SH CAVEATS
+\f3attach()\f1
+and the constructors should test if the file descriptor they
+are given is open, but I can't figure out a portable way to do that.
+.PP
+There is no way to force atomic reads.
+.PP
+The UNIX system does not usually report failures of seek (e.g. on a tty),
+so a filebuf does not either.
+.SH SEE ALSO
+sbuf.pub(3C++),
+sbuf.prot(3C++),
+fstream(3C++)

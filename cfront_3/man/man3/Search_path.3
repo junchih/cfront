@@ -1,0 +1,153 @@
+.\" ident	@(#)Path:man/Search_path.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Search_path\fP \f3Path(3C++)\fP " "
+.SH NAME
+Search_path \- UNIX search paths
+.SH "SYNOPSIS of Search_path.h"
+.Bf
+#include <Path.h>
+#include <ksh_test.h>
+#include <List.h>
+
+class Search_path : public List<Path>{
+public:
+
+//  Constructors
+
+    Search_path();
+    Search_path(const char* p);
+
+//  Copy and assign
+
+    Search_path(const Search_path& p);
+    Search_path& operator=(const Search_path& p);
+
+//  Conversion to and from strings
+
+    operator const char*()const;
+    operator String()const;
+
+//  Searching
+
+    int find(
+	const Path& p,
+	Path& ret,
+	Ksh_test::unary u = Ksh_test::x,
+	Ksh_test::id id = Ksh_test::effective
+    )const;
+
+    int find_all(
+	const Path& p,
+	List<Path>& ret,
+	Ksh_test::unary u = Ksh_test::x,
+	Ksh_test::id  id = Ksh_test::effective
+    )const;
+
+//  Stream insertion and extraction
+
+    \f2friend\fP ostream& operator<<(ostream& os,
+        const Search_path& p);
+    \f2friend\fP istream& operator>>(istream& is,
+        Search_path& p);
+};
+
+// Global variables
+
+extern Search_path PATH;
+.Be
+.SH DESCRIPTION
+A Search_path represents a UNIX search path, that is, a 
+list of zero or more path names.
+A Search_path is constructed, written and read
+in standard UNIX search path format, i.e., as a string of 
+colon-separated path names.
+However, Search_paths are real Lists, and
+as such obey all the semantics of Lists 
+(see \f3List(3C++)\f1).
+.SH " "
+.SH "Search_path"
+.SH " "
+.SS "Constructors"
+.IP "\f4Search_path();\f1"
+The empty search path.
+.IP "\f4Search_path(const char* p);\f1"
+Constructs the search path corresponding to the 
+colon-separated list of paths pointed to by \f4p\fP.
+If \f4p\fP is 0, constructs the empty search path.
+(This enables usages such as 
+\f4Search_path(getenv("PATH"))\f1 shown below.)
+.SS "Copy and assign"
+.IP "\f4Search_path(const Search_path& p);\f1"
+.hS
+.IP "\f4Search_path& operator=(const Search_path& p);\f1"
+Copy and assignment operator.
+.SS "Conversion to and from strings"
+.IP "\f4operator const char*()const;\f1"
+.hS
+.IP "\f4operator String()const;\f1"
+Conversion to colon-separated list of paths.
+.SS "Searching"
+.IP "\f4int find(\f1"
+.IC "\f4    const Path& p,\f1" 
+.IC "\f4    Path& ret,\f1"
+.IC "\f4    Ksh_test::unary u = Ksh_test::x,\f1"
+.IC "\f4    Ksh_test::id id = Ksh_test::effective\f1"
+.IC "\f4)const;\f1"
+If \f4p\fP is relative,
+looks for the first Path \f4dir\fP
+in this Search_path 
+for which \f4ksh_test(t,Path(dir,p),id)\fP is true.
+If such a directory exists, sets
+\f4ret\fP to \f4Path(dir,p)\fP
+and returns true, otherwise returns false 
+without affecting \f4ret\fP.
+If \f4p\fP is absolute, returns \f4ksh_test(t,p,id)\fP,
+setting \f4ret\fP to \f4p\fP if true.
+.IP "\f4int find_all(\f1"
+.IC "\f4    const Path& p,\f1" 
+.IC "\f4    List<Path>& ret,\f1" 
+.IC "\f4    Ksh_test::unary u = Ksh_test::x,\f1" 
+.IC "\f4    Ksh_test::id id = Ksh_test::effective\f1"
+.IC "\f4)const;\f1"
+Similar to the above, except that in the case \f4p\fP is 
+relative, sets \f4ret\fP to the list consisting of
+.I all
+the satisfying Paths,
+and in the case \f4p\f1 is absolute,
+sets \f4ret\fP to the list consisting of \f4p\fP or the empty list,
+depending on whether \f4ksh_test(t,p,id)\fP is true.
+The current position of \f4ret\f1 is set to the beginning of the List.
+Returns true just if the returned value of \f4ret\fP 
+is non-empty.
+.SS "Stream insertion and extraction"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os,\f1"
+.IC "\f4    const Search_path& p);\f1"
+.hS
+.IP "\f4\f2friend\fP istream& operator>>(istream& is,\f1"
+.IC "\f4    Search_path& p);\f1"
+Representation is as a colon-separated list of Paths.
+.SH " "
+.SH Global variables
+.SH " "
+.IP "\f4extern Search_path PATH;\f1"
+The value of the environment variable PATH at the time of program start-up.
+PATH is intentionally not declared const in order to enable assignment to it
+in case the value of the environment variable 
+PATH changes while the program is executing.
+Assignment can be done as follows:
+\f4PATH = Search_path(getenv("PATH"))\fP.
+.SH SEE ALSO
+.Bf
+\f3ksh_test(.)\fP
+\f3Path(.)\fP
+\f3Tmppath(.)\fP
+.Be

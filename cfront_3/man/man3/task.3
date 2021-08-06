@@ -1,0 +1,1117 @@
+.  \"ident	"@(#)cls4:man/task/task.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved        
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any           
+.  \"actual or intended publication of such source code.
+.  \"Run off with:  tbl task.3 |troff -man - |lp
+.TH TASK 3C++ "C++ Task Library" " "
+.SH NAME
+task \- coroutines, multiple threads of control, C++ task library
+.SH SYNOPSIS
+\f3
+.nf
+#include <task.h>
+
+typedef int (*PFIO)(int,object*);
+typedef void (*PFV)();
+extern	int _hwm;
+
+class object {
+public:
+	enum objtype { OBJECT, TIMER, TASK, QHEAD, QTAIL, INTHANDLER };
+
+	object*		o_next;
+			object();
+			~object();
+	void		alert();
+	void		forget(task*);
+	virtual objtype	o_type();
+	virtual int	pending();
+	virtual	void	print(int, int =0);
+	void		remember(task*);
+	static int	task_error(int, object*);
+	int		task_error(int);
+	static task*	this_task();
+	static	PFIO	error_fct;
+};
+
+class sched : public object {
+protected:
+			sched();
+public:
+	enum statetype { IDLE=1, RUNNING=2, TERMINATED=4 };
+
+	static	task*	clock_task;
+	void		cancel(int);
+	int		dont_wait();
+	static long	get_clock();
+	sched*		get_priority_sched();
+	static sched*	get_run_chain();
+	static int	get_exit_status();
+	int		keep_waiting();
+	int		pending();
+	void		print(int, int =0);
+	statetype	rdstate();
+	long		rdtime();
+	int		result();
+	void		setclock(long);
+	static void	set_exit_status(int);
+	virtual void	setwho(object*);
+	static	PFV	exit_fct;
+};
+
+#define	DEFAULT_MODE	DEDICATED
+
+class task : public sched {
+public:
+	enum modetype { DEDICATED=1, SHARED=2 };
+protected:
+			task(char* name=0, modetype mode=DEFAULT_MODE, int stacksize=SIZE);
+public:
+	task*		t_next;	
+	char*		t_name;
+			~task();
+	void		cancel(int);
+	void		delay(long);
+	static task*	get_task_chain();
+	objtype		o_type();
+	long		preempt();
+	void		print(int, int =0);
+	void		resultis(int);
+	void		setwho(object*);
+	void		sleep(object* =0);
+	void		wait(object*);
+	int		waitlist(object* ...);
+	int		waitvec(object**);
+	object*		who_alerted_me();
+};
+
+class timer : public sched {
+public:
+			timer(long);
+			~timer();
+	objtype		o_type();
+	void		print(int, int =0);
+	void		reset(long);
+	void		setwho(object*);
+};
+
+.fi
+\f1
+.SH DESCRIPTION
+.P
+A \f(CWtask\fP is an object with an associated program
+and thread of control.
+To use the task system, the programmer must derive a class from class
+\f(CWtask\fP,
+and supply a constructor for the derived class
+to serve as the \f(CWtask\fP's main program.
+(Note, however, that only one level of derivation is permitted
+from class \f(CWtask\fP.
+See the BUGS section.)
+.P
+Control in the task system is based on a concept of operations
+which may succeed immediately or be blocked,
+and \f(CWobject\fPs which may be
+.I ready
+or 
+.I pending
+(not ready).
+When a \f(CWtask\fP executes a blocking operation
+on an \f(CWobject\fP that is ready,
+the operation succeeds immediately
+and the \f(CWtask\fP continues running,
+but if the \f(CWobject\fP is pending, the \f(CWtask\fP waits.
+Control then returns to the scheduler,
+which chooses the next \f(CWtask\fP from the ready list or
+.I "run chain."
+Eventually, the pending \f(CWobject\fP may become ready,
+and it will notify all the \f(CWtask\fPs that are waiting for it,
+causing the waiting \f(CWtask\fPs to be put back on the 
+.I "run chain".
+.P
+A \f(CWtask\fP can be in one of three states:
+.TP 15
+RUNNING
+The \f(CWtask\fP is running or it is ready to run.
+.TP 15
+IDLE
+The \f(CWtask\fP is waiting for a pending \f(CWobject\fP.
+.TP 15
+TERMINATED
+The \f(CWtask\fP has completed its work.
+It cannot be resumed,
+but its result can be retrieved.
+.P
+The function 
+.B sched::rdstate()
+returns the state.
+These states are enumerations of type \f(CWstatetype\fP.
+These enumerations are in the scope of class \f(CWsched\fP.
+.P
+Most classes in the task system are derived from class \f(CWobject\fP.
+Each different kind of \f(CWobject\fP can have its own way of determining
+whether it is ready,
+which makes it easy to add new capabilities to the system.
+However, each kind of \f(CWobject\fP can have only one criterion
+for readiness (although it may have several blocking operations).
+The criterion for readiness is defined by the
+virtual function
+.B pending().
+For all classes derived from \f(CWobject\fP,
+.B pending()
+returns TRUE if the \f(CWobject\fP is not ready.
+This invariant should be maintained for user-defined derived classes as well.
+.P
+Each pending \f(CWobject\fP contains a list (the
+.IR "remember chain" )
+of the \f(CWtask\fPs that are waiting for it.
+When a \f(CWtask\fP attempts an operation on a pending \f(CWobject\fP
+(that is, it calls a blocking function),
+that \f(CWtask\fP is put on the
+.I "remember chain"
+for the \f(CWobject\fP
+via
+.B object::remember(),
+and the \f(CWtask\fP is suspended.
+When the state of an \f(CWobject\fP changes from pending to ready,
+.B object::alert()
+must be called for the \f(CWobject\fP.
+(Note, this is done for classes in the task system.
+Programmers who write classes for which \f(CWtask\fPs can wait,
+must ensure that
+.B object::alert()
+is called on a state change.)
+.B alert()
+changes the state of all \f(CWtask\fPs "remembered" by the \f(CWobject\fP
+from IDLE to RUNNING
+and puts them on the scheduler's
+.I "run chain."
+.P
+The base class,
+\f(CWsched\fP,
+is responsible for scheduling and for the functionality
+that is common to \f(CWtask\fPs and \f(CWtimer\fPs.
+Class \f(CWsched\fP can only be used as a base class,
+that is, it is illegal to create objects of class \f(CWsched\fP.
+Class \f(CWsched\fP also provides facilities
+for measuring simulated time.
+A unit of simulated time can represent any amount of real time,
+and it is possible to compute without consuming simulated time.
+The system clock is initialized to 0 and can be set with
+.B sched::setclock()
+once only.
+Thereafter, only a call to 
+.B task::delay()
+will cause the clock to advance.
+.B sched::getclock()
+can be used to read the clock.
+.P
+Class \f(CWtimer\fP provides a facility for implementing time-outs
+and other time-dependent phenomena.
+A \f(CWtimer\fP is similar to a \f(CWtask\fP with a constructor consisting
+of the single statement:
+.RS 10
+\f(CWdelay(d);\fP
+.RE
+That is, when a \f(CWtimer\fP is created it simply waits for the number
+of time units given to it as its argument,
+and then wakes up any \f(CWtask\fPs waiting for it.
+A \f(CWtimer\fP's state can be either RUNNING or TERMINATED.
+.P
+A \f(CWtask\fP cannot return a value with the usual function return
+mechanism.
+Instead, a \f(CWtask\fP sets the value of its 
+.I result
+(using
+.B task::resultis()
+or
+.BR task::cancel() ),
+at which time the \f(CWtask\fP becomes TERMINATED.
+Then this result can be retrieved by other \f(CWtask\fPs
+via a call to
+.B sched::result().
+.P
+The \f(CWtask\fP constructor takes three optional arguments:
+a name, a mode, and a stacksize.
+The name is a character string pointer,
+which is used to initialize the class \f(CWtask\fP variable \f(CWt_name\fP.
+This name can be used to provide more readable output
+and does not affect the behavior of the \f(CWtask\fP.
+.P
+The mode argument can be DEDICATED (the default when none is specified)
+or SHARED,
+(the enumerations of type \f(CWmodetype\fP in class \f(CWtask\fP's scope).
+DEDICATED \f(CWtask\fPs each have their own stack,
+allocated from the free store.
+SHARED \f(CWtask\fPs share stack space with the \f(CWtask\fP that creates them.
+When a SHARED \f(CWtask\fP is running, it occupies the shared stack space,
+while copies of the active portions of the other \f(CWtask\fPs' stacks
+occupy save areas.
+SHARED \f(CWtask\fPs trade speed for space:
+they use less storage than DEDICATED \f(CWtask\fPs use,
+but task switches among SHARED \f(CWtask\fPs often involve
+copying stacks to and from the save area.
+.P
+The stacksize argument to the \f(CWtask\fP constructor
+represents the maximum space that a \f(CWtask\fP's stack can occupy.
+The default is 750 machine words.
+Overflowing the stack is a fatal error.
+.P
+When an object of a class derived from class \f(CWtask\fP is created,
+its constructor becomes a new \f(CWtask\fP that runs in
+parallel with the other \f(CWtask\fPs that have been created.
+When the first \f(CWtask\fP is created,
+\f(CWmain()\fP automatically becomes a \f(CWtask\fP itself.
+.P
+The public member functions supplied in the task system classes
+\f(CWtask\fP, \f(CWobject\fP, \f(CWsched\fP, and \f(CWtimer\fP
+are listed and described in the next four sections.
+The following symbols are used:
+.RS 10
+.TP 4
+.B t
+a \f(CWtask\fP object
+.TP 4
+.B o
+an \f(CWobject\fP object
+.TP 4
+.B s
+a \f(CWsched\fP object
+.TP 4
+.B tm
+a \f(CWtimer\fP object
+.TP 4
+.B op
+a pointer to an \f(CWobject\fP
+.TP 4
+.B tp
+a pointer to a \f(CWtask\fP
+.TP 4
+.B sp
+a pointer to a \f(CWsched\fP
+.TP 4
+.B cp
+a pointer to a \f(CWchar\fP
+.TP 4
+.B i, j
+\f(CWint\fPs
+.TP 4
+.B l
+a \f(CWlong\fP \f(CWint\fP
+.TP 4
+.B eo
+an \f(CWobjtype\fP enumeration
+.TP 4
+.B es
+a \f(CWstatetype\fP enumeration
+.TP 4
+.B em
+a \f(CWmodetype\fP enumeration
+.RE
+.SS "Class Task"
+.P
+Class \f(CWtask\fP has one form of constructor, which is protected:
+.TP
+\f3task t( cp, em, j )\f1 
+Constructs a \f(CWtask\fP object, \f3t\fP.
+All three arguments are optional and have default values.
+If \f3cp\fP is given, the character string it points to is used
+as \f3t\fP's name.
+\f3em\fP represents the \f2mode\fP (see above),
+and can be DEDICATED or SHARED. 
+DEDICATED is the default.
+The default mode can be changed to SHARED by recompiling
+the task library with _SHARED_ONLY defined.
+See the NOTES section.
+\f3j\fP represents the maximum size of \f3t\fP's stack;
+the default is 750 machine words.
+.P
+Most public member functions of class \f(CWtask\fP are conditional
+or unconditional requests for suspension.
+They are (in alphabetical order):
+.TP
+.B "t.cancel( i )"
+Puts \f3t\fP into the TERMINATED state,
+without suspending the calling \f(CWtask\fP
+(that is, without invoking the scheduler),
+and sets \f3t\fP's result (or "return value") to \f3i\fP.
+.TP
+.B "t.delay( l )"
+Suspends \f3t\fP for the time specified by \f3l\fP.
+A delayed \f(CWtask\fP is in the RUNNING state.
+\f3t\fP will resume at the current time on the task system clock
++ \f3l\fP.
+Only a call to
+.B delay()
+causes the clock to advance.
+.sp
+.nf
+.in -.5i
+.B "tp = task::get_task_chain()"
+.B "tp = t.get_task_chain()"
+.in
+.fi
+Returns a pointer to the first \f(CWtask\fP on the list of all \f(CWtask\fPs
+(linked by \f(CWt_next\fP pointers).
+.TP
+.B "eo = t.o_type()"
+Returns the class type of \f3t\fP
+(\f(CWobject::TASK\fP).
+.B o_type()
+is a virtual function.
+.TP
+.B "l = t.preempt()"
+Suspends RUNNING \f(CWtask\fP \f3t\fP, making it IDLE.
+Returns the number of time units left in \f3t\fP's delay.
+Calling 
+.B preempt()
+for an IDLE or TERMINATED \f(CWtask\fP causes a runtime error.
+.TP
+.B "t.print( i )"
+Prints the contents of \f3t\fP on
+\f(CWstdout\fP.
+The first argument, \f3i\fP, specifies the amount of information to be printed.
+It can be 0, for the minimum amount of information,
+VERBOSE, for more information,
+CHAIN, for information about each object on the chain of all \f(CWtask\fPs,
+or STACK, for information about the runtime stack.
+These argument constants can be combined with the or operator,
+e.g., \f(CW print(VERBOSE|CHAIN)\fP.
+A second integer argument is for internal use and defaults to 0.
+.B print()
+is a virtual function.
+.TP
+.B "t.resultis( i )"
+Sets the result (or "return value") of \f3t\fP
+to be the value of \f3i\fP
+and puts \f3t\fP in the TERMINATED state.
+The result can be examined by calling
+.B "t.result()"
+(\f3result()\fP is a member function of class \f(CWsched\fP).
+\f(CWtask\fPs cannot return a value using the usual function return mechanism.
+A call to
+.B task::resultis()
+should appear at the end of every \f(CWtask\fP constructor body
+(unless the constructor will execute infinitely).
+A \f(CWtask\fP is
+.I pending
+(see 
+.B sched::pending()
+) until it is TERMINATED.
+.TP
+.B "t.setwho( op )"
+Records the \f(CWobject\fP denoted by \f3op\fP
+as the one that alerted \f3t\fP when it was IDLE.
+\f3*op\fP
+is meant to be the \f(CWobject\fP whose state change from pending to ready
+caused \f3t\fP to be put back on the
+.I "run chain."
+This information can be retrieved with 
+.B "task::who_alerted_me()."
+.sp
+.nf
+.in -.5i
+.B "t.sleep( op )"
+.B "t.sleep()"
+.in
+.fi
+Suspends \f3t\fP unconditionally (puts the \f3t\fP in the IDLE state).
+The \f3op\fP argument is optional.
+If 
+.B task::sleep()
+is given a pointer to a pending \f(CWobject\fP as an argument,
+\f3t\fP will be "remembered" by the denoted \f(CWobject\fP,
+so that when that \f(CWobject\fP becomes ready,
+\f3t\fP will be "alerted"
+and put back on the
+.I "run chain"
+(via
+.B object::alert() ).
+If no argument is given to 
+.B task::sleep(),
+the event that will cause \f3t\fP to be resumed is unspecified.
+Contrast
+.B sleep()
+with
+.B wait(),
+which suspends a \f(CWtask\fP conditionally.
+.B task::sleep()
+does not check whether the \f(CWobject\fP
+denoted by \f3op\fP is pending.
+.TP
+.B "t.wait( op )"
+If \f3op\fP points to a pending \f(CWobject\fP,
+then \f3t\fP will be suspended (put in the IDLE state)
+until that \f(CWobject\fP is ready.
+If \f3op\fP points to an \f(CWobject\fP
+that is not pending (that is ready),
+then \f3t\fP will not be suspended at all.
+Any class derived from class \f(CWobject\fP that is ever going
+be waited for must have rules for when it is pending and ready.
+Each \f(CWobject\fP can only have one definition of pending. 
+.TP
+.B "i = t.waitlist( op ...)"
+Suspends \f3t\fP to wait for
+one of a list of \f(CWobject\fPs to become ready.
+.B waitlist()
+takes a list of \f(CWobject\fP pointers terminated by a 0 argument.
+If any of the arguments points to a "ready" \f(CWobject\fP,
+then \f3t\fP will not be suspended at all.
+.B waitlist()
+returns when one of the \f(CWobject\fPs on the list is ready.
+It returns the position in the list of the \f(CWobject\fP
+that caused the return,
+with positions numbered starting from 0.
+Note that \f(CWobject\fPs on the list other than the one denoted
+by the return value might also be ready.
+.TP
+.B "i = t.waitvec( op* )"
+Is the same as 
+.B waitlist(),
+except that it takes as an argument the address of a vector
+holding a list of \f(CWobject\fP pointers.
+.TP
+.B "op = t.who_alerted_me()"
+Returns a pointer to the \f(CWobject\fP whose state change
+from \f2pending\fP to \f2ready\fP caused \f3t\fP
+to be put back on the \f2run chain\fP (put in the RUNNING state).
+.TP
+.B "_hwm = 1;"
+Causes the task system to keep track of the "high water mark"
+for each \f(CWtask\fP's stack;
+that is, the most stack ever used by each \f(CWtask\fP.
+This information is printed by 
+.B "task::print(STACK)."
+This information is intended primarily for debugging purposes,
+and will affect performance speed.
+.B _hwm
+must be set before any \f(CWtask\fPs whose high water marks
+are of interest are created.
+Note that two \f(CWtask\fPs are created by a static constructor:
+the internal Interrupt_alerter \f(CWtask\fP and the "main" \f(CWtask\fP.
+If you need accurate information about the high water mark for "main,"
+then \f3_hwm\fP must be set by a static constructor which is called
+before that for the Interrupt_alerter \f(CWtask\fP.
+.SS "Class Object"
+.P
+Class \f(CWobject\fP has one form of constructor:
+.TP
+.B "object o;"
+Construct an \f(CWobject\fP object, \f3o\fP, which is not on any lists.
+The constructor takes no arguments.
+.P
+Public member functions of class \f(CWobject\fP are
+(in alphabetical order):
+.TP
+.B "o.alert()"
+Changes the state of all \f(CWtask\fPs "remembered" by \f3o\fP
+from IDLE to RUNNING,
+puts them on the scheduler's
+.I "run chain,"
+and removes them from \f3o\fP's
+.I "remember chain."
+.TP
+.B "o.forget( tp )"
+Removes all occurrences of the \f(CWtask\fP denoted by \f3tp\fP
+from \f3o\fP's 
+.I "remember chain."
+.TP
+.B "eo = o.o_type()"
+Returns the class type of the object, \f3o\fP
+(\f(CWobject::OBJECT\fP).
+.B o_type()
+is a virtual function.
+.TP
+.B "i = o.pending()"
+Returns the ready status of an \f(CWobject\fP.
+It returns FALSE if \f3o\fP is ready, and TRUE if it is pending.
+Classes derived from class \f(CWobject\fP must define
+.B pending()
+if they are to be waited for.
+.B object::pending()
+returns TRUE by default.
+.B pending()
+is a virtual function.
+.TP
+.B "o.print( i )"
+Prints the contents of \f3o\fP on
+\f(CWstdout\fP.
+It is called by the
+.B print()
+functions for classes derived from
+\f(CWobject\fP.
+See
+.B task::print()
+for a description of the arguments.
+.B print()
+is a virtual function.
+.TP
+.B "o.remember( tp )"
+Adds the \f(CWtask\fP denoted by \f3tp\fP
+to \f3o\fP's
+.I "remember chain."
+Remembered \f(CWtask\fPs will be alerted
+when \f3o\fP's state becomes ready.
+.sp
+.nf
+.in -.5i
+.B "i = object::task_error( i, op )"
+.B "i = o.task_error( i, op )"
+.in
+.fi
+The central error function called by task system functions
+when a run time error occurs.
+\f3i\fP represents the error number
+(see the DIAGNOSTICS section for a list of error numbers and
+their meanings).
+\f3op\fP is meant to be a pointer to the \f(CWobject\fP
+which called \f3task_error()\fP or 0.
+.B object::task_error()
+examines the variable \f(CWerror_fct\fP,
+and if this variable denotes a function,
+that function will be called with \f3i\fP
+and \f3op\fP as arguments, respectively.
+(See \f(CWerror_fct\fP, below.)
+Otherwise, \f3i\fP will be given as an argument to
+.B print_error(),
+which will print an error message on \f(CWstderr\fP
+and call \f3exit(i)\fP, terminating the program.
+The non-static, single argument form of \f3task_error()\fP
+is obsolete, but remains for compatibility.
+.sp
+.nf
+.in -.5i
+.B "tp = object::this_task()"
+.B "tp = o.this_task()"
+.in
+.fi
+Returns a pointer to the \f(CWtask\fP that is currently running.
+.sp
+.nf
+.in -.5i
+.B "PFIO user-defined-error-function;" 
+.B "error_fct =  user-defined-error-function"
+.in
+.fi
+.B error_fct
+is a pointer to a function that returns an \f(CWint\fP
+and takes two arguments:  an \f(CWint\fP representing the error number
+and an \f(CWobject*\fP representing the \f(CWobject*\fP that called
+\f3task_error\fP.
+If \f3error_fct\fP is set,
+.B task_error()
+will call the \f3user-defined-error-function\fP with 
+the error number and the \f(CWobject*\fP as arguments.
+(The \f(CWobject*\fP will be 0 if \f3task_error\fP was not called by
+an \f(CWobject\fP.)
+If \f3user-defined-error-function\fP does not return 0,
+.B task_error()
+will call
+.B exit(i).
+If the
+.B user-defined-error-function
+does return 0, 
+.B task_error()
+will retry the operation that caused the error.
+.SS "Class Sched"
+.P
+Both class \f(CWtask\fP and class \f(CWtimer\fP are derived
+from class \f(CWsched\fP.
+Class \f(CWsched\fP provides one form of constructor,
+which is protected:
+.TP
+.B "sched s;"
+Constructs a \f(CWsched\fP object, \f3s\fP,
+initialized to be IDLE and to have a 0 delay.
+.P
+Class \f(CWsched\fP is responsible for the functionality that
+is common to \f(CWtask\fPs and \f(CWtimer\fPs.
+Class \f(CWsched\fP provides the following public member functions:
+.TP
+.B "s.cancel( i )"
+Puts \f3s\fP into the TERMINATED state,
+without suspending the caller
+(that is, without invoking the scheduler),
+and sets the result of \f3s\fP
+to be \f3i\fP.
+.TP
+.B "i = s.dont_wait()"
+Returns the number of times
+.B keep_waiting()
+has been called, minus the number of times
+.B dont_wait()
+has been called (excluding the current call).
+If these functions are used as intended,
+the return value represents
+the number of \f(CWobject\fPs that were waiting for external events
+before the current call.
+See
+.B keep_waiting().
+See interrupt(3C++) for a description of how \f(CWtask\fPs can wait
+for external events.
+.sp
+.nf
+.in -.5i
+.B "l = sched::get_clock()"
+.B "l = s.get_clock()"
+.in
+.fi
+Returns the value of the task system clock.
+.sp
+.nf
+.in -.5i
+.B "i = sched::get_exit_status()"
+.B "i = s.get_exit_status()"
+.in
+.fi
+Returns the \f2exit status\fP of the task program.
+When a task program terminates normally (that is, \f3task_error\fP
+is not called), the program will call \f3exit(i)\fP,
+where \f3i\fP is the value passed by the last caller
+of \f3sched::set_exit_status()\fP.
+.TP
+.B "sp = s.get_priority_sched()"
+Returns a pointer to a system \f(CWtask\fP, \f(CWinterrupt_alerter\fP,
+if a signal that was being waited for has occurred.
+If no interrupt has occurred,
+.B get_priority_sched()
+returns 0.
+.sp
+.nf
+.in -.5i
+.B "sp = sched::get_run_chain()"
+.B "sp = s.get_run_chain()"
+.in
+.fi
+Returns a pointer to the
+.I "run chain,"
+the linked list of ready \f(CWsched\fP objects
+(\f(CWtask\fPs and \f(CWtimer\fPs).
+.TP
+.B "i = s.keep_waiting()"
+Returns the number of times
+.B keep_waiting()
+has been called (not counting the current call), minus the number of times
+.B dont_wait()
+has been called.
+.B keep_waiting()
+is meant to be called when an \f(CWobject\fP that will wait
+for an external event is created.
+For example, it is called when an
+\f(CWInterrupt_handler\fP object is created by the 
+\f(CWInterrupt_handler\fP constructor
+(see interrupt(3C++)).
+The inverse function,
+.B dont_wait(),
+should be called when such an \f(CWobject\fP is deleted.
+.B keep_waiting()
+causes the scheduler to keep waiting (not to exit) when there
+are no runnable \f(CWtask\fPs
+(because an external event may make an IDLE \f(CWtask\fP runnable).
+.TP
+.B "i = s.pending()"
+Returns FALSE if \f3s\fP (\f(CWtask\fP or \f(CWtimer\fP)
+is in the TERMINATED state,
+TRUE otherwise.
+.B pending()
+is a virtual function.
+.TP
+.B "s.print( i )"
+Prints the contents of \f3s\fP on
+\f(CWstdout\fP.
+It is called by the
+.B print()
+functions for classes derived from
+\f(CWsched\fP.
+See
+.B task::print()
+and 
+.B timer::print()
+for a description of the arguments.
+.B print()
+is a virtual function.
+.TP
+.B "es = s.rdstate()"
+Returns the state of \f3s\fP:
+RUNNING, IDLE, or TERMINATED.
+.TP
+.B "l = s.rdtime()"
+Returns the clock time at which \f3s\fP is to run.
+.TP
+.B "i = s.result()"
+Returns the result of \f3s\fP
+(as set by
+.B task::resultis(),
+.B task::cancel(),
+or
+.B sched::cancel()
+).
+If \f3s\fP is not yet TERMINATED,
+the calling \f(CWtask\fP will be suspended
+to wait for \f3s\fP to terminate.
+If a \f(CWtask\fP calls
+.B result()
+for itself, it will cause a run time error.
+.sp
+.nf
+.in -.5i
+.B "sched::setclock( l )"
+.B "s.setclock( l )"
+.in
+.fi
+Initializes the system clock to the time given by \f3l\fP.
+Causes a run time error if used more than once.
+.sp
+.nf
+.in -.5i
+.B "sched::set_exit_status( i )"
+.B "s.set_exit_status( i )"
+.in
+.fi
+Sets the \f2exit status\fP of the task program.
+When a task program terminates normally (that is, \f3task_error\fP
+is not called), the program will call \f3exit(i)\fP,
+where \f3i\fP is the value passed by the last caller
+of \f3set_exit_status()\fP.
+.TP
+.B "s.setwho( op )"
+Is a virtual function defined for \f(CWtask\fPs and \f(CWtimer\fPs; see its
+definition for those classes.
+The argument is meant to be a pointer to the \f(CWobject\fP
+that caused \f3s\fP to be alerted.
+.nf
+.in -.5i
+.B "PFV user-defined-exit-function;"
+.B "exit_fct = user-defined-exit-function"
+.in
+.fi
+.B exit_fct
+is a pointer to a function taking no arguments and returning void.
+If set, 
+the task system scheduler will call the \f3user-defined-exit-function\fP
+before the program exits.
+.TP
+.B "clock_task = tp;"
+Sets \f3tp\fP to be a \f(CWtask\fP that
+will be scheduled each time the system clock advances,
+before any other \f(CWtask\fPs.
+The \f3clock_task\fP must be IDLE when it is resumed
+by the scheduler.
+The \f3clock_task\fP can suspend itself by calling
+.B task::sleep()
+to ensure this.
+.SS "Class Timer"
+.P
+Class \f(CWtimer\fP provides one form of constructor:
+.TP
+.B "timer tm( l );"
+Constructs a \f(CWtimer\fP object, \f3tm\fP,
+and inserts it on the scheduler's 
+.I run chain.
+\f(CWl\fP represents the number of time units \f3tm\fP is to wait.
+.P
+The following public member functions are provided for \f(CWtimer\fPs:
+.TP
+.B "eo = tm.o_type()"
+Returns the class type of the object (\f(CWobject::TIMER\fP).
+.B o_type()
+is a virtual function.
+.TP
+.B "tm.reset( l )"
+Resets \f3tm\fP's delay to \f3l\fP.
+This makes repeated use of \f(CWtimer\fPs possible.
+A \f(CWtimer\fP can be reset even when it is TERMINATED.
+.TP
+.B "tm.setwho( op )"
+Is defined to be null for \f(CWtimer\fPs.
+.B setwho()
+is a virtual function.
+.TP
+.B "tm.print( i )"
+Prints the contents of \f3tm\fP on
+\f(CWstdout\fP.
+The argument is ignored.
+.B print()
+is a virtual function.
+.SH FILES
+LIBDIR/libtask.a
+.SH NOTES
+The task library is supplied only for the following machines:
+WE32000-series machines (e.g., the AT&T 3B2), AT&T 3B20, AT&T 6386 WGS,
+Sun-2 and Sun-3, and the VAX.
+It must be ported to work on other platforms.
+.SH WARNINGS
+Beware of optimizing compilers that inline constructors for
+classes derived from class \f(CWtask\fP!
+.P
+Although the task library was engineered to be as free as possible
+from dependencies on compilation systems
+and dynamic call chains,
+it does depend on the existence of stack frames for the \f(CWtask\fP
+constructor and constructors for classes derived from class \f(CWtask\fP.
+If these constructors are inlined by an optimizing compiler,
+unpredictable behavior will result.
+.P
+For related reasons,
+although you must derive a class from class \f(CWtask\fP
+to use the task library,
+you can only have one level of derivation from class \f(CWtask\fP.
+That is, the system will not work reliably if you derive a class
+from a class derived from class \f(CWtask\fP.
+.SH BUGS
+DEDICATED tasks are implemented by building task stacks in the
+free store.
+Because UNIX System V Release 2 (SVR2) for the WE32000-series machines
+does not allow stack pointers to point into the free store,
+DEDICATED \f(CWtask\fPs cannot be used on these machines with SVR2.
+In such cases, compile the task library with _SHARED_ONLY defined,
+which will make SHARED the default mode for \f(CWtasks\fP.
+(Note:  it is insufficient to declare all \f(CWtask\fPs as SHARED without
+compiling a _SHARED_ONLY version of the task library,
+because there is an internal system \f(CWtask\fP
+(the \f2interrupt alerter\fP \f(CWtask, see interrupt(3C++))
+\fPwhich is DEDICATED by default.)
+.P
+UNIX System V Releases 3.1 and 3.2 (SVR3.1 and SVR3.2)
+for the Intel 386 machine
+will not call a signal handler when the current \f(CWtask\fP is running on
+a stack in the free store,
+that is, when the current \f(CWtask\fP has a DEDICATED stack.
+If you need to use the signal handling mechanisms
+(described on the tasksim(3C++) manual page)
+on that configuration,
+you cannot use tasks which have DEDICATED stacks.
+In this case, compile the task library with _SHARED_ONLY defined,
+which will make SHARED the default mode for \f(CWtasks\fP.
+.P
+For implementation reasons, it is not possible to derive a class
+from a class derived from class \f(CWtask\fP;
+only one level of derivation is permitted.
+Use of multi-level derivation is not detected,
+and will usually result in an unexpected core dump.
+One possible workaround for this limitation
+is to use multiple inheritance rather than multi-level derivation.
+For example, you can derive a class from class \f(CWtask\fP and
+from another class;
+the derived class will serve as the \f(CWtask\fP's main program
+just as it does in single inheritance.
+.SH DIAGNOSTICS
+When a task system function encounters a run time error, it calls
+.B object::task_error(),
+with one of the following error numbers as an argument.
+The table below lists the run time errors the task system detects,
+the associated error messages, and explanations of the errors.
+.bp
+.nf
+.TS
+center;
+c c c
+l l l.
+\f3Error Name\fP	\f3Message\fP	\f3Explanation\fP
+.sp
+1  E_OLINK	"object::delete(): has chain"	T{
+.fi
+Attempt to delete an object which remembers a task.
+.nf
+T}
+2  E_ONEXT	"object::delete(): on chain"	T{
+.fi
+Attempt to delete an object which is still on some chain.
+.nf
+T}
+3  E_GETEMPTY	"qhead::get(): empty"	T{
+.fi
+Attempt to get from an empty queue in E_MODE.
+.nf
+T}
+4  E_PUTOBJ	"qtail::put(): object on other queue"	T{
+.fi
+Attempt to put an object already on some queue.
+.nf
+T}
+5  E_PUTFULL	"qtail::put(): full"	T{
+.fi
+Attempt to put to a full queue in E_MODE.
+.nf
+T}
+6  E_BACKOBJ	T{
+.fi
+"qhead::putback(): object on other queue"
+.nf
+T}	T{
+.fi
+Attempt to putback an object already on some queue.
+.nf
+T}
+7  E_BACKFULL	"qhead::putback(): full"	T{
+.fi
+Attempt to putback to a full queue in E_MODE.
+.nf
+T}
+8  E_SETCLOCK	"sched::setclock(): clock!=0"	T{
+.fi
+Clock was non-zero when setclock() was called.
+.nf
+T}
+9  E_CLOCKIDLE	"sched::schedule(): clock_task not idle"	T{
+.fi
+The clock_task was not IDLE when the clock was advanced.
+.nf
+T}
+10 E_RESTERM	"sched::schedule: terminated"	T{
+.fi
+Attempt to resume a TERMINATED task.
+.nf
+T}
+11 E_RESRUN	"sched::schedule: running"	T{
+.fi
+Attempt to resume a RUNNING task.
+.nf
+T}
+12 E_NEGTIME	"sched::schedule: clock<0"	T{
+.fi
+Negative argument to delay().
+.nf
+T}
+13 E_RESOBJ	T{
+.fi
+"sched::schedule: task or timer on other queue"
+.nf
+T}	T{
+.fi
+Attempt to resume task or timer already on some queue.
+.nf
+T}
+14 E_HISTO	"histogram::histogram(): bad arguments"	T{
+.fi
+Bad arguments for histogram constructor.
+.nf
+T}
+15 E_STACK	"task::restore(): stack overflow"	T{
+.fi
+Task run time stack overflow.
+.nf
+T}
+16 E_STORE	"new: free store exhausted"	T{
+.fi
+No more free store--new() failed.
+.nf
+T}
+17 E_TASKMODE	"task::task(): bad mode"	T{
+.fi
+Illegal mode argument for task constructor.
+.nf
+T}
+18 E_TASKDEL	"task::~task(): not terminated"	T{
+.fi
+Attempt to delete a non-TERMINATED task.
+.nf
+T}
+19 E_TASKPRE	"task::preempt(): not running"	T{
+.fi
+Attempt to preempt a non-RUNNING task.
+.nf
+T}
+.TE
+.bp
+.TS
+center;
+c c c
+l l l.
+\f3Error Name\fP	\f3Message\fP	\f3Explanation\fP
+.sp
+20 E_TIMERDEL	"timer::~timer(): not terminated"	T{
+.fi
+Attempt to delete a non-TERMINATED timer.
+.nf
+T}
+21 E_SCHTIME	"schedule: bad time"	T{
+.fi
+Scheduler run chain is corrupted:  bad time.
+.nf
+T}
+22 E_SCHOBJ	"sched object used directly (not as base)"	T{
+.fi
+Sched object used directly instead of as a base class.
+.nf
+T}
+23 E_QDEL	"queue::~queue(): not empty"	T{
+.fi
+Attempt to delete a non-empty queue.
+.nf
+T}
+24 E_RESULT	"task::result(): thistask->result()"	T{
+.fi
+A task attempted to obtain its own result().
+.nf
+T}
+25 E_WAIT	"task::wait(): wait for self"	T{
+.fi
+A task attempted to wait() for itself to TERMINATE.
+.nf
+T}
+26 E_FUNCS	T{
+.fi
+"FrameLayout::FrameLayout(): function start"
+.nf
+T}	T{
+.fi
+Internal error--cannot determine the call frame layout.
+.nf
+T}
+27 E_FRAMES	T{
+.fi
+"FrameLayout::FrameLayout(): frame size"
+.nf
+T}	T{
+.fi
+Internal error--cannot determine frame size.
+.nf
+T}
+28 E_REGMASK	T{
+.fi
+"task::fudge_return(): unexpected register mask"
+.nf
+T}	T{
+.fi
+Internal error--unexpected register mask.
+.nf
+T}
+29 E_FUDGE_SIZE	"task::fudge_return(): frame too big"	T{
+.fi
+Internal error--fudged frame too big.
+.nf
+T}
+30 E_NO_HNDLR	"sigFunc - no handler for signal"	T{
+.fi
+No handler for the generated signal.
+.nf
+T}
+31 E_BADSIG	"illegal signal number"	T{
+.fi
+Attempt to use a signal number that is out of range.
+.nf
+T}
+32 E_LOSTHNDLR	"Interrupt_handler::~Interrupt_handler():	
+	signal handler not on chain"	
+.TE
+.fi
+.SH SEE ALSO
+TASK.INTRO(3C++), interrupt(3C++), queue(3C++), tasksim(3C++)
+.br
+Stroustrup, B. and Shopiro, J. E.,
+"A Set of C++ Classes for Co-routine Style Programming,"
+in
+.I "AT&T C++ Language System Release 2.0 Library Manual."
+.br
+Shopiro, J. E.,
+"Extending the C++ Task System for Real-Time Control,"
+in
+.I "AT&T C++ Language System Release 2.0 Library Manual."
+.br
+Keenan, S. A.,
+"A Porting Guide for the C++ Coroutine Library,"
+in
+.I "AT&T C++ Language System Release 2.0 Library Manual."

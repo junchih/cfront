@@ -1,0 +1,417 @@
+.\" ident	@(#)Time:man/Duration.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Duration\fP \f3Time(3C++)\fP " "
+.SH NAME
+Duration \- Time differences
+.SH SYNOPSIS OF Time.h
+.Bf
+#include <Objection.h>  /* see \f3Objection(3C++)\fP */
+#include <String.h>     /* see \f3String(3C++)\fP */
+
+class ostream;          // see \f3iostream(3C++)\fP
+
+class Duration{
+public:
+
+//  Duration constants
+
+    static Duration MAX();
+
+//  Objections
+
+    static Objection string_objection;
+
+//  Constructors, destructor
+
+    Duration();
+    Duration(long d,long h = 0,long m = 0,long s = 0);
+    ~Duration();
+
+//  Copy and assign
+
+    Duration(const Duration& d);
+    Duration& operator=(const Duration& d);
+
+//  Component extractors
+
+    long day_part()const;
+    int hour_part()const;
+    int minute_part()const;
+    int second_part()const;
+
+//  Conversion to and from strings
+
+    String make_string()const;
+    String make_string(const char* fmt)const;
+    \f2friend\fP Duration make_duration(const char* time_of_day);
+
+//  Other conversions
+
+    operator void*()const;
+    \f2friend\fP long seconds(const Duration& d);
+
+//  Relations
+
+    \f2friend\fP int operator==(const Duration& d1,
+        const Duration& d2);
+    \f2friend\fP int operator!=(const Duration& d1,
+        const Duration& d2);
+    \f2friend\fP int operator>(const Duration& d1,
+        const Duration& d2);
+    \f2friend\fP int operator>=(const Duration& d1,
+        const Duration& d2);
+    \f2friend\fP int operator<(const Duration& d1,
+        const Duration& d2);
+    \f2friend\fP int operator<=(const Duration& d1,
+        const Duration& d2);
+
+//  Fixed-point arithmetic
+
+    \f2friend\fP Duration operator+(const Duration& d1,
+        const Duration& d2);
+    \f2friend\fP Duration operator\(mi(const Duration& d1,
+        const Duration& d2);
+    \f2friend\fP Duration operator*(const Duration& d,long n);
+    \f2friend\fP Duration operator*(long n,const Duration& d);
+    const Duration& operator+=(const Duration& d);
+    const Duration& operator\(mi=(const Duration& d);
+    const Duration& operator*=(long n);
+    \f2friend\fP Duration operator\(mi(const Duration& d);
+    \f2friend\fP Duration abs(const Duration& d);
+
+//  Approximate arithmetic
+
+    \f2friend\fP Duration operator/(const Duration& d,long n);
+    const Duration& operator/=(long n);
+    \f2friend\fP double operator/(const Duration& d1,
+        const Duration& d2);
+
+//  Functions for expressing Durations in natural units
+
+    static Duration days(long d);
+    static Duration hours(long h);
+    static Duration minutes(long m);
+    static Duration seconds(long s);
+
+//  Stream insertion
+
+    \f2friend\fP ostream& operator<<(ostream& os,
+        const Duration& d);
+};
+
+.Be
+.SH DESCRIPTION
+.PP
+A Duration is a time difference, like ``two hours.''
+Class Duration provides positive and negative Durations with 
+a fixed precision of one second and a machine-dependent 
+range.  As \f2fixed point\f1 quantities, 
+Durations can be added, subtracted, 
+and multiplied by integers 
+without loss of accuracy,
+unlike floating point numbers, 
+which yield approximate results for such operations.
+Dividing a Duration by an integer, on the other hand, 
+yields a Duration guaranteed 
+accurate to the nearest second, while
+dividing one Duration by another yields an approximate 
+floating point ratio.  
+.PP
+A Duration may be constructed by giving its 
+component days, hours, minutes, and seconds.  
+When components are viewed using the \f2component 
+extractors\f1, the resulting component values may differ 
+from the original constructor arguments through the
+effect of \f2normalization\f1.
+.PP
+Two functions named \f4make_string\f1 convert Durations 
+to \f3String(3C++)\f1; the parameterless version can be
+used for arbitrary Durations, while the one-parameter 
+version, which takes a \f3printf(3)\f1-like control string,
+is intended for use with Durations representing
+\f2times-of-day\f1 
+(nonnegative Durations less than \f324h\f1).
+For the inverse transformation, 
+strings representing times-of-day
+in a variety of styles can be converted to Durations 
+using function \f4make_duration()\f1.  This conversion
+uses the string table described in \f3intro(.)\f1;
+the table can be set to reflect local preferences
+by calling \f4Time::set_table()\f1 (see \f3Time(.)\f1).
+.sp
+.SS "Duration constants"
+.IP "\f4static Duration MAX();\f1"
+Returns a machine-dependent Duration whose value is 
+the largest positive Duration that can be computed.
+Equivalent to \f4Duration(0,0,0,MAXLONG)\f1, 
+where \f4MAXLONG\f1 is a constant defined 
+in a standard system header file.
+For machines with 32-bit longs, Durations of 
+approximately 68 years 
+in length can be created.  
+The maximum negative Duration is \f4-Duration::MAX()-1\f1.
+The range of representable Durations is 
+therefore \f4[-Duration::MAX()-1,Duration::MAX()]\f1.
+.SS "Objections"
+.IP "\f4static Objection string_objection;"
+Indicates an error in conversion from string to Duration.
+The default action is to abort with an error message.
+.SS "Constructors, destructor"
+.IP "\f4Duration();\f1"
+The zero-length Duration.
+.IP "\f4Duration(long d,long h = 0,long m = 0,long s = 0);\f1"
+A Duration of \f4d\f1 days, \f4h\f1 hours, 
+\f4m\f1 minutes, and \f4s\f1 seconds.  
+\f3Preconditions\f1: the resulting Duration must 
+lie in the range \f4[-Duration::MAX()-1,Duration::MAX()]\f1.
+.IP "\f4~Duration();\f1"
+Destructor.
+.SS "Copy and assign"
+.IP "\f4Duration(const Duration& d);\f1"
+.hS
+.IP "\f4Duration& operator=(const Duration& d);\f1"
+Copying or assigning a Duration creates a copy of 
+its value.
+.SS "Component extractors"
+.IP "\f4long day_part()const;\f1"
+.hS
+.IP "\f4int hour_part()const;\f1"
+.hS
+.IP "\f4int minute_part()const;\f1"
+.hS
+.IP "\f4int second_part()const;\f1"
+The normalized components of a Duration.  
+Normalized components satisfy the following properties:
+(1) \f4hour_part()\f1 lies in \f4[\(mi23,+23]\f1
+(2) \f4minute_part()\f1 and \f4second_part()\f1 lie 
+in \f4[\(mi59,+59]\f1
+(3) all components are either 
+(a) all nonnegative or 
+(b) all nonpositive.
+.SS "Conversion to and from strings"
+.IP "\f4String make_string()const;\f1"
+Constructs a string representation of the Duration.
+The Duration may have any value 
+(i.e., it need not represent a time-of-day).  
+The String has the format
+\f2[\(mi] d..d\f4d\fP hh\f4h\fP mm\f4m\fP ss\f4s\f1.  
+.IP "\f4String make_string(const char* fmt)const;\f1"
+Converts a Duration to a String under control of
+the \f3printf(3C)\f1-like control string \f4fmt\f1.
+If the Duration is not a time-of-day
+it will be converted to one 
+by discarding whole days and, if necessary
+to make the value nonnegative, adding \f424h\f1.
+Fields of the control string have 
+the form \f2%field\f1, where
+.RS
+.TP
+.PD 0
+.B %
+.B %
+character.
+.TP
+.B H
+24-hour clock hour.
+.TP
+.B I
+12-hour clock hour.
+.TP
+.B M
+Minutes.
+.TP
+.B n
+.B newline
+character.
+.TP
+.B p
+Meridian (e.g.,
+.B AM
+or
+.BR PM ).
+.TP
+.B r
+12-hour time as
+.IR hh : mm : ss
+.IR meridian .
+.TP
+.B R
+24-hour time as
+.IR hh : mm .
+.TP
+.B S
+Seconds.
+.TP
+.B t
+.B tab
+character.
+.TP
+.B T
+24-hour time as
+.IR hh : mm : ss .
+.TP
+.B X
+Local time style (using index 38 of the string table)
+that includes the hours and minutes.
+.PD
+.RE
+.IP "\f4\f2friend\fP Duration make_duration(const char* time_of_day);\f1"
+The inverse of the above transformation.
+Parses a string (which must represent a time-of-day)
+and returns the corresponding Duration.
+The string must have one of the following forms:
+.Bf
+
+    \f2hh meridian\fP
+    \f2hh:mm[:ss][meridian]\fP
+    noon
+    midnight
+    morning
+    evening
+
+.Be
+where: \f2meridian\f1 is \f4AM\f1 or \f4PM\f1,
+\f4midnight\f1 gives a Duration of \f40h\f1,
+\f4morning\f1 gives a Duration of \f46h\f1 (\f46AM\f1), 
+\f4noon\f1 gives a Duration of \f412h\f1,
+and \f4evening\f1 gives a Duration 
+of \f418h\f1 (\f46PM\f1).
+\f4make_duration()\f1 is case insensitive.  
+If \f2hh\f1 is 12
+or greater, \f2meridian\f1 is ignored.
+The tokens recognized by \f4make_duration()\f1 may be
+redefined by calling \f4Time::set_table()\f1 
+(see \f3Time(.)\f1 for a description of the function
+and \f3intro(.)\f1 for a description of the
+table layout).
+Raises \f4Duration::string_objection\f1 if 
+the string does not represent a valid time-of-day;
+recovery action: return a zero-length Duration.
+.SS "Other conversions"
+.IP "\f4operator void*()const;\f1"
+Returns zero if and only if this is the zero-length
+Duration.  Most useful in contexts where implicit
+conversion will take place, e.g., \f4while(d)...\f1.
+.IP "\f4\f2friend\fP long seconds(const Duration& d);\f1"
+Converts \f4d\f1 to seconds.  For example,
+\f4seconds(days(1))\f1 would give 86400.
+.SS "Relations"
+.IP "\f4\f2friend\fP int operator==(const Duration& d1,\f1"
+.IC "\f4    const Duration& d2);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator!=(const Duration& d1,\f1"
+.IC "\f4    const Duration& d2);\f1"
+Equality and inequality relations.
+.IP "\f4\f2friend\fP int operator>(const Duration& d1,\f1"
+.IC "\f4    const Duration& d2);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator>=(const Duration& d1,\f1"
+.IC "\f4    const Duration& d2);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator<(const Duration& d1,\f1"
+.IC "\f4    const Duration& d2);\f1"
+.hS
+.IP "\f4\f2friend\fP int operator<=(const Duration& d1,\f1"
+.IC "\f4    const Duration& d2);\f1"
+The usual total order relations.
+.SS "Fixed-point arithmetic"
+These yield exact results wherever possible.  
+\f3Preconditions\f1: the result of all functions must 
+lie in the range \f4[-Duration::MAX()\-1, Duration::MAX()]\f1.
+.IP "\f4\f2friend\fP Duration operator+(const Duration& d1,\f1"
+.IC "\f4    const Duration& d2);\f1"
+.hS
+.IP "\f4\f2friend\fP Duration operator\(mi(const Duration& d1,\f1"
+.IC "\f4    const Duration& d2);\f1"
+Addition and subtraction, yielding a Duration.
+.IP "\f4\f2friend\fP Duration operator*(const Duration& d,long n);\f1"
+.hS
+.IP "\f4\f2friend\fP Duration operator*(long n,const Duration& d);\f1"
+Multiplication by an integer.
+.IP "\f4const Duration& operator+=(const Duration& d);\f1"
+.hS
+.IP "\f4const Duration& operator\(mi=(const Duration& d);\f1"
+.hS
+.IP "\f4const Duration& operator*=(long n);\f1"
+Assignment versions of the above.
+.hS
+.IP "\f4\f2friend\fP Duration operator\(mi(const Duration& d);\f1"
+A Duration with the same magnitude as \f4d\f1 but 
+opposite sign.
+.IP "\f4\f2friend\fP Duration abs(const Duration& d);\f1"
+A positive Duration with the same magnitude as \f4d\f1.
+.SS "Approximate arithmetic"
+These yield results that are accurate to the nearest second.
+.IP "\f4\f2friend\fP Duration operator/(const Duration& d,long n);\f1"
+Divide a Duration by an integer.  
+\f3Preconditions\f1: the divisor must be non-zero.
+.IP "\f4const Duration& operator/=(long n);\f1"
+Assignment version of the above.
+.IP "\f4\f2friend\fP double operator/(const Duration& d1,\f1"
+.IC "\f4    const Duration& d2);\f1"
+The quotient of \f4d1\f1 and \f4d2\f1.
+\f3Preconditions\f1: the divisor must not be a zero-length
+Duration.
+.SS "Stream insertion"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os,const Duration& d);\f1"
+Displays \f4d\f1 in the standard format.  That is,
+\f4os << d\f1 is equivalent to \f4os << d.make_string()\f1.
+.SS "Functions for expressing Durations in natural units"
+The following functions may lead to clearer
+expressions where constructors might otherwise be used.
+For example, \f4seconds(1)\f1 is probably easier to
+read than \f4Duration(0,0,0,1)\f1.
+.IP "\f4static Duration days(long d);\f1"
+\f4Duration::days(d)\f1 is equivalent 
+to \f4Duration(d)\f1.
+.IP "\f4static Duration hours(long h);\f1"
+\f4Duration::hours(h)\f1 is equivalent 
+to \f4Duration(0,h)\f1.
+.IP "\f4static Duration minutes(long m);\f1"
+\f4Duration::minutes(m)\f1 is equivalent 
+to \f4Duration(0,0,m)\f1.
+.IP "\f4static Duration seconds(long s);\f1"
+\f4Duration::seconds(s)\f1 is equivalent to
+.br
+\f4Duration(0,0,0,s)\f1.
+.SH NOTES
+As described above, certain operations have preconditions
+requiring that their results lie in the range of 
+representable Durations.   For example, 
+.Bf
+
+    Duration::MAX() + seconds(1)
+
+.Be
+violates the precondition of the addition operator, while
+.Bf
+
+    -Duration::MAX() - seconds(2)
+
+.Be
+violates the precondition of the subtraction operator.
+Although preconditions are never checked for and
+the result is technically undefined when preconditions
+are not satisfied, the usual effect of such
+operations is that large positive Durations become 
+large negative Durations, and vice-versa.
+.SH SEE ALSO
+.Bf
+\f3printf(3C)\f1
+\f3iostream(3C++)\f1
+\f3Objection(3C++)\f1
+\f3String(3C++)\f1
+
+\f3intro(.)\f1
+\f3Place(.)\f1
+\f3Time(.)\f1
+.Be

@@ -1,0 +1,146 @@
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3G2text\fP \f3G2++(3C++)\fP " "
+.SH NAME
+G2text \- Strings with printable ASCII external representations
+.SH SYNOPSIS OF G2text.h
+.Bf
+
+#include <String.h>
+
+class istream;
+class ostream;
+
+class G2text : public String{     // See String(3C++)
+public:
+
+//  Constructors
+
+    G2text();
+    G2text(const char* p);
+    G2text(const char* p,unsigned n);
+    G2text(char c);
+    G2text(const Substring& s);
+    G2text(Tmpstring& s);
+    G2text(Stringsize n);
+    G2text(const G2text& t);
+
+//  Insertion and extraction
+
+    \f2friend\fP ostream& operator<<(ostream& os,const G2text& t);
+    \f2friend\fP istream& operator>>(istream& is,G2text& t);
+};
+
+.Be
+.SH DESCRIPTION
+When a \f3String(3C++)\f1 is inserted into an output
+stream, its characters, including nonprintable 
+characters, are written without translation.  
+When a G2++ record contains a String value (declared
+as \f4n\f1, \f4*\f1, or \f4*(n)\f1), any nonprintable
+character will cause the field to be truncated on either
+input or output.  To avoid truncation,
+you may declare the field as type G2text 
+whenever you know this possibility exists
+(see the second \f3EXAMPLE\f1). 
+.PP
+G2text are exactly like Strings, except that their
+insertion operator translates non-printable characters
+into octal escape sequences, and their extraction
+operator performs the opposite translation.
+.SS "Constructors"
+All constructors have exactly the same meaning as for
+Strings (they are provided because constructors
+are not inherited).
+.SS "Insertion and extraction"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os,const G2text& t);\f1"
+G2text inserter.
+Inserts the characters of \f4t\f1 into stream \f4os\f1,
+translating each nonprintable ASCII character, as defined
+by the \f4isprint()\f1 function (see \f3ctype(3C)\f1),
+to an octal escape sequence.  The sequence consists of
+a backslash followed by three octal digits; the digits
+represent the ASCII value of the character.  
+For example, the newline character is translated into 
+the sequence \f4\e012\f1.  To avoid confusing the extractor
+(see below), a single backslash is converted
+to a double backslash.
+.IP "\f4\f2friend\fP istream& operator>>(istream& is,G2text& t);\f1"
+G2text extractor.
+Performs the inverse of the translation performed by
+the G2text inserter.  That is, it translates
+octal escape sequences to the ASCII characters they
+represent (e.g., it translates\f4\e012\f1 to a newline 
+character) and translates double backslash to 
+single backslash.
+.SH EXAMPLE
+Example 1:
+.Bf
+
+    G2text t = "hello\enworld";
+    cout << "t = " << t << endl;
+    cout << "(String)t = " << (String)t << endl;
+
+.Be
+The above code segment prints three lines:
+.Bf
+
+    t = hello\012world
+    (String)t = hello
+    world
+
+.Be
+Example 2 (defining a G2++ record containing G2text):
+.Bf
+
+    \f2usr.g:\fP
+
+        G2text    USER
+
+        usr
+                name    *
+                age     SHORT
+                bio     G2text    # can contain
+                                  # nonprintables
+
+    \f2client.c:\fP
+
+        #include "usr.h"
+        main(){
+            USR u;
+            u.name = "Crockett";
+            u.age = 50;
+            while(cin){
+                u.bio += sgets(cin) + '\en';
+            }
+            cout << u;
+        }
+
+    \f2standard input:\fP
+
+        Born on a mountaintop in Tennessee,
+        Greenest state in the land of the Free.
+
+    \f2standard output:\fP
+
+        usr
+                name    Crockett
+                age     50
+                bio     Born on a mountaintop in
+         Tennessee,\e012Greenest state...
+
+.Bf
+.SH SEE ALSO
+.Bf
+\f3G2++(3C++)\f1
+\f3String(3C++)\f1
+\f3ctype(3C)\f1
+.Be

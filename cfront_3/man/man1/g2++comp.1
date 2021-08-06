@@ -1,0 +1,380 @@
+.\" ident	@(#)G2++:compsrc/man/g2++comp.1	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3g2++comp\fP \f31C++\fP " "
+.SH NAME
+g2++comp  \-  compile G2++ record definitions
+.SH SYNOPSIS
+.B
+g2++comp [-n] [-s] [-g[.suf]] \f2file\f1 ...
+.SH DESCRIPTION
+\f3g2++comp(1C++)\f1 reads G2++ record definitions
+and generates declarations and code needed by 
+client programs to perform \f2typed I/O\f1 
+(see \f3typed_io(G2++(3C++))\f1).
+.PP
+This command has the following optional arguments: 
+.TP
+\f4\-n\f1
+no-caps mode:  the G2++ record names are not converted to upper case
+when generating the internal structure names in the C++ code
+.TP
+\f4\-s\f1
+always generate structures mode:  \f4g2++comp\fP will generate
+a struct rather than a typedef for G2++ records that only consist a
+single field or a single array
+.TP
+\f4\-g[.suf]\f1
+change the suffix on a G2++ source file:  \f4g2++comp\fP without the
+\f2-g\f1 option expects that the G2++ source files end in ''.g'',
+if \f4g2++comp\fP is run with the option \f2-g.xyz\fP, the G2++ source
+files should end in ``.xyz'',
+and if \f2g2++comp\fP is run with the option \f2-g\fP, the G2++ source
+files can end in anything
+.PP
+For each file argument of the 
+form \f2stem\f4.g\f1,
+\f3g2++comp(1C++)\f1 creates two new files,
+\f2stem\f4.h\f1 and \f2stem\f4.c\f1
+(file arguments not ending in the specified suffix are ignored).
+For each record definition in \f2stem\f4.g\f1 (there may
+be more than one), three declarations are generated 
+in \f2stem\f4.h\f1:
+.Bf
+
+    struct \*(gt {
+        ....      // declarations of the structure's data fields
+        \*(gt();  // default constructor
+    };
+    istream& operator>>(istream& is, \*(gt& t);
+    ostream& operator<<(ostream& os, const \*(gt& t);
+
+.Be
+or
+.Bf
+
+    typedef \f2type_specifier\fP \*(gt;
+
+    istream& operator>>(istream& is, \*(gt& t);
+    ostream& operator<<(ostream& os, const \*(gt& t);
+
+.Be
+The symbol \*(gt is replaced by the internal \f2structure name\fP
+corresponding to the record name specified in the \f2stem\f4.g\f1 file
+(the structure name is the record name from the
+\f2stem\f4.g\f1 file converted
+to upper case if the \f4-n\fP option is \f3not\fP used,
+but it is the unconverted record name if the
+\f4-n\fP option is used).
+The \f2type_specifier\fP specifies a predefined C++ type.
+The first form will always be used
+if the record definition has any 
+inner structure.
+The second form will be used if the
+record definition is a simple type
+or array type \f3and\fP the \f4-s\fP option
+is \f3not\fP used.
+.PP
+.SS "G2++ record definition language"
+Syntactically, a G2++ record definition is itself
+a G2++ record (see \f3G2++(4C++)\f1 for the
+syntax of G2++ records; the terms given in italics 
+below refer to metavariables defined there).
+It can be viewed as a \f2template\f1
+for a fully-populated instance of the corresponding 
+G2++ data record in which 
+(1) \f2strings\f1 convey type information
+rather than data and (2) \f2arrays\f1 have exactly one 
+\f2(index,value)\f1 pair that specifies the array's 
+size and element type, respectively.
+.PP
+In a G2++ record definition, \f2strings\f1 may take 
+any of the following forms:
+.IP "\f4CHAR                \f1"
+.sp -0.5
+.IP "\f4SHORT               \f1"
+.sp -0.5
+.IP "\f4LONG                \f1"
+Correspond to types \f4char\f1, \f4short\f1, 
+and \f4long\f1, respectively.
+.IP "\f2positive_integer    \f1"
+A \f3String(3C++)\f1 with a given fixed maximum size 
+given by the integer.
+.IP "\f4*                   \f1"
+A \f3String(3C++)\f1 with an arbitrary size.
+.IP "\f4*(positive_integer) \f1"
+A \f3String(3C++)\f1 with an arbitrary size whose
+initial storage capacity is defined by the positive
+integer (this form is provided purely for efficiency 
+reasons).
+.IP "\f2previously_defined_type\f1"
+The name of any type defined earlier in the same \f4.g\f1 file
+(another record type or a user-defined type \- see below).
+.PP
+An \f2array\f1 is specified by giving a 
+single \f2(index,value)\f1
+pair, in which \f2value\f1 can be any of the above
+forms and \f2index\f1 may be any of the following:
+.IP "\f2positive_integer    \f1"
+A \f3Vblock(G2++(3C++))\f1 with a given fixed maximum size.
+.IP "\f4*                   \f1"
+A \f3Vblock(G2++(3C++))\f1 with an arbitrary size.
+.IP "\f4*(positive_integer) \f1"
+A \f3Vblock(G2++(3C++))\f1 with an arbitrary size whose
+initial storage capacity is defined by the positive
+integer (this form is provided purely for efficiency 
+reasons).
+.SS "User-defined types"
+Any type \*(gu can appear in a G2++ record 
+definition as long as it has an assignment operator.  
+However, 
+if \*(gu occurs as the type of an array element, it
+must also have a default constructor (a constructor
+with no arguments).
+A user-defined type \*(gu is defined in the G2++
+record definition language by writing
+a special G2++ record definition of the following form:
+.Bf
+
+        \*(gu      USER
+
+.Be
+This must precede the first use of \*(gu as a 
+typename in a record definition.  
+Certain default assumptions
+about \*(gu will be made by \f3g2++comp(1C++)\f1.
+These assumptions can be overridden by means 
+of \f2attributes\f1 (see below).
+In general, a \f3USER\f1 type definition has the form:
+.Bf
+
+        \*(gu      USER
+                .header \f2H1\fP
+                .header \f2H2\fP
+                   ...
+                .null   \f2N\fP
+                .isnull \f2I\fP
+                .put    \f2P\fP
+                .get    \f2G\fP
+        ...
+
+.Be
+The attributes and their defaults are explained below:
+.IP "\f4.header  \f2H\f1"
+There may be zero or more \f4header\f1 attributes.
+The value \f2H\f1 is
+interpreted as the name of a header file.
+\f3g2++comp(1C++)\f1 will generate an \f4#include "\f2H\fP"\f1 
+directive for each attribute, in the same order 
+as the attributes.  As mentioned 
+above, the default header filename 
+is \*(gu\f4.h\f1.
+The remaining attributes are allowed
+to assume the existence of definitions exported by the 
+transitive closure of header files named 
+by \f4header\f1 attributes.
+.IP "\f4.null  \f2N\f1"
+There may be zero or one \f4null\f1 attributes.
+When translated in the context of 
+the header file closure implied by header attributes,
+\f2N\fP must be a valid C++ expression of type \*(gu.
+Its value will be used as 
+the ``null'' value for type \*(gu.
+If the \f4null\f1 attribute is
+omitted, the default constructor \*(gu\f4()\f1 will
+be assumed to exist and it will be called to generate
+the ``null'' value.
+.IP "\f4.isnull  \f2I\f1"
+There may be zero or one \f4isnull\f1 attributes.
+\f2I\f1 is taken as the name of a function 
+that indicates whether or not its argument is ``null''.
+Including an \f4isnull\f1 attribute implies
+that there exists
+a declaration of the form:
+.Bf
+
+    int \f2I\fP(const \*(gu& t);
+
+.Be
+somewhere in the 
+header file closure implied by \f4header\f1 attributes.
+This function is expected to return 1 if its 
+argument is null, and 0 otherwise.
+If the \f4isnull\f1 attribute is omitted, \f3g2++comp(1C++)\f1
+will generate code to explicitly test for equality with 
+the ``null'' value defined by the \f4null\f1 attribute;
+this means that omitting the \f4isnull\f1 attribute 
+implies that there exists
+the declaration of an equality operator for type \*(gu
+somewhere in the
+header file closure implied by \f4header\f1 attributes.
+.IP "\f4.put  \f2P\f1"
+There may be zero or one \f4put\f1 attributes.
+\f2P\f1 is taken as the name of a function 
+that knows how to insert an external representation 
+of type \*(gu into an output stream.
+Including a \f4put\f1 attribute 
+implies that there exists a declaration of the form
+.Bf
+
+    ostream& \f2P\fP(ostream& os,const \*(gu& t);
+
+.Be
+somewhere in the header file closure implied by
+\f4header\f1 attributes.
+\f2P\f1 is expected to insert an external
+representation of \f4t\f1 into stream \f4os\f1.
+To preserve the integrity of the G2 record, the external
+representation must not contain tabs, newlines, or 
+nonprintable ASCII characters.
+If the \f4put\f1 attribute is omitted, \f3g2++comp(1C++)\f1
+will call \f4\*(gu::operator<<\f1 to do the insertion.
+This means that omitting the \f4put\f1 attribute 
+implies that there exists the declaration of an insertion operator
+for type \*(gu
+somewhere in
+the header file closure implied by \f4header\f1
+attributes.
+.IP "\f4.get  \f2G\f1"
+There may be zero or one \f4get\f1 attributes.
+\f2G\f1 is taken as the name of a function
+that knows how to extract an external representation 
+type \*(gu from an input stream.
+Including a \f4get\f1 attribute 
+implies that there exists
+a declaration of the form
+.Bf
+
+    istream& \f2G\fP(istream& is,\*(gu& t);
+
+.Be
+somewhere in the header file closure implied by
+\f4header\f1 attributes.
+\f2G\f1 is expected to extract an external representation
+from stream \f4is\f1, construct an object of type \*(gu,
+and assign it to \f4t\f1.
+The function must extract only the characters 
+constituting the external representation and leave the 
+stream positioned so that the first character extracted
+by a subsequent extraction operation
+will be the first character following
+the external representation of type \*(gu.
+If \f2G\f1 cannot construct an object of type \*(gu,
+it should assign a ``null'' value to \f4t\f1 and
+clear the error bits (see \f3ios(iostream(3C++))\f1.
+If the \f4get\f1 attribute is omitted, \f3g2++comp(1C++)\f1
+will call \f4\*(gu::operator>>\f1 to do the extraction.
+This means that omitting the \f4get\f1 attribute 
+implies that there exists the declaration of an extraction operator
+for type \*(gu
+somewhere in
+the header file closure implied by \f4header\f1
+attributes.
+.SH EXAMPLE
+The following \f4.g\f1 file defines a single record:
+.Bf
+
+        Time    USER               \f2a user-defined type\fP
+                .header Time.h
+                .header Timeio.h
+                .null   Time::MIN
+
+        person
+                id      *          \f2arbitrary size string\fP
+                age     SHORT
+                b_day   Time       \f2a Time\fP
+                hobbies
+                        *       *  \f2arbitrary size array of\fP
+                                   \f2arbitrary size strings\fP 
+
+.Be
+To see what the header file generated by \f3g2++comp(1C++)\f1
+looks like, see \f3typed_io(G2++(3C++))\f1.
+.SH NOTES
+The G2++ record definition language is a strict superset
+of the G2 record definition language.  This means that
+a G2++ program and a G2 program that use the same record
+definition cannot be told apart by purely external
+means.  Any other behavior should be interpreted as a bug.
+.PP
+Note that when you compile a G2++ record definition file containing
+multiple record definitions, certain legal G2++ definitions 
+may create conflicting definitions in the generated C++ code.
+Here is an example:
+.Bf
+        
+        id      *
+
+        name    *(20)
+
+.Be
+The problem is that these two G2++ definitions will generate
+the following typedefs in the \f4.h\fP file:
+.Bf
+
+    typedef String ID;
+    istream& operator>>(istream& is, ID& t);
+    ostream& operator<<(ostream& os, const ID& t);
+
+    typedef String NAMELIST;
+    istream& operator>>(istream& is, NAMELIST& t);
+    ostream& operator<<(ostream& os, const NAMELIST& t);
+
+.Be
+This causes a problem when you use these datatypes,
+because typedefs
+do not create new types in C++ (they merely create new
+names for existing types), so the overloaded insertion
+and extraction operators generated for these types will
+be ambiguous.
+There are two solutions for this problem.
+The first solution (which is admittedly inelegant)
+is to force a structured type to be generated:
+.Bf
+        
+        id	
+                tag     *
+
+        namelist
+                tag     *(20)
+
+.Be
+The second solution is to run \f4g2++comp -s\fP,
+which will generate the following representation in the \f4.h\fP file:
+.Bf
+
+    class ID : public String {
+    public:
+        ID();   // default constructor
+    };
+    istream& operator>>(istream& is, ID& t);
+    ostream& operator<<(ostream& os, const ID& t);
+
+    class NAME : public String {
+    public:
+        NAME(); // default constructor
+    };
+    istream& operator>>(istream& is, NAME& t);
+    ostream& operator<<(ostream& os, const NAME& t);
+
+.Be
+.SH WARNINGS
+Do not mix \f4.c\f1 and \f4.h\f1 files
+produced by different compilations (doing so
+will cause a link error).
+.SH SEE ALSO
+.Bf
+\f3Vblock(G2++(3C++))\f1
+\f3G2++(3C++)\f1
+\f3G2++(4C++)\f1
+\f3iostream(3C++)\f1
+\f3String(3C++)\f1
+.Be

@@ -1,0 +1,28 @@
+#ident	"@(#)cls4:demo/lang/runtests	1.1"
+###########################################################################
+#			Copyright (c) 1984 AT&T
+#	  		  All Rights Reserved  	
+#
+#	THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+#	
+#	The copyright notice above does not evidence any   	
+#	actual or intended publication of such source code.
+#
+###########################################################################
+for tests in *.[E]
+do
+	fil=`basename ${tests} .E`
+        case ${fil} in
+		op_over) ./${tests} < moby_dick > ${fil}.r ;;
+		new_del) ./${tests} < text > ${fil}.r ;;
+		*) ./${tests} > ${fil}.r ;;
+        esac
+	diff ${fil}.r ${fil}.V > /dev/null 2>&1
+	if test $? -eq 0
+	then 
+		echo "${fil}: passed"
+	else 
+		echo "${fil}: FAILED"
+	fi
+	rm -f ${fil}.r
+done

@@ -1,0 +1,374 @@
+.\" ident	@(#)ipc:man/ipcstream.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3ipcstream\fP \f33C++\fP " " "SYSTEM V ONLY"
+.SH NAME
+ipcstream \- iostream and streambuf specialized to interprocess communication
+.SH SYNOPSIS OF ipcstream.h
+.Bf
+
+#include <iostream.h>
+#include <String.h>
+
+class  ipc_attachment{
+public: 
+
+//  Constructors, destructor
+
+    ipc_attachment(const String& name);
+    ipc_attachment(const char* name);
+    ~ipc_attachment();
+
+//  Copy and assign
+
+    private: 
+        ipc_attachment(const ipc_attachment& a);
+        ipc_attachment& operator=(const ipc_attachment& a); 
+    public:
+
+//  Test state
+
+    operator const void*()const;
+    int operator!()const;
+    int fail()const;
+    int bad()const;
+    int good()const;
+
+//  Wait for a connection
+
+    void listen();
+
+//  Info about requester
+
+    const char* username();
+    int uid();
+    int gid();
+
+//  Respond to request
+
+    ipcstream accept();
+    void reject(int err_no, const char* reason);
+
+//  Project identifier
+
+    static char ftok_id;
+};
+
+class ipcstream : public iostream {
+public: 
+
+//  Constructors, destructor
+
+    ipcstream(const String& name); 
+    ipcstream(const char* name); 
+    ipcstream(ipc_attachment& att);
+    ~ipcstream();
+
+//  Project identifier
+
+    static char ftok_id;
+
+//  Reason for rejection
+
+    int remote_errno;
+    String remote_reason;
+};
+.Be
+.SH DESCRIPTION
+.PP
+The above classes are used for interprocess 
+communication (IPC) between servers and clients.  
+Each server may have several clients.  
+The server makes itself accessible to clients 
+by creating an ipc_attachment with a name like 
+a filename.  
+A client creates an IPC connection to the server 
+by creating an ipcstream with the same name.
+An ipcstream accesses an IPC connection 
+in much the same way that an \f3fstream(iostream(3C++))\f1 
+accesses a file, except that reading and writing 
+on one end of an IPC connection are cross-connected 
+to the other end:  
+that is, data written by the client are available for 
+reading by the server, and vice versa.  
+Also, there is no \f2seek\f1 operation on an ipcstream.
+.PP
+When a client requests an IPC connection, it waits
+until the request is acted upon by the server. 
+The client's username, uid, and gid (see \f3getuid(2)\f1)
+are available to the server through the 
+correspondingly-named ipc_attachment member functions; 
+if no request is outstanding, these functions
+wait for one.
+The server may \f4reject()\f1 the request, 
+in which case the would-be client's 
+ipcstream becomes invalid and 
+its data members \f4remote_errno\f1 and
+\f4remote_reason\f1 are set to the values supplied by server.
+Otherwise, the server establishes a 
+connection by creating 
+an ipcstream of its own, using the ipc_attachment
+as the constructor argument.
+The server may then listen for 
+requests from other clients.
+.SH "\s+2ipc_attachment\s-2"
+Only servers create and manipulate ipc_attachments.
+.SS "Constructors, destructor
+.IP "\f4ipc_attachment(const String& name);\f1"
+.sp -0.5
+.IP "\f4ipc_attachment(const char* name);\f1"
+An ipc_attachment whose name is 
+is \f4name\f1, given as either a String or a 
+null-terminated character array.
+If the supplied string is empty 
+(or the character pointer is zero), 
+the default name \f4"ipcattachment"\f1 will be used. 
+If the number of characters in \f4name\f1 is greater than 
+or equal to the System V maximum filename length 
+(14 characters), it will be truncated to one less than 
+the maximum.
+.IP "\f4~ipc_attachment();\f1"
+Destructor.  Existing clients will be able to
+continue IPC with server, but clients with outstanding
+requests will see a failure return 
+(similar to rejection).
+.SS "Copy and assign
+An ipc_attachment cannot be copied or assigned.
+.SS "Test state"
+.IP "\f4operator const void*()const;\f1"
+.sp -0.5
+.IP "\f4int operator!()const;\f1"
+.sp -0.5
+.IP "\f4int fail()const;\f1"
+.sp -0.5
+.IP "\f4int bad()const;\f1"
+.sp -0.5
+.IP "\f4int good()const;\f1"
+These functions test the state of the attachment.  
+There is no distinction between \f4fail\f1 and \f4bad\f1:
+the names are copied from \f3ios(iostream(3C++))\f1.
+.SS "Wait for a connection"
+.IP "\f4void listen();\f1"
+Waits for a request.
+Each request must be accepted or rejected in turn, 
+so a call to listen when a request is already
+outstanding will have no effect.
+.SS "Info about requester"
+.IP "\f4const char* username();\f1"
+.sp -0.5
+.IP "\f4int uid();\f1"
+.sp -0.5
+.IP "\f4int gid();\f1"
+These functions wait for a request if one is not 
+currently outstanding and then return information 
+about the requester.  
+They rely on the requester's honesty for their security.
+.SS "Respond to request"
+.IP "\f4ipcstream accept();\f1"
+Waits for a request if one is not currently outstanding
+and then returns an ipcstream connected to the requester.  
+The resulting ipcstream will be cross-connected to the 
+corresponding ipcstream in the client.
+Works by calling \f4ipcstream(ipc_attachment&(*this))\f1.
+.IP "\f4void reject(int err_no, const char* reason);\f1"
+Waits for a request if one is not currently outstanding
+and then rejects it, giving \f4err_no\f1 and \f4reason\f1 
+as reasons for rejection.  These values are subsequently 
+available to the requester through its 
+ipcstream data members (see below).
+.SS "Project identifier"
+.IP "\f4static char ftok_id;\f1"
+The current implementation of ipc_attachment uses
+a semaphore to ensure that only one process at a time
+tries to make a connection.  
+The key for the semaphore is obtained
+by calling \f3ftok(3C)\f1 with the ipc_attachment 
+name and the character \f4'z'\f1 as the
+'project identifier,' unless \f4ftok_id\f1 is set, 
+in which case its value 
+is used as the project identifier.
+If the server sets \f4ftok_id\f1, 
+its clients must set the same value in 
+their \f4ipcstream::ftok_id\f1.
+.SH "\s+2ipcstream\s-2"
+Both servers and clients create and 
+manipulate ipcstreams.  Some operations are used only
+by the server, some are used only by clients, and some are
+used by both server and clients.  These are indicated below.
+.SS "Constructors, destructor"
+.IP "\f4ipcstream(const String& name);\f1" 
+.sp -0.5
+.IP "\f4ipcstream(const char* name);\f1" 
+Used by clients.  Generates a request to the 
+server holding the ipc_attachment 
+with the same name 
+(for the rules concerning names, see
+\f4ipc_attachment::ipc_attachment\f1).  
+If no such server exists, the request fails 
+immediately.  Otherwise, the request blocks until 
+the request is accepted or rejected by the server.  
+The client should determine the outcome of
+the request by testing the ipcstream error bits
+(see \f3ios(iostream(3C++))\f1 and the \f3EXAMPLE\f1).
+If the request failed or was rejected, 
+error bits will be set.  
+If the request was accepted, the error bits
+will be clear and the ipcstream will be 
+cross-connected to the corresponding ipcstream in 
+the server.
+.IP "\f4ipcstream(ipc_attachment& att);\f1"
+Used by server.  Accepts the current request, or
+waits for a request if one is not currently
+outstanding.  
+The resulting ipcstream will be cross-connected to the 
+corresponding ipcstream in the client.
+.IP "\f4~ipcstream();\f1"
+Used by servers and clients.
+Destructor.  The cross-connected ipcstream (whether
+server or client) will test as null.
+.SS "Project identifier"
+.IP "\f4static char ftok_id;\f1"
+Used by clients.  See \f4ipc_attachment::ftok_id\f1.
+.SS "Reason for rejection"
+.IP "\f4int remote_errno;\f1"
+.sp -0.5
+.IP "\f4String remote_reason;\f1"
+Used by clients to determine the reason for rejection
+of a request (see \f4ipc_attachment::reject()\f1).
+.SH NOTES
+\(bu In the current implementation data is transmitted 
+between server and client over named pipes (FIFOs) 
+which have a maximum buffering capacity of 5120 
+characters.  
+An ipc_attachment is represented by a file, 
+a semaphore, and two named pipes.  
+Each ipcstream adds two more named pipes.  
+The pathname (see \f3intro(2)\f1) of the file
+is the same as the ipc_attachment name;
+the pathnames of the pipes are formed by adding
+one-letter suffixes \f4'a', 'b', ...\f1 
+to the ipc_attachment name.
+The semaphore identifier is obtained by passing
+a key to \f3semget(2)\f1; the key is obtained
+using \f3ftok(3C)\f1 
+(see the description of \f4ipc_attachment::ftok_id\f1).
+.br
+\(bu Since there is a limit of 20 open files, 
+a server is limited to approximately
+5 simultaneous clients.  
+.br
+\(bu It is usually not necessary to change 
+the value of \f4ftok_id\f1.
+.SH WARNINGS
+Since communication is buffered, there is no guarantee 
+of when data written to an ipcstream will be read by 
+the other process or in fact if it will be read at 
+all.  Since buffering is finite, deadlock is possible.
+.SH BUGS
+\(bu All operations other than writing data are 
+synchronous.  There is no way to select among 
+ipcstreams or ipc_attachments 
+according to which has available data.
+.br
+\(bu Certain error conditions in a server or client 
+may result in the signal \f4SIGPIPE\f1 
+(see \f3signal(2)\f1) being 
+sent to the other.
+.br
+\(bu If a server or client terminates without executing
+destructors for its ipcstreams and ipc_attachments, 
+pipes, files, and/or semaphores may be left 
+behind and may interfere with the operation of other 
+ipcstream processes.  
+Users must find and remove these manually.  See
+\f3NOTES\f1 for information on file and pipe naming
+conventions; these can be removed in the usual
+way with \f3rm(1)\f1.  The semaphore, 
+which has neither a name nor a directory, 
+can be found using \f3ipcs(1)\f1 
+and removed with \f3ipcrm(1)\f1
+by specifying either the semaphore's key or its identifier.
+.SH EXAMPLE
+The following example illustrates IPC among three
+processes: a server and two clients (\f2server\f1 reads an 
+integer from \f2client1\f1 and passes it to \f2client2\f1).  
+It relies on programs being started in the following order: 
+\f2server, client1, client2\f1.
+.Bf
+
+    \f2server.c\fP
+
+        main(){
+            ipc_attachment att("x");
+            if(!att)exit(1);
+            ipcstream s1(att);
+            ipcstream s2(att);
+            while(1){
+                int i;
+                s1 >> i;
+                s2 << i << endl; 
+		if (i < 0)
+		    break;
+            }
+        }
+.Be
+.Bf
+
+    \f2client1.c\fP
+
+        main(){
+	    char next[20];
+            ipcstream s("x");
+            if(!s)exit(1);
+
+            for(int i = 0; i<10; i++){
+                s << i << endl;
+                sleep(2);
+            }
+	    gets(next);
+	    if (next[0] == 'y') {
+		s << -1 << endl;
+		break;
+	    }
+        }
+.Be
+.Bf
+
+    \f2client2.c\fP
+
+        main(){
+            ipcstream s("x");
+            if(!s)exit(1);
+
+            while (1){
+                int i;
+                s >> i; 
+		if (i < 0)
+		    break;
+            }
+        }
+
+.Be
+.SH SEE ALSO
+.PP
+\f3filebuf(iostream(3C++))\f1,
+\f3fstream(iostream(3C++))\f1,
+\f3ftok(3C)\f1,
+\f3intro(2)\f1,
+\f3ios(iostream(3C++))\f1,
+\f3ipcs(1)\f1,
+\f3ipcrm(1)\f1,
+\f3istream(iostream(3C++))\f1,
+\f3ostream(iostream(3C++))\f1,
+\f3sbuf.pub(iostream(3C++))\f1,
+\f3semget(2)\f1,
+\f3signal(2)\f1,
+\f3String(3C++)\f1.

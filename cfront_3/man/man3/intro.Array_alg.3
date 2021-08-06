@@ -1,0 +1,333 @@
+.\" ident	@(#)Array_alg:man/intro.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3intro\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+intro \- introduction to Array Algorithms
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+#include <stddef.h>
+
+    //  Array Algorithms
+
+    template <class \*(gt>
+    const \*(gt* bin_loc(
+	const \*(gt& val,
+	const \*(gt* b,
+	const \*(gt* e
+    );
+    template <class \*(gt>
+    const \*(gt* bin_loc_r(
+	int (*rel)(const \*(gt)* p1,const \*(gt)* p2),
+	const \*(gt& val,
+	const \*(gt* b,
+	const \*(gt* e
+    );
+    template <class \*(gt>
+    const \*(gt* bin_search(
+	const \*(gt& val,
+	const \*(gt* b,
+	const \*(gt* e
+    );
+    template <class \*(gt>
+    const \*(gt* bin_search_r(
+	int (*rel)(const \*(gt)* p1,const \*(gt)* p2),
+	const \*(gt& val,
+	const \*(gt* b,
+	const \*(gt* e
+    );
+    
+   //  etc. for the remaining functions
+    
+
+.Be
+.SH DESCRIPTION
+.PP
+\f2Array Algorithms\f1 implement 
+nearly 100 common (and not-so-common) algorithms on arrays.
+But because a Block can always be used wherever
+an array is called for
+(see \f3Block(3C++)\f1),
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.PP
+Array Algorithms consist entirely of preprocessor macros;
+the macros generate (1) function declarations and 
+(2) function definitions, which must be 
+compiled and linked with client code.
+.SS "User-defined function types"
+.IP "\f4int (*\f2relation\f4)(const \*(gt* p1,const \*(gt* p2);\f1"
+A so-called \f2relation\f1.  
+The intended semantics 
+of relations varies from function to function.  
+For example, some functions (like \f4sort_r\f1) 
+require that a relation
+``defines a total ordering relation on \*(gt;'' 
+these expect the relation to return
+a negative, zero, or positive value,
+depending on whether the first argument is 
+less than, equal to, or greater than the second argument, 
+respectively (the C library function \f3strcmp(3C)\f1 
+is an example of a such a function).
+Other functions (e.g., \f3subs_r(.)\f1)
+require only that a relation ``defines an equivalence
+relation on \*(gt;'' these expect the relation
+to return 0 if its two arguments are equal.
+.IP "\f4int (*\f2predicate\f4)(const \*(gt* p);\f1"
+A so-called \f2predicate\f1.  
+Predicates return non-zero if the object pointed to by \f4p\f1 
+passes a test, the nature of which varies from function
+to function.
+.IP "\f4void (*\f2fun1\f4)(\*(gt* p);\f1"
+.hS
+.IP "\f4void (*\f2fun2\f4)(ptrdiff_t i,\*(gt* p);\f1"
+Used by functions that \f2apply\f1 functions to
+the elements of an array (\f3for_each(.)\f1,
+\f3generate(.)).
+.SS "Array Algorithms"
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4const \*(gt* bin_loc(\f1"
+.IC "\f4    const \*(gt& val,\f1"
+.IC "\f4    const \*(gt* b,\f1"
+.IC "\f4    const \*(gt* e\f1"
+.IC "\f4);\f1"
+.hS
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4const \*(gt* bin_loc_r(\f1"
+.IC "\f4    int (*rel)(const \*(gt)* p1,const \*(gt)* p2),\f1"
+.IC "\f4    const \*(gt& val,\f1"
+.IC "\f4    const \*(gt* b,\f1"
+.IC "\f4    const \*(gt* e\f1"
+.IC "\f4);\f1"
+.hS
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4const \*(gt* bin_search(\f1"
+.IC "\f4    const \*(gt& val,\f1"
+.IC "\f4    const \*(gt* b,\f1"
+.IC "\f4    const \*(gt* e\f1"
+.IC "\f4);\f1"
+.hS
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4const \*(gt* bin_search_r(\f1"
+.IC "\f4    int (*rel)(const \*(gt)* p1,const \*(gt)* p2),\f1"
+.IC "\f4    const \*(gt& val,\f1"
+.IC "\f4    const \*(gt* b,\f1"
+.IC "\f4    const \*(gt* e\f1"
+.IC "\f4);\f1"
+.hS
+.IP "\f2etc.                           \fP"
+Function names are constructed using a 
+system of prefixes and suffixes.
+The prefix indicates broadly what the function does
+(e.g., \f4sort\f1, \f4count\f1, \f4remove\f1),
+while the suffix denotes one or more \f2versions\f1
+of the functionality.  There are 32 prefixes.
+Since versions are documented together on the same
+manpage, there are 32 manpages,
+one for each prefix.
+Suffixes consist of an underscore 
+followed by a sequence of between one and three letters.
+Suffixes have the following meaning:
+.RS
+.sp
+\(bu A function without suffix letters is 
+called a \f2plain version\f1.  
+.br
+\(bu A function with the letter \f3r\f1 in its suffix is
+called a \f2relational version\f1.
+A relational version takes, 
+as its first argument, a pointer to a user-defined 
+\f2relation\f1 function.
+.br
+\(bu A function with the letter \f3p\f1 in its suffix is
+called a \f2predicate version\f1.
+A predicate version takes, as its first argument, 
+a pointer to user-defined 
+\f2predicate\f1 function.
+.br
+\(bu Note that a function may be a predicate version 
+or a relational version, but not both.
+.br
+\(bu A function with the letter \f3s\f1 in its suffix is
+called a \f2stable version\f1.
+A stable version maintains the relative order of 
+equal elements; stability may be required when
+an element is actually a structure consisting of a key 
+and a value, for which an equivalence or ordering relation 
+compares only the keys.
+Stable versions should only be used when stability is 
+required, since stable algorithms are slower
+than unstable ones.
+.br
+\(bu A function with the letter \f3c\f1 in its suffix is
+called a \f2copy version\f1.
+A copy version copies its output to a new array, 
+leaving its input array undisturbed.  
+Copy versions require an output array
+large enough to hold the result.  The output array
+is always specified by a single pointer, which
+points to its first cell.
+Furthermore, the output
+array must not overlap the input array.  
+If arrays must overlap,
+or if a copy version of a particular function
+is not available and you want to preserve the input array,
+use \f4copy\f1 followed by an in-place
+version of the function; \f4copy\f1 is the only function 
+that handles overlap correctly.
+Copy versions employ clever
+algorithms to achieve greater efficiency than could 
+be obtained by first calling \f4copy\f1 and then 
+performing the in-place version of the same function.
+Not every algorithm has a copy version because there
+is often no such clever algorithm.  
+.RE
+.sp
+The functions operate on one, two, or possibly three arrays.
+Each array is explicitly or implicitly identified by 
+a pair of pointers that point to the begining and end of the 
+array, respectively.
+In writing the function prototypes, we 
+have used the formal parameter names \f4b\f1 and \f4e\f1 
+when there is just one array, \f4b1,e1\f1 and \f4b2,e2\f1 
+when there are two arrays, and so-on.
+The first pointer of each pair points to the 
+first cell of the array, while the second pointer points 
+just beyond the last cell of the array.  
+For example, \f3random(.)\f1 takes a single array
+and returns a pointer to a random cell:
+.Bf
+
+    template <class \*(gt>
+    const \*(gt* random(const \*(gt* b,const \*(gt* e);
+    //see \f3random(.)\fP
+
+.Be
+To call \f4random()\f1,
+.Bf
+
+    Block<int> b(10);      // see \f3Block(3C++)\fP
+    ...
+    const int* p = random(&b[0],b.end());
+
+.Be
+\f3rem_dup_c(.)\f1 takes an input array
+and an output array; it copies unique elements to 
+the output array, leaving the input array undisturbed:
+.Bf
+
+    \*(gt rem_dup_c(\*(gt* b1,\*(gt* e1,\*(gt* b2);  // see \f3rem_dup(.)\fP
+
+.Be
+To call \f4rem_dup_c()\f1,
+.Bf
+
+    Block<int> input(10);    // see \f3Block(3C++)\fP
+    int output[10];
+    ...
+    int* p = rem_dup_c(&input[0],input.end(),output);
+
+.Be
+Note that the second array is identified by a 
+single pointer only (\f4b2\f1); its size must be large
+enough to hold all the unique elements (in the worst
+case, there would be ten unique elements).
+It is the programmer's responsibility to ensure that
+such assumptions are correct.
+.sp
+Some functions have parameters or return type 
+of \f4ptrdiff_t\f1, a machine-dependent type 
+defined in \f3stddef(3S)\f1.
+A \f4ptrdiff_t\f1 is an integral type capable
+of representing the difference 
+between any two pointers of the same type.
+.SH BUGS
+Several functions (e.g., \f3random(.)\f1 
+and \f3shuffle(.)\f1)
+make calls to the standard C library pseudo-random 
+number generator, \f3drand48(3C)\f1.  To insure repeatable results, 
+which may be desirable while programs are still under development, 
+the client may 
+initialize \f3drand48(3C)\f1 by calling \f4srand48()\f1 with
+a fixed ``seed'' (or may rely on default
+initialization).  Doing this will cause \f3drand48(3C)\f1
+to yield an identical sequence of random numbers.
+Repeatability may be difficult 
+(requiring multiple initializations) 
+or impossible to obtain 
+if random numbers are withdrawn from the sequence elsewhere 
+in client code.  
+.SH EXAMPLE
+Given an array containing at least one even element,
+the following code displays a random even element:
+.Bf
+
+    \f2main.c\fP
+
+	#include <Array_alg.h>
+
+	int even(const int* a);
+
+	const int SIZE = 100;
+	int a[SIZE] = {...};   \f2must contain at least one
+                            even element\fP
+
+	main(){
+	    cout << *random(a,part_ps(even,a,a+SIZE));
+	}
+	int even(const int* a){
+	    return (*a)%2 == 0;
+	}
+
+.Be
+.SH SEE ALSO
+.Bf
+\f3Block(3C++)\f1 
+\f3drand48(3C)\f1 
+\f3stddef(3S)\f1
+\f3strcmp(3C)\f1
+
+\f3bin_loc(.)\f1 
+\f3bin_search(.)\f1 
+\f3copy(.)\f1 
+\f3count(.)\f1 
+\f3fill(.)\f1 
+\f3for_each(.)\f1 
+\f3generate(.)\f1 
+\f3ins_sort(.)\f1 
+\f3insert(.)\f1 
+\f3merge(.)\f1 
+\f3merge_sort(.)\f1 
+\f3minimum(.)\f1 
+\f3mismatch(.)\f1 
+\f3part(.)\f1 
+\f3pos(.)\f1 
+\f3random(.)\f1 
+\f3rem(.)\f1 
+\f3rem_dup(.)\f1 
+\f3reverse(.)\f1 
+\f3rotate(.)\f1 
+\f3rt_pos(.)\f1 
+\f3search(.)\f1
+\f3select(.)\f1 
+\f3set_diff(.)\f1 
+\f3set_insert(.)\f1 
+\f3set_inter(.)\f1
+\f3set_remove(.)\f1
+\f3set_sdiff(.)\f1 
+\f3set_union(.)\f1 
+\f3shuffle(.)\f1 
+\f3sort(.)\f1 
+\f3subs(.)\f1 
+\f3unique(.)\f1
+.Be

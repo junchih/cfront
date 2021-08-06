@@ -1,0 +1,625 @@
+#!/bin/sh
+#ident	"@(#)cls4:incl-master/build	1.1"
+###############################################################################
+#
+# C++ source for the C++ Language System, Release 3.0.  This product
+# is a new release of the original cfront developed in the computer
+# science research center of AT&T Bell Laboratories.
+#
+# Copyright (c) 1991 AT&T and UNIX System Laboratories, Inc.
+# Copyright (c) 1984, 1989, 1990 AT&T.  All Rights Reserved.
+#
+# THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE of AT&T and UNIX System
+#
+# Laboratories, Inc.  The copyright notice above does not evidence
+# any actual or intended publication of such source code.
+#
+###############################################################################
+
+test $# -eq 6 || { echo "Usage: build os stdincl symboliclinkflag verboseflag targetdir list-of-headers"; exit; }
+
+OS=$1
+STDINCL=$2; export STDINCL
+if test "$OS" = "sun"
+then
+	if test -f $STDINCL/macros.h
+	then
+		OS=sunos3
+	else
+		if test -f $STDINCL/sys/stdtypes.h
+		then
+			OS=sunos4.1
+		else
+			OS=sunos4
+		fi
+	fi
+fi
+ft_flag=0
+if test "$OS" = "svr4FT"
+then
+        OS=svr4
+        ft_flag=1
+fi
+pyr_flag=0
+if test "$OS" = "pyramid"
+then
+	OS=svr3
+	pyr_flag=1
+fi
+mips_flag=0
+if test "$OS" = "3b2mips"
+then
+	OS=svr4
+	mips_flag=1
+fi
+SYMBOLICLINK=$3
+VERBOSE=$4
+TARGET=$5
+TEMPTARGET=$5.temp
+ROOT=`pwd`
+
+PATH=$ROOT:$PATH
+export PATH
+
+# Calculate the full path name of $TARGET.
+#
+cd $ROOT
+if test ! -d $TARGET
+then
+	mkdir $TARGET
+	cd $TARGET
+	CURTARGET=`pwd`
+	cd $ROOT
+	rmdir $TARGET
+else
+	cd $TARGET
+	CURTARGET=`pwd`
+	cd $ROOT
+fi
+
+# Figure out where the proto-headers are.
+#
+cd $ROOT
+if test -n "$PROTOHEADERS"
+then
+	echo
+	echo "Using proto-headers: $PROTOHEADERS"
+	echo
+	PROTOS=$PROTOHEADERS
+else
+	PROTOS=$ROOT/proto-headers
+fi
+
+# Make a new empty temporary target directory.
+#
+cd $ROOT
+rm -rf $TEMPTARGET
+mkdir $TEMPTARGET
+
+# Make the link to /usr/include, if that's how we're doing it.
+#
+cd $ROOT
+cd $TEMPTARGET
+if test $SYMBOLICLINK -eq 1
+then
+	ln -s $STDINCL cc
+fi
+
+# Duplicate the directory structure.
+#
+if test $VERBOSE -eq 1
+then
+	echo
+	echo "Creating directories:"
+fi
+cd $ROOT
+cd $PROTOS
+alldirs=`find . -type d -print`
+if test -z "$6"
+then
+	allheaders=`find . -name \*.h -print`
+else
+	allheaders=$6
+fi
+cd $ROOT
+cd $TEMPTARGET
+for i in $alldirs
+do
+	if test $i != "."
+	then
+		if test $VERBOSE -eq 1
+		then
+			echo $i
+		fi
+		mkdir $i
+	fi
+done
+
+# Now build the headers.
+#
+echo
+echo "Building the headers for your machine:"
+
+# If there's no /usr/include/stddef.h, build one.
+# -- Changed this to build stddef.h even if this
+# machine already has one, because some machines
+# define the types in stddef.h wrong.
+#
+#stdcat -s stddef.h
+#if test $? -ne 0
+#then
+if [ "$OS" != "hpux8.0" -a "$OS" != "solaris" -a "$OS" != "svr4" -a "$OS" != "sgi-svr4" ]
+then
+	stddef > stddef.h
+	nochange "$CURTARGET" ./stddef.h
+fi
+#fi
+
+# If curses.h has been ported to this OS, get it.
+#
+if test -f $PROTOS/curses.$OS
+then
+	cp $PROTOS/curses.$OS curses.h
+	nochange "$CURTARGET" ./curses.h
+	chmod +w curses.h
+fi
+
+# For sunos4, copy the special version of setjmp.h
+#
+if test "$OS" = sunos4 -o "$OS" = sunos4.1
+then
+	cp $PROTOS/setjmp.sunos4 setjmp.h
+	nochange "$CURTARGET" ./setjmp.h
+	chmod +w setjmp.h
+fi
+
+# For solaris, copy the special versions of unistd.h, setjmp.h, curses.h
+#
+if test "$OS" = solaris
+then
+	cp $PROTOS/unistd.sol unistd.h
+	nochange "$CURTARGET" ./unistd.h
+	cp $PROTOS/setjmp.sol setjmp.h
+	nochange "$CURTARGET" ./setjmp.h
+	cp $PROTOS/curses.sol curses.h
+	nochange "$CURTARGET" ./curses.h
+	chmod +w unistd.h setjmp.h curses.h
+fi
+
+# Now transform the proto-headers into headers for this OS.
+#
+for h in $allheaders
+do
+	grep "#usedby" $PROTOS/$h >/dev/null
+	if test $? -ne 0
+	then
+		echo
+		echo "error: $h is missing a #usedby directive"
+		echo
+	else
+		grep "#usedby.*[ 	]all\$" $PROTOS/$h >/dev/null
+		G0=$?
+		grep "#usedby.*[ 	]all[ 	]" $PROTOS/$h >/dev/null
+		G1=$?
+		grep "#usedby.*[ 	]$OS[ 	]" $PROTOS/$h >/dev/null
+		G2=$?
+		grep "#usedby.*[ 	]$OS\$" $PROTOS/$h >/dev/null
+		G3=$?
+		if test $G0 -eq 0 -o $G1 -eq 0 -o $G2 -eq 0 -o $G3 -eq 0
+		then
+			# This OS wants this header file.
+
+			sh $ROOT/transform $OS $SYMBOLICLINK $PROTOS/$h > $h
+			if test $h != "./dial.h" -a $h != "./arpa/nameser.h"
+			then
+				nochange "$CURTARGET" $h
+			fi
+		fi
+	fi
+done
+
+# pyramid is just like svr3, except that it also has a values.h file
+if [ "$pyr_flag" = 1 ]
+then
+	sh $ROOT/transform pyramid $SYMBOLICLINK $PROTOS/values.h > values.h
+	nochange "$CURTARGET" values.h
+fi
+# Get a special version of stdarg.h for the mips based 3b2
+#
+if [ "$mips_flag" = 1 ]
+then
+	cp $PROTOS/stdarg.3b2mips stdarg.h
+	nochange "$CURTARGET" ./stdarg.h
+fi
+# Get special versions of curses.h and stdarg.h for the sgi-svr4 architecture
+#
+if test "$OS" = "sgi-svr4"
+then
+	cp $PROTOS/curses.sgi curses.h
+	nochange "$CURTARGET" ./curses.h
+	cp $PROTOS/stdarg.sgi stdarg.h
+	nochange "$CURTARGET" ./stdarg.h
+	chmod +w curses.h stdarg.h
+fi
+
+###########################################################
+# Operating System Dependent Adjustments
+#
+# TO ANYONE PORTING THE HEADERS TO A NEW OPERATING SYSTEM:
+# THIS IS WHERE YOU SHOULD ADD ANY OF YOUR OWN OPERATING
+# SYSTEM DEPENDENT ADJUSTMENTS.
+#
+if test "$OS" = "svr2" -o "$OS" = "svr3" -o "$OS" = "hpux" -o "$OS" = "hpux8.0" -o "$OS" = "uts"
+then
+	# fix the faulty comment in dial.h
+	sed -e 's/device used$/device used \*\//' -e 's/device used to make$/device used to make \*\//' dial.h >$$.tmp
+	mv $$.tmp dial.h
+	nochange "$CURTARGET" ./dial.h
+fi
+if test "$OS" = "sunos4" -o "$OS" = "sunos4.1"
+then
+	# fix the faulty comment in arpa/nameser.h
+	sed -e 's/\/\* 0x3 reserved \*\/$/\*\/\/\* 0x3 reserved \*\//' arpa/nameser.h >$$.tmp
+	mv $$.tmp arpa/nameser.h
+	nochange "$CURTARGET" ./arpa/nameser.h
+fi
+if test "$OS" = "sunos3" -o "$OS" = "sunos4" -o "$OS" = "sunos4.1"
+then
+	# change the name of struct core to struct Bsdcore in sys/core.h
+	sed -e 's/struct core/struct Bsdcore/' $STDINCL/sys/core.h >sys/core.h
+	nochange "$CURTARGET" ./sys/core.h
+fi
+if test "$OS" = "sunos3"
+then
+	# fix the prototype of itol in macros.h
+	sed -e 's/itol()/itol(int)/' $STDINCL/macros.h >macros.h
+	nochange "$CURTARGET" ./macros.h
+fi
+if test "$OS" = "sgi" -o "$OS" = "sgi-svr4"
+then
+	# remove all of the "#pragma" statements from math.h, and all lgammas
+	sed -e '/^#pragma/d' -e '/lgamma/d' math.h >$$.tmp
+	mv $$.tmp math.h
+	nochange "$CURTARGET" ./math.h
+fi
+if test "$OS" = "sgi"
+then
+	# remove the extra declaration of function "stat()"
+	sed -e 's/^extern int	stat/\/\/&/' sys/stat.h >$$.tmp
+	mv $$.tmp sys/stat.h
+	nochange "$CURTARGET" ./sys/stat.h
+	sed -e '/^#pragma/d' \
+	    -e 's/typedef[ 	]signed/typedef \/* signed *\//' \
+		$STDINCL/sys/types.h >$$.tmp
+	mv $$.tmp sys/types.h
+	nochange "$CURTARGET" ./sys/types.h
+	sed -e 's/int creat(const char\*, int);/int creat(const char *, mode_t);/' \
+		./sysent.h >$$.tmp
+	mv $$.tmp sysent.h
+	nochange "$CURTARGET" ./sysent.h
+	sed -e 's/mallinfo(int)/mallinfo()/' ./malloc.h >$$.tmp
+	mv $$.tmp malloc.h
+	nochange "$CURTARGET" ./malloc.h
+fi
+if test "$OS" = "sgi-svr4"
+then
+	# comment out the superfluous declaration of wait() in sys/wait.h
+	sed -e 's/^extern[ 	]pid_t[ 	]wait([^)]*);/\/* & *\//' sys/wait.h >$$.tmp
+	mv $$.tmp sys/wait.h
+	nochange "$CURTARGET" ./sys/wait.h
+fi
+if test "$OS" = "sunos4.1"
+then
+	# remove the superfluous declaration of wait() in sys/wait.h
+	sed -e '/^pid_t	wait(\/\* int \*loc \*\/);$/d' sys/wait.h >$$.tmp
+	mv $$.tmp sys/wait.h
+	nochange "$CURTARGET" ./sys/wait.h
+fi
+if test "$OS" = "svr4" -o "$OS" = "solaris" -o "$OS" = "sgi-svr4"
+then
+	# remove the mblen define in stdlib.h
+	sed -e '/^#define mblen(s, n)/d' stdlib.h >$$.tmp
+	mv $$.tmp stdlib.h
+	nochange "$CURTARGET" ./stdlib.h
+	# remove the C style static functions in sys/stat.h
+	sed -e 's/^#if !defined(_STYPES) && !defined(_KERNEL)$/& \&\& !defined(__cplusplus)/' sys/stat.h >$$.tmp
+	mv $$.tmp sys/stat.h
+	nochange "$CURTARGET" ./sys/stat.h
+	# remove the C style static functions in ftw.h
+	sed -e 's/^#if !defined(_STYPES)$/& \&\& !defined(__cplusplus)/' \
+	    -e 's/^#if defined(_STYPES)$/& \&\& !defined(__cplusplus)/' \
+		ftw.h >$$.tmp
+	mv $$.tmp ftw.h
+	nochange "$CURTARGET" ./ftw.h
+	# remove the C style static functions in sys/utsname.h
+	sed -e 's/^#if !defined(_KERNEL) && !defined(_STYPES)$/& \&\& !defined(__cplusplus)/' sys/utsname.h >$$.tmp
+	mv $$.tmp sys/utsname.h
+	nochange "$CURTARGET" ./sys/utsname.h
+	# hide the #define in dirent.h
+	sed -e 's/^#define[ 	]rewinddir(*[^)]*)[ 	]seekdir(*[^)]*)$/\/* & *\//' dirent.h >$$.tmp
+	mv $$.tmp dirent.h
+	nochange "$CURTARGET" ./dirent.h
+        # hide C-style declaration of rlimit()
+        sed -e 's/^extern int rlimit([^)]*);$/\/* & *\//' sys/resource.h >$$.tmp
+        mv $$.tmp sys/resource.h
+        nochange "$CURTARGET" ./sys/resource.h
+	# hide the function decl of statfs, cannot do this in the proto-header
+	# because there is a statfs structure declared in the header
+	sed -e 's/^[\(extern \)]*int[ 	]*statfs([^)]*);$/\/* & *\//' sys/statfs.h >$$.tmp
+        mv $$.tmp sys/statfs.h
+        nochange "$CURTARGET" ./sys/statfs.h
+	# hide nested declaration of "struct exit_status"
+	sed -e 's/^[ 	]*struct exit_status$/&\
+#ifndef __cplusplus/' -e 's/^[ 	]*ut_exit ;.*$/#endif\
+&/' utmp.h >$$.tmp
+	mv $$.tmp utmp.h
+        nochange "$CURTARGET" ./utmp.h
+	# hide C-style declaration of ustat()
+	sed -e 's/^extern int ustat([^)]*);/\/* & *\//' ustat.h >$$.tmp
+	mv $$.tmp ustat.h
+        nochange "$CURTARGET" ./ustat.h
+fi
+if test "$OS" = "svr4" -o "$OS" = "solaris" -o "$OS" = "sgi-svr4"
+then
+	# hide C-style declaration of statvfs()
+	sed -e 's/^int statvfs([^)]*);/\/* & *\//' sys/statvfs.h >$$.tmp
+	mv $$.tmp sys/statvfs.h
+        nochange "$CURTARGET" ./sys/statvfs.h
+fi
+if test "$OS" = "svr4" -o "$OS" = "solaris"
+then
+	# remove the C style static functions in sys/mkdev.h
+	sed -e 's/^#if !defined(_KERNEL)$/& \&\& !defined(__cplusplus)/' sys/mkdev.h >$$.tmp
+	mv $$.tmp sys/mkdev.h
+	nochange "$CURTARGET" ./sys/mkdev.h
+fi
+if test "$OS" = "svr4" -o "$OS" = "sgi-svr4"
+then
+	# hide C-style declaration of mallinfo()
+	sed -e 's/^extern[ 	]struct[ 	]mallinfo[ 	]mallinfo([^)]*);/\/* & *\//' malloc.h >$$.tmp
+	mv $$.tmp malloc.h
+	sed -e 's/^struct mallinfo mallinfo([^)]*);/\/* & *\//' malloc.h >$$.tmp
+	mv $$.tmp malloc.h
+        nochange "$CURTARGET" ./malloc.h
+# This is actually only needed for svr4.2 but I didn't want to have another
+# OS for one header file change, changing st_[acm]tim.st__sec to tv_sec
+	sed -e 's/^#define st_atime	st_atim.st__sec$/#define st_atime	st_atim.tv_sec/' sys/stat.h >$$.tmp
+	mv $$.tmp sys/stat.h
+	sed -e 's/^#define st_mtime	st_mtim.st__sec$/#define st_mtime	st_mtim.tv_sec/' sys/stat.h >$$.tmp
+	mv $$.tmp sys/stat.h
+	sed -e 's/^#define st_ctime	st_ctim.st__sec$/#define st_ctime	st_ctim.tv_sec/' sys/stat.h >$$.tmp
+	mv $$.tmp sys/stat.h
+        nochange "$CURTARGET" ./sys/stat.h
+fi
+if test "$OS" = "svr4"
+then
+	# work around bug in the ncr svr4 sys/file.h file
+	sed -e 's/^lockinfo_t[	 ]file_lkinfo;$/extern lockinfo_t file_lkinfo;/' sys/file.h >>$$.tmp
+	mv $$.tmp sys/file.h
+        nochange "$CURTARGET" ./sys/file.h
+fi
+
+if test "$OS" = "solaris"
+then
+	# hide C-style declaration of mallinfo()
+	sed -e 's/^struct mallinfo mallinfo([^)]*);/\/* & *\//' malloc.h >$$.tmp
+	mv $$.tmp malloc.h
+        nochange "$CURTARGET" ./malloc.h
+fi
+if test "$OS" = "hpux8.0"
+then
+	# rename the MIN and MAX macros in sys/param.h, they should
+	# be inlines not macros.
+	sed -e '/^#define	MIN(a,b)/s//#define HPUXMIN(a,b)/' -e '/^#define	MAX(a,b)/s//#define HPUXMAX(a,b)/' sys/param.h > $$.tmp
+	mv $$.tmp sys/param.h
+	nochange "$CURTARGET" ./sys/param.h
+fi
+# The svr4 for the starserver FT is slightly different than
+# USL's svr4
+if [ "$ft_flag" = 1 ]
+then
+        # remove the superfluous declaration of mallinfo() in malloc.h
+        sed -e '/^_EXTERN(struct mallinfo, mallinfo, (_NO_ARGUMENTS));$/d' malloc.h >$$.tmp
+        mv $$.tmp malloc.h
+        nochange "$CURTARGET" ./malloc.h
+        # remove the superfluous declaration of flsbuf() in stdio.h
+        sed -e '/^_EXTERN(int, _flsbuf, (int, FILE \*));$/d' stdio.h >$$.tmp
+        mv $$.tmp stdio.h
+        nochange "$CURTARGET" ./stdio.h
+        # remove the superfluous declaration of _fxstat, _xstat,
+        # _xmknod, _lxstat from sys/stat.h
+        sed -e '/^_EXTERN(int, _fxstat, (_CONST int, int, struct stat \*));$/d' sys/stat.h >$$.tmp
+        mv $$.tmp sys/stat.h
+        sed -e '/^_EXTERN(int, _xstat, (_CONST int, _CONST char \*, struct stat \*));$/d' sys/stat.h >$$.tmp
+        mv $$.tmp sys/stat.h
+        sed -e '/^_EXTERN(int, _lxstat, (_CONST int, _CONST char \*, struct stat \*));$/d' sys/stat.h >$$.tmp
+        mv $$.tmp sys/stat.h
+        sed -e '/^_EXTERN(int, _xmknod, (_CONST int, _CONST char \*, mode_t, dev_t));$/d' sys/stat.h >$$.tmp
+        mv $$.tmp sys/stat.h
+        nochange "$CURTARGET" ./sys/stat.h
+fi
+if test "$OS" = "sgi-svr4"
+then
+	sed -e 's/^extern int	_semputc([^)]*);/\/* & *\//' stdio.h >$$.tmp
+	mv $$.tmp stdio.h
+	sed -e 's/^extern int	_semgetc([^)]*);/\/* & *\//' stdio.h >$$.tmp
+	mv $$.tmp stdio.h
+        nochange "$CURTARGET" ./stdio.h
+	sed -e 's/^extern int toupper (int);/\/* & *\//' ctype.h >$$.tmp
+	mv $$.tmp ctype.h
+	sed -e 's/^extern int tolower (int);/\/* & *\//' ctype.h >$$.tmp
+	mv $$.tmp ctype.h
+        nochange "$CURTARGET" ./ctype.h
+	sed -e 's/^extern int	stat([^)]*);/\/* & *\//' sys/stat.h >$$.tmp
+	mv $$.tmp sys/stat.h
+        nochange "$CURTARGET" ./sys/stat.h
+	sed -e 's/^extern int	sigsetjmp([^)]*);/\/* & *\//' setjmp.h >$$.tmp
+	mv $$.tmp setjmp.h
+        nochange "$CURTARGET" ./setjmp.h
+
+	sed -e '/^#pragma/d' sys/types.h >$$.tmp
+	mv $$.tmp sys/types.h
+	nochange "$CURTARGET" ./sys/types.h
+	sed -e '/^#pragma/d' sys/siginfo.h >$$.tmp
+	mv $$.tmp sys/siginfo.h
+	nochange "$CURTARGET" ./sys/siginfo.h
+
+	sed -e '/^#pragma/d' string.h > $$.tmp
+	mv $$.tmp string.h
+	nochange "$CURTARGET" ./string.h
+	sed -e '/^#pragma/d' stdio.h > $$.tmp
+	mv $$.tmp stdio.h
+	nochange "$CURTARGET" ./stdio.h
+fi
+
+if test "$OS" = "svr4" -o "$OS" = "sgi-svr4" -o "$OS" = "solaris"
+then
+	# hide C-style declaration of nlist()
+	sed -e 's/^extern[ 	]int[ 	]nlist([^)]*);/\/* & *\//' nlist.h >$$.tmp
+	mv $$.tmp nlist.h
+        nochange "$CURTARGET" ./nlist.h
+fi
+if [ "$mips_flag" = 1 ]
+then
+	sed -e 's/^#include <stdvar_dcl.h>/\/* & *\//' stdio.h >$$.tmp
+	mv $$.tmp stdio.h
+	sed -e 's/^extern int	vfprintf([^)]*);/\/* & *\//' stdio.h >$$.tmp
+	mv $$.tmp stdio.h
+	sed -e 's/^extern int	vprintf([^)]*);/\/* & *\//' stdio.h >$$.tmp
+	mv $$.tmp stdio.h
+	sed -e 's/^extern int	vsprintf([^)]*);/\/* & *\//' stdio.h >$$.tmp
+	mv $$.tmp stdio.h
+        nochange "$CURTARGET" ./stdio.h
+fi
+
+if [ "$pyr_flag" = 1 ]
+then
+	sed -e '/^#pragma/d' setjmp.h > $$.tmp
+	mv $$.tmp setjmp.h
+	nochange "$CURTARGET" ./setjmp.h
+fi
+
+# If the OS is solaris we must run the solaris.fix script.  This
+# sed script gets rid of the extern "C" blocks Sun has included
+# in their system header files.  This script will not work if
+# SYMBOLICLINK is set (since we are actually changing something in
+# the system header).
+if test "$OS" = "solaris"
+then
+	solaris.fix
+fi
+# Same goes for sgi-svr4, but the script is slightly different
+if test "$OS" = "sgi-svr4"
+then
+	sgi4.fix
+fi
+
+# If netdb.h is from the Wollongong TCP/IP implementation,
+# use the header file generated from the netdb-w.h proto-header
+# file (which contains some extra function prototypes).
+if [ -f netdb.h ]
+then
+	if grep "Wollongong" netdb.h >/dev/null
+	then
+		mv netdb.h netdb.h.bak
+		mv netdb-w.h netdb.h
+		nochange "$CURTARGET" ./netdb.h
+	fi
+fi
+#
+# END OF OPERATING SYSTEM DEPENDENT ADJUSTMENTS
+###########################################################
+
+
+# Remove all empty directories.
+#
+for d in `find . -type d -print`
+do
+	rmdir $d >/dev/null 2>&1
+done
+
+# The common headers can just be copied.
+#
+cd $ROOT
+if test -d const-headers
+then
+	cp const-headers/* $TEMPTARGET
+fi
+
+# Copy the Standard Template Library headers into their directory
+if test -d Stl-headers
+then
+	mkdir $TEMPTARGET/Stl
+	cp Stl-headers/* $TEMPTARGET/Stl
+fi
+
+# Save the current contents of $TARGET.
+#
+cd $ROOT
+if test -d $TARGET
+then
+	if test -d $TARGET.OLD
+	then
+		if test $VERBOSE -eq 1
+		then
+			echo
+			echo "Removing directory structure $TARGET.OLD..."
+		fi
+		/bin/rm -fr $TARGET.OLD
+	fi
+	if test $VERBOSE -eq 1
+	then
+		echo
+		echo "Saving current $TARGET directory structure as $TARGET.OLD."
+	fi
+	mv $TARGET $TARGET.OLD
+
+	# Remove all empty directories.
+	#
+	cd $TARGET.OLD
+	for d in `find . -type d -print`
+	do
+		rmdir $d >/dev/null 2>&1
+	done
+	rm -f cc
+fi
+
+# On platforms where K&R C code is generated, 'long double' in the C++
+# code is mapped to 'double' in the C code.  To make float.h (if it exists)
+# consistent with this transformation, each LDBL_XXX macro should be mapped
+# to the corresponding DBL_XXX macro.  Filter out systems on which:
+#   1) ANSI C is generated, and
+#   2) float.h does not exist
+
+if [ "$OS" != "dec_alpha" -a "$OS" != "linux" -a "$OS" != "svr4FT" -a -f $STDINCL/float.h ]
+then
+	sed \
+	-e 's/define[ 	]*LDBL_MANT_DIG[ 	].*$/define LDBL_MANT_DIG	DBL_MANT_DIG/' \
+	-e 's/define[ 	]*LDBL_EPSILON[ 	].*$/define LDBL_EPSILON	DBL_EPSILON/' \
+	-e 's/define[ 	]*LDBL_DIG[ 	].*$/define LDBL_DIG	DBL_DIG/' \
+	-e 's/define[ 	]*LDBL_MIN_EXP[ 	].*$/define LDBL_MIN_EXP	DBL_MIN_EXP/' \
+	-e 's/define[ 	]*LDBL_MIN[ 	].*$/define LDBL_MIN	DBL_MIN/' \
+	-e 's/define[ 	]*LDBL_MIN_10_EXP[ 	].*$/define LDBL_MIN_10_EXP	DBL_MIN_10_EXP/' \
+	-e 's/define[ 	]*LDBL_MAX_EXP[ 	].*$/define LDBL_MAX_EXP	DBL_MAX_EXP/' \
+	-e 's/define[ 	]*LDBL_MAX[ 	].*$/define LDBL_MAX	DBL_MAX/' \
+	-e 's/define[ 	]*LDBL_MAX_10_EXP[ 	].*$/define LDBL_MAX_10_EXP	DBL_MAX_10_EXP/' \
+	$STDINCL/float.h >$TEMPTARGET/float.h
+fi
+
+# Move the stuff we built to its final resting place.
+#
+cd $ROOT
+mv $TEMPTARGET $TARGET
+
+# All done.
+#
+if test $VERBOSE -eq 1
+then
+	echo
+	echo "All done.  The following directories now contain the following stuff:"
+	echo
+	echo "	$TARGET -- the newest C++ headers for this machine"
+	echo "	$TARGET.OLD -- (if present) the old versions of any headers which"
+	echo "			have changed"
+	echo
+fi

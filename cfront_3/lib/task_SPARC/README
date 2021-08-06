@@ -1,0 +1,29 @@
+SPARC TASK LIBRARY:
+------------------
+This is the version of the USL task library for Sun's SPARC
+archtecture.  The code was ported to the SPARC architecture by
+SUN and is being distributed by USL.  It is based upon release 
+3.0 of the USL task library.  NOTE: This product is NOT supported
+by USL, it is not part of the standard USL 3.0 C++ release.  It 
+is being distributed as a service to our customers.
+
+BUILDING INSTRUCTIONS:
+---------------------
+This directory contains the source code used to build a version of 
+the task libraries for Sun's SPARC architecture.  There are TWO 
+directories; mk and task.  The task directory contains the source
+code used to build the task library, libtask.a.  The mk directory
+contains the makefile to build the library, and once built the
+library (libtask.a) and object files (.o's).   Before building 
+the library you will need to edit the mk/makefile and set
+CC to your C compiler, CCC to your C++ compiler, and CCFLAGS to
+any compile time options you would like to use.  You should not
+have to change any other variables.
+
+KNOWN PROBLEMS:
+--------------
+This version of the task library does not work properly when 
+SHARED tasks are specified.  Applications that use SHARED
+tasks may dump core when run.  The problem should go away if
+DEDICATED tasks are used.  For more information on SHARED vs.
+DEDICATED tasks see section 2 of the USL Library Manual.

@@ -1,0 +1,69 @@
+.\" ident	@(#)Array_alg:man/reverse.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3reverse\fP \f3Array_alg(3C++)\fP " "
+.SH NAME
+reverse \- reverse the order of elements in an array
+.SH SYNOPSIS OF Array_alg.h
+.Bf
+
+    template <class \*(gt>
+    void reverse(\*(gt* b,\*(gt* e);
+    template <class \*(gt>
+    void reverse_c(\*(gt* b1,\*(gt* e1,\*(gt* b2);
+
+.Be
+.SH ASSUMPTIONS
+.PP
+.br
+(1) For the copy version, the output array does not
+overlap the input array
+.br
+(2) For the copy version, the output array has
+at least as many cells as the input array.
+.br
+(3) \*(gt has \f4operator=\f1
+.SH DESCRIPTION
+.PP
+These functions reverse the elements of an array.
+That is, for every integer \f4i\f1 between \f20\f1
+and \f4e\-b\-1\f1, location \f4e\-(i+1)\f1 
+will have the same value after reversal 
+that \f4b + i\f1 had before reversal.
+.sp 0.5v
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void reverse(\*(gt* b,\*(gt* e);\f1"
+Reverses the array in place.
+.IP "\f4template <class \*(gt>\f1"
+.IC "\f4void reverse_c(\*(gt* b1,\*(gt* e1,\*(gt* b2);\f1"
+Like \f4reverse\f1 except that the input array
+is preserved and the result written to a new array
+beginning at location \f4b2\f1.
+.SH COMPLEXITY
+.PP
+If \f2N\f1 is the size of the array,
+then complexity is \f2O(N)\f1 for both versions.  
+More precisely,
+.IP "\f3plain version\f1"
+Exactly \f23floor(N/2)\f1 assignments are done.
+.IP "\f3copy version\f1"
+Exactly \f2N\f1 assignments are done.
+.SH NOTES
+Because a Block (see \f3Block(3C++)\f1)
+can always be used wherever an array is called for,
+Array Algorithms can also be used with Blocks.
+In fact, these two components were actually designed 
+to be used together.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3Block(3C++)\f1
+.Be

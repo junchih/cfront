@@ -1,0 +1,263 @@
+#ident	"@(#)ctrans:README	1.6"
+/**************************************************************************
+
+C++ source for the C++ Language System, Release 3.0.  This product
+is a new release of the original cfront developed in the computer
+science research center of AT&T Bell Laboratories.
+
+Copyright (c) 1991 AT&T and UNIX System Laboratories, Inc.
+Copyright (c) 1984, 1989, 1990 AT&T.  All Rights Reserved.
+
+THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE of AT&T and UNIX System
+Laboratories, Inc.  The copyright notice above does not evidence
+any actual or intended publication of such source code.
+
+*****************************************************************************/
+This is the USL C++ Language System, Release 3.0.1
+This README highlights major changes since Releases 2.1 and 2.0.
+It should be read in conjunction with the Release 3.0 Release Notes
+that describe in detail the installation process and features of 
+the release.
+
+Release 3.0 is both a feature and bug fix release.   The major
+feature enhancement is the implementation of Templates.  Both
+template classes and functions are supported.  Automatic instantiation
+of templates is also provided.  Please see the Release Notes,
+Selected Readings and Reference Manual for more information on templates.
+Specifically, for a description of the feature and its uses, see
+Chapter 14 of the Reference Manual, "Parameterized Types for C++",
+B. Stroustrup, in the Selected Readings manual and Chapters 1 and 4
+of the Release Notes.  For information about the automatic instantiation
+support, refer to the Selected Readings: "Template Instantiation in
+C++ Release 3.0, Overview", G. McCluskey and R. B. Murray, which
+presents an overview and technical rationale for the instantiation
+mechanism and "Template Instantiation, Users Guide", G. McCluskey,
+which presents various examples of use of the automated support for
+instantiations.
+
+In addition, this release implements various enhancements to the language
+first defined in the 2.1 Reference Manual and enforces additional
+anachronisms.  For the most part, anachronisms that were warned about by
+default in Release 2.1 are errors in Release 3.0.  Those that were
+warned about only under +w, such as assignment to this and binding
+a non-const reference to a temporary, will become warnings by default
+in this release and will be disallowed in the next.  Similarly, the
+Ostream library, which was made obsolete in Release 2.0, is no longer
+distributed with Release 3.0.  This release also begins a process of
+architectural renewal for the cfront source, with reengineering of the
+front end symbol table, type checking, function matching and operator
+overloading.  Finally, for this release, we have reimplemented the name
+demangler library, have included support for SVR 4 including an ELF
+based patch, and provided SunOS 4.1 header files.  Please see the
+Release Notes for a brief overview of new features, anachronism
+treatment and renovations.
+
+Release 3.0 is both source and link compatible with Release 2.1:
+a legal C++ program that compiled warning free and executed correctly
+under Release 2.1 will continue to compile and execute correctly with
+Release 3.0.  Note, however, that the introduction of true nested
+types, begun under the transition model in Release 2.1, is completed
+in this release.  Code that uses nested types and which has not been 
+recompiled since Release 2.0 or which compiled with warnings
+in Release 2.1 will need to be recompiled.  With this exception, code compiled
+under Release 2.0 or 2.1 does NOT need to be recompiled under Release 3.0.
+For any of several reasons, however, you might want to recompile
+your old code anyway using Release 3.0:
+	-Release 3.0 enforces some language rules that were not enforced
+	 by Release 2.0/2.1.  If you recompile your code, you will find out
+	 if it makes use of constructs that are illegal.
+	-Release 3.0 issues, by default, clearly-marked warning messages if
+	 you use any anachronistic constructs in your code.  Because these
+	 anachronisms will no longer be supported in the next major
+	 release of the USL Language System, you might want to
+	 delete any uses from your code now.
+	-As with Release 2.1, Release 3.0, when +w is specified, issues warning
+	 messages for inline functions that are not inlined.  This may
+	 be useful for performance analysis.
+
+Chapter 4 of the Release Notes, "Compatibility," discusses changes you
+may need to make in upgrading from Release 2.0 or 2.1 to Release 3.0.
+In particular, various bugs have been fixed, and some may cause code that
+used to work (but never should have worked) to fail.  Please see Chapter 4,
+"Language-Related Fixes" for more information.
+
+
+REFERENCE MANUAL
+
+The Reference Manual has been updated to include Chapter 14
+describing the templates feature, but otherwise includes
+only editorial changes over the 2.1 Release version.  Since the
+Reference Manual has been selected as the base document for
+ANSI C++ standardization efforts, we are hesitant to make further
+changes pending ANSI standardization.
+
+If you are upgrading to 3.0 from 2.1, the only change you will
+see is the implementation of various features which were introduced
+in the 2.1 Reference Manual, but not implemented.  See Chapter 4,
+"Upgrading from Release 2.1 to Release 3.0" in the Release Notes for
+more information.  For users upgrading from Release 2.0, there were
+extensive clarifications in the Release 2.1 Reference Manual which
+are carried forward into the 3.0 Release.  Please refer to Chapter 4,
+"Upgrading from Release 2.0 to Release 2.1" before attempting to upgrade 
+to 3.0.
+
+
+ANACHRONISMS
+
+Release 3.0, as in previous releases, continues to implement several
+extensions to the C++ language known as anachronisms.  Anachronistic behaviors
+will not be implemented in the next major release of the USL C++
+Language System.  Release 3.0 produces a warning message for each
+anachronistic construct, and each message is suffixed with the string
+"(anachronism)."  Warnings for essentially all anachronistic constructs are
+issued unconditionally.  Anachronisms are described in Chapter 4 under
+"Future Compatibility Issues" and in Appendix B.3 of the Reference Manual.
+
+
+DOCUMENTATION
+
+The documentation supplied with Release 3.0 has been revised.
+User documentation is packaged in 4 volumes:
+	-Release Notes:  describes the contents of the release,
+		installation and porting instructions, compatibility
+		with previous releases, known problems, "sorry"
+		messages and the CC command.
+	-Product Reference Manual:  provides a complete definition of the
+		C++ language supported by Release 3.0 of the C++ Language
+		System.  This manual has been revised since Release 2.0,
+		but with the exception of including Chapter 14, has not
+		been revised significantly since Release 2.1.
+	-Selected Readings:  contains papers describing various aspects
+		of the C++ language, including templates, changes since 1985,
+		multiple inheritance, type-safe linkage, and language overviews.
+	-Library Manual:  describes the class libraries supplied with
+		Release 3.0:  the iostream library, the complex library,
+		and the task library.
+
+In addition, on-line manual pages are supplied under the man directory.
+Hard copies of the manual pages are reproduced in the Release Notes
+and the Library Manual.  The on-line copies can be printed with 
+troff -man or nroff -man.
+
+MAKEFILE AND BUILD PROCEDURES
+
+Changes have been made in the makefile and build procedures to accommodate
+build and installation of the automatic instantiation support tools, ptlink
+and ptcomp.  The instantiation tools reside in a new directory, tools/pt.
+Please refer to the Release Notes for more information on build and
+installation.  In addition, a README.ptenv is included in the tools/pt
+directory discussing the details of build and installation for the instantiator.  
+Similarly, a README is included in tools/demangler/README.dem describing
+the build and installation for the new demangler.
+
+Please note that the instantiation mechanism is automatically invoked by 
+CC and therefore programs intending to exercise the instantiation 
+mechanism  must be compiled through the CC command distributed with this 
+release or a CC command modified to incorporate the appropriate changes.
+
+Aside from additions to build and install the instantiation mechanism, the 
+overall build and installation process is essentially unchanged.  Similarly,
+with the exception of new files to implement the templates feature, the
+directory structure on the source tape is virtually identical to the structure
+for Release 2.0/2.1.
+
+To build the compiler, first edit the makefile to set any variables
+you need to change for your environment (see the Release Notes for details
+about makefile variables and building the compiler), then type
+
+		make munch
+or
+		make patch
+
+to build either a munch version or a patch version, respectively, of the
+compiler.  
+
+For users upgrading from Release 2.0, you should be aware that Release 2.1
+introduced one new makefile variable, the AON variable.  AON can be set
+to +a1 to build a CC command that generates ANSI C style declarations in the
+intermediate C code, or to +a0 (the default) to build a CC command that 
+generates classic C style declarations in the intermediate C code.
+
+
+PORTING CHANGES
+
+If you are upgrading from Release 2.1 you should see little change in
+porting cfront or the header files.  However, please refer to the Release
+Notes for a description of the instantiation mechanism which may involve
+some degree of porting, especially to non-UNIX(TM) systems.  In particular,
+users with their own CC commands will need to study changes to the
+distributed CC command carefully to understand how to integrate instantiation
+support into their systems.
+
+For users upgrading from 2.0, you will also see that the format of the output
+of the szal program was improved for Release 2.1.  The new output is in the
+same format as the entries in the src/size.h file.  This change makes it easier
+to add new systems to src/size.h.  See the section in the Release Notes on 
+"Porting the C++ Compiler" for more details on the szal program.
+
+
+CC COMMAND CHANGES
+
+There have been several options added to the CC command to support
+the automatic instantiation process.  Please refer to the CC man page
+in the Release Notes and "Template Instantiation, Users Guide" in the
+Selected Readings for a description of these options.
+
+We have also added support for multiple include paths in the -I directive.
+Multiple paths may be specified in a colon separated list.
+
+In addition, for users upgrading from Release 2.0, the following
+changes in the CC command introduced in Release 2.1 are worth noting.
+
+The +w option now consistently provides information about whether inline
+functions are actually being inlined.
+	-If an inline function definition is seen, and the definition
+	 contains some construct for which it is too complicated to 
+	 generate inline code, a "not implemented" error message
+	 is reported.
+	-If an inline function definition is seen and the definition
+	 cannot be inlined for some other reason (e.g., it is too long
+	 or it is a virtual function) a warning message will be issued
+	 if the +w option is specified.
+	-If a call to an inline function is seen and, because of the
+	 characteristics of the call site, the particular call cannot
+	 be generated inline, a warning message will be issued if the
+	 +w option is specified.
+	-If the address of an inline function is taken, a warning message
+	 will be issued if the +w option is specified.
+
+Under Release 2.0, most options to the CC command were "position-dependent,"
+that is, they applied only to files named after them on the command line.
+Under Releases 2.1 and 3.0, the following options are now "position-independent,"
+that is, they apply to all files named on the command line:  -Y, +a, -E,
+-F, -C, -P, -S, -c, -I, -D, -U, and -g.  The +d, +p, and +w options, however,
+continue to be "position-dependent," as they were in Release 2.0.
+
+Under Release 2.0, the -g option, which causes additional debugging
+information to be generated, was only passed to the underlying C compiler;
+it did not affect the behavior of the compiler itself.  Under Releases 2.1
+and 3.0, however, the -g option also affects the behavior of the compiler.
+If -g is specified, the compiler produces C code for every declaration in the
+compilation, rather than only for those declarations that are actually
+needed or used.
+
+
+LIBRARY CHANGES
+
+The Ostream library, made obsolete in Release 2.0 is no longer included
+in the release.  The only other changes in the libraries for Release
+3.0 are miscellaneous bug fixes.
+
+Users upgrading from Release 2.0 should be aware of the following
+library changes introduced in Release 2.1.
+
+The iostream library functions iostream::get() and iostream::put() have
+been reimplemented so that the compiler can successfully expand them
+inline for most calls.  Under Release 2.0, these functions could not
+be expanded inline.
+
+The task library has been ported to the Amdahl UTS platform.  To build
+the task library for the Amdahl UTS computer, either set MACH=uts in the
+top level makefile, or specify MACH=uts on the command line when building
+the task library.
+

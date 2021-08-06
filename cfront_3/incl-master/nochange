@@ -1,0 +1,41 @@
+#!/bin/sh
+#ident	"@(#)cls4:incl-master/nochange	1.2"
+###############################################################################
+#
+# C++ source for the C++ Language System, Release 3.0.  This product
+# is a new release of the original cfront developed in the computer
+# science research center of AT&T Bell Laboratories.
+#
+# Copyright (c) 1991 AT&T and UNIX System Laboratories, Inc.
+# Copyright (c) 1984, 1989, 1990 AT&T.  All Rights Reserved.
+#
+# THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE of AT&T and UNIX System
+#	
+# Laboratories, Inc.  The copyright notice above does not evidence
+# any actual or intended publication of such source code.
+#
+###############################################################################
+
+# nochange $CURTARGET headerfile
+#
+# checks whether the newly generated header file is identical to
+# the old one.  if it is, it overwrites the new one with the old
+# one in order to restore the file's last-access time.
+
+olddir=$1
+file=$2
+
+if test -f $olddir/$file
+then
+	cmp -s $file $olddir/$file
+	if test $? -eq 0
+	then
+		echo "$file"
+		# restore the old date.
+		mv $olddir/$file $file
+	else
+		echo "$file (CHANGED SINCE LAST BUILD)"
+	fi
+else
+	echo "$file (NEW SINCE LAST BUILD)"
+fi

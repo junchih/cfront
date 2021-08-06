@@ -1,0 +1,117 @@
+NOTE: THESE FILES ARE NOT DISTRIBUTED WITH THE TASK RELEASE.
+
+Summary of unit tests for task library included in this directory:
+
+See the makefile for info on how to compile and run the tests
+Notes:	[N] denotes a reference, see below.
+	*'d tests are run automatically by the makefile
+
+*2cancel.C    --test derived from bug report by Martin Carroll; see
+	    	mdc.2cancel.C for bug report.  This test cancels a task
+		twice, which should be okay.
+8queens.net.C --test program from net; I haven't actually run it.
+*Qex1.C	      --see "A Server Example" in [1],
+		uses queues to communicate with Server task
+*Qex2.C	      --see "Encapsulation" in [1],
+		builds on Qex1.C:  adds ctors and member functions to Message,
+		derives a special queue type for Message objects
+*Qex3.C	      --see "Encapsulation" in [1],
+		builds on Qex2.C:  adds Server member functions for requesting
+		services.
+*Spaces.C      --see "Tasks" in [1],
+		very simple example to show task basics:  creation,
+		termination, "returning" values, blocking.
+airport.C     --From draft Dewhurst/Stark C++ Programming book, proprietary.
+		Simulates air traffic control at an airport.
+		Creates three tasks:  Airport, AirControl, and GroundControl,
+		uses random numbers, delays, queues.
+*alph.C	      --From Jonathan E. Shopiro, uses Semaphores as in [2].
+		Demonstration of 2 tasks communicating by semaphores.
+		Defines objects (semaphores) that tasks can wait for.
+*compat.C      --based on triv.C with additions to test compatibility
+		of various task changes with 1.2 constructs, and to
+		test various functions such as task::print() and o_type().
+		See compat.C comments for more detail.
+		Uses function TOP() from hw_stack.c, which is not part
+		of public interface of task library; it is used to provide
+		point of reference to check output from print(STACK).
+		NOTE:  this test is run automatically by makefile, but 
+		because it prints stack sizes, which vary when the lib
+		is changed, it often prints failed, but is actually okay.
+*ded-sh.C     --Like nontriv.C but alternately creates DEDICATED and SHARED
+		tasks; first is DEDICATED.
+*delTERM.C    --Based on bug report by Martin Carroll (see mdc.delTERM.C),
+		with extraneous double cancel's removed and longer remember
+		lists added.
+*delTERM2.C   --Like delTERM2.C, but expected to generate a runtime error.
+*exit_stat.C  --Simple test to test sched::set_exit_status() and
+		sched::get_exit_status()
+*filter.C     --see "More About Queues:  Cutting and Splicing" in [1],
+		"fairly static" use of filters, which creates 3 tasks:
+		Producer produces lines, Consumer consumes words, and
+		Line_to_Word converts lines to words.  Requires filter.in
+		file to provide lines for Producer.
+*filter2.C    --see "More About Queues:  Cutting and Splicing" in [1],
+		Builds on filter.C but shows a more dynamic use of filters,
+		using "qtail::cut" and "qtail::splice".
+		See filter2.C comments for details.  Requires filter2.in
+		file to provide lines and macros for Producer.
+jes.shared.C  --Infinite loop version of sh-ded.C
+*mi.C	      --Example of using multiple inheritance with the task library
+		as an alternative to multi-level derivation from class task.
+		Based on triv.C.
+*misc.C	      --Builds on examples from various sections of [1].
+		"More about Queues:  Mode and Size," "More About Tasks,"
+		(ctor args, task_chain, print), "Waiting," "System Time
+		and Timers," "More about Queues:  Cutting and Splicing"
+		(task deleting itself).
+*nontriv.C    --Like triv.C, but each task but the last creates the next task.
+*public.C     --Like triv.C, but also calls o_type().
+rand.C	      --test of random number generating classes in libtask.a
+real_timer.C  --Example from appendix in [2].
+regtest.C     --Like nontriv.C, but uses more registers and checks that they
+		have been preserved across a task switch.
+*sh-ded-rec.C --Based on nontriv.C, but more complicated; involves recursion.
+*sh-ded.C     --Like ded-sh.C, but first task is SHARED, subsequent ones
+		alternate between DEDICATED and SHARED.
+*sh-noded.C   --Like sh-ded.C, but only creates SHARED tasks.
+*sh_misc.C    --Same as misc.C, but all tasks are SHARED.
+*shared.C     --Like nontriv.C, but all tasks are SHARED.
+*shareg.C     --Like shared.C, but uses more registers and checks that they
+		have been preserved across a task switch.
+sigq.C	      --See [2], section "Real-Time Extensions, Avoiding Interference,
+		Interrupts".  Uses Interrupt_handler, and has an interrupt
+		function that collects data.  One task waits for SIGINTS.
+	 NOTE:  This program is interactive, and cannot be killed with
+		a DEL; it requires kill -9 to stop it, so only run it when you
+		can kill it from a different window.
+*sigtest.C    --Task example showing 2 tasks communicating with semaphores
+		and signals.  Uses the new signal-handling mechanisms in the
+		task library: class Interrupt_handler and the virtual
+		interrupt() function.
+*splice.C     --Test of fix to bug in qhead::splice() that occurred when
+		a splice occurred to a queue on which another task was
+		blocked.
+*t_create.C   --See [2], "Appendix:  Example Programs."
+		Repeatedly creates a task and waits for it to terminate.
+		Can be used to time task creation and termination.
+*t_switch.C   --See [2], "Appendix:  Example Programs."
+		Task example using semaphores to switch between 2 tasks.
+		Can be used to time task switches.
+*triv.C       --Example from Appendix of [1], "A Program Using Tasks."
+		Makes a set of tasks which pass an object around.
+		Each task gets an object from the head of one queue, and puts
+		the object on the tail of another queue.
+		Main creates each task, then puts the object on a queue.
+		Each task quits after getting the object MAX_CYCLES times.
+*trivrand.C   --Derived from triv.C, but the object passed around is a member
+		of a derived class that contains a randint object.  Uses
+		randint draw functions.
+*triverand.C  --Like trivrand.C, but uses class erand instead of randint.
+
+
+
+[1] Stroustrup, B. & Shopiro, J.E.  A Set of C++ Classes for Co-routine
+    Style Programming.  In C++ Translator Release Notes.
+[2] Shopiro, J.E., Extending the C++ Task System for Real-Time Control.
+    In C++ Translator Release Notes.

@@ -1,0 +1,226 @@
+.\" ident	@(#)Block:man/Block.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Block\fP \f33C++\fP " "
+.SH NAME
+Block \- Parameterized variable-size arrays
+.SH SYNOPSIS OF Block.h
+.Bf
+
+    template <class \*(gt>
+    class Block {
+    public:
+
+    //  Constructors, destructor
+
+	Block();
+	Block(unsigned n);
+	~Block();
+
+    //  Copy and assign
+
+	Block(const Block(\*(gt)& b);
+	Block<\*(gt>& operator=(const Block<\*(gt>& b);
+
+    //  Access elements 
+
+	operator \*(gt*();
+	\*(gt* end();
+	\*(gt& operator[](int i);
+
+	operator const \*(gt*()const;
+	const \*(gt* end()const;
+	const \*(gt& operator[](int i)const;
+
+    //  Length
+
+	unsigned size()const;
+	unsigned size(unsigned n);
+	int reserve(unsigned i);
+
+    //  Stream insertion
+
+	\f2friend\fP ostream& operator<<(ostream& os,
+              const Block<\*(gt>& b);
+
+    //  Miscellaneous
+
+	void swap(Block<\*(gt>& b);
+    };
+
+.Be
+.SH DESCRIPTION
+.PP
+A
+\f4Block<\*(gt>\f1
+is a contiguous region of memory in which
+\f2elements\f1 of type \*(gt are stored in 
+consecutive \f2cells\f1.  
+At the client's request, the number of cells may be changed
+(this does not happen automatically).  
+Such requests are carried out in three steps:
+(1) allocate a new region 
+(2) copy elements from the old region to the new region 
+(3) de-allocate the old region.
+Like arrays, the cells of a Block may be accessed 
+using an integer index or ordinary pointer operations,
+but care must be taken not to use pointers or
+references to obsolete regions.
+.P
+In all cases, the type parameter \*(gt must be a single
+token (use \f4typedef\f1 to create typenames for
+complex types), and should be a type having
+.RS
+.TP
+.PD 0
+\(bu \f4\*(gt()\f1
+.TP
+\(bu \f4\*(gt(\*(gt&)\f1
+.TP
+\(bu \f4operator=\f1
+.PD
+.RE
+.SS "Constructors, destructor"
+.IP "\f4Block();\f1"
+A Block of size 0.
+.IP "\f4Block(unsigned n);\f1"
+A Block of size \f4n\f1.  
+If \f4n\f1 cells cannot
+be acquired, 
+\f4size()\f1 will subsequently return zero.
+Elements are initialized with the value of an otherwise
+uninitialized static object of type \*(gt.
+.IP "\f4~Block();\f1"
+Destructor.  Frees all \f4size()\f1 cells.
+.SS "Copy and assign"
+Copying or assigning a \f4Block<\*(gt>\f1
+creates a copy of its value.
+For both operations, the size of the result will be
+zero if \f4b.size()\f1 cells cannot be acquired.
+.IP "\f4Block(const Block<\*(gt>& b);\f1"
+Copy constructor.  Acquires \f4b.size()\f1 cells.
+.IP "\f4Block<\*(gt>& operator=(const Block<\*(gt>& b);\f1"
+Assignment.  Acquires \f4b.size()\f1 cells and 
+frees \f4size()\f1 cells.
+.SS "Access elements"
+The functions in this group yield pointers 
+or references to cells.  Such pointers or references 
+are valid only as long as same storage region remains 
+associated with the Block.
+.IP "\f4operator \*(gt*();\f1"
+A pointer to the first cell of the Block (the cell with
+index \f20\f1).  Useful as an implicit
+conversion in contexts involving pointer arithmetic.  
+For example, if \f4b\f1 is a Block, 
+then \f4b+i\f1 is equivalent to \f4(\*(gt*)b+i\f1.
+.IP "\f4\*(gt* end();\f1"
+A pointer just beyond the last cell.  
+For example, if \f4b\f1 is a Block, then \f4b.end()\f1 is 
+equivalent to \f4(\*(gt*)b+b.size()\f1.
+.IP "\f4\*(gt& operator[](int i);\f1"
+A reference to the cell with index \f4i\f1.
+.IP "\f4operator const \*(gt*()const;\f1"
+.hS
+.IP "\f4const \*(gt* end()const;\f1"
+.hS
+.IP "\f4const \*(gt& operator[](int i)const;\f1"
+Like the above, but these can be used on constant
+as well as non-constant Blocks.
+.SS "Length"
+.IP "\f4unsigned size()const;\f1"
+The number of cells in the Block.
+.IP "\f4unsigned size(unsigned n);\f1"
+Changes the region of memory associated with the Block
+to a new region having \f4n\f1 cells and copies
+elements from the old region into the new region.
+If the new region is larger than the old, 
+the excess element are set to the value of an otherwise
+uninitialized static object of type \*(gt.
+Otherwise, only enough elements are copied 
+to fill the new region.  
+If \f4n\f1 cells cannot be acquired,
+the size is set to zero.  
+Returns the new size.
+.IP "\f4int reserve(unsigned i);\f1"
+Increases the size, if necessary, 
+to some value strictly greater than \f4i\f1.  
+In other words, calling \f4reserve(i)\f1
+is a way of guaranteeing that \f4i\f1 is a valid 
+index (see the \f3EXAMPLE\f1).  
+If the size is already greater than \f4i\f1, 
+the operation is very fast and has no effect.
+If the size must be increased but enough new cells 
+cannot be acquired, the size is set to zero.  
+Returns nonzero if the operation succeeds.
+.SS "Stream insertion"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os,const Block<\*(gt>& b);\f1"
+Inserts an ASCII representation of \f4b\f1 into \f4os\f1.
+The representation has the 
+form \f4[\f2e1\fP,\f2e2\fP,...\f2en\fP]\f1 
+where the \f2e\f1's are the elements of \f4b\f1.
+.SS "Miscellaneous"
+.IP "\f4void swap(Block<\*(gt>& b);\f1"
+The memory associated with \f4b\f1 and the memory 
+associated with this Block are swapped.  
+No result is returned and no
+elements are copied or moved.
+.SH COMPLEXITY
+Block is implemented by straightforward use of 
+the \f4new\f1 and \f4delete\f1 operators, 
+with the sole exception of \f4reserve()\f1.
+Calling \f4b.reserve(i)\f1
+checks inline that the size of
+\f4b\f1 is greater then \f4i\f1;
+if it isn't, the size may well be increased considerably 
+beyond \f4i\f1 (the present strategy is to multiply the 
+current size by the smallest power of 1.5 needed 
+to increase it beyond \f4i\f1).
+.SH EXAMPLE
+\f4reserve()\f1 was designed to be used
+in the following way:
+.Bf
+
+    unsigned i = 0;
+    Block<int> b;
+    int x;
+
+    while(cin >> x){
+	b.reserve(i);   \f2guarantee that i is a valid index\fP
+	b[i++] = x;
+    }
+
+.Be
+.SH BUGS
+\(bu\ Elements are copied during reallocation by using
+\f4\*(gt::operator=\f1 instead of \f4\*(gt(\*(gt&)\f1.
+.br
+\(bu\ Functions that access elements yield pointers or references
+that are only good as long as the as same storage region 
+remains associated with the Block.
+.SH ERRORS
+The only error detected is running out of memory.  This
+is indicated in all cases by setting the size of the
+Block for which the allocation failed to zero.
+.SH NOTES
+\(bu\ Array algorithms 
+(see \f3Array_alg(3C++)\f1) implement
+nearly 100 algorithms on blocks of contiguously
+stored data, including algorithms for searching, 
+sorting, inserting, removing, and paritioning.
+These algorithms can be used on either arrays or Blocks.
+.br
+\(bu\ For parameterized variable-size arrays with 
+non-integral index types, see \f3Map(3C++)\f1.
+.SH SEE ALSO
+.Bf
+\f3intro(Array_alg(3C++))\f1
+\f3Map(3C++)\f1
+.Be

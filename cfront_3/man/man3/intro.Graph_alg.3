@@ -1,0 +1,121 @@
+.\" ident	@(#)Graph_alg:man/intro.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3intro\fP \f3Graph_alg(3C++)\fP " "
+.SH NAME
+intro \- introduction to Graph Algorithms
+.SH SYNOPSIS OF Graph_alg.h
+.Bf
+#include <Graph.h>
+#include <List.h>
+#include <Set.h>
+
+//  Macros used to simulate parameterized types
+
+#define GApredicate(\*(gt) ...
+
+#define Graph_algdeclare(\f2G\fP,\f2V\fP,\f2E\fP) ...
+#define Graph_algimplement(\f2G\fP,\f2V\fP,\f2E\fP) ...
+
+Graph_algdeclare(Graph,Vertex,Edge)   \f2//see \f3Graph(3C++)\fCW
+
+//Expanding Graph_algdeclare(G,V,E) produces the following text:
+
+
+    //  Auxiliary definition needed by Graph algorithms
+
+    typedef int GApredicate(\f2V\fP)(const \f2V\fP* v);
+
+    //  Graph algorithms
+
+    List_of_p<\f2V\fP> dfs(\f2G\fP& g,\f2V\fP* v,GApredicate(\f2V\fP)* f = 0);
+    List_of_p<\f2V\fP> dfs_u(\f2G\fP& g,\f2V\fP* v,GApredicate(\f2V\fP)* f = 0);
+    .
+    .  \f2etc. for the remaining algorithms\fR
+    .
+
+.Be
+.SH DESCRIPTION
+.PP
+\f2Graph Algorithms\f1 are a collection of functions 
+implementing some of the most basic algorithms on 
+directed and undirected Graphs.
+Functions with the suffix \f5_u\f1
+treat Graphs as \f2undirected\f1 (that is, they
+ignore Edge directionality), while functions without 
+this suffix treat Graphs as directed.
+See \f3Graph(3C++)\f1 for a description of
+the base classes
+\f5Graph\f1, \f5Edge\f1, and \f5Vertex\f1,
+and the rules for deriving application-specific
+classes \f2G\f1, \f2V\f1, and \f2E\f1 from these.
+.PP
+The functions in this collection are
+parameterized by the Graph, Vertex, and Edge type.
+Type parameterization is simulated
+by two preprocessor macros, \f5Graph_algdeclare\f1
+and \f5Graph_algimplement\f1, both of which
+take three arguments specifying (respectively) 
+the Graph, Edge, and Vertex types.
+As a convenience to users who would like to apply Graph
+Algorithms to the ``vanilla'' types defined 
+in \f3Graph(3C++)\f1,
+the macros are pre-expanded for \f4Vertex\f1, \f4Graph\f1 
+and \f4Edge\f1; such users can ignore the following macros.
+.SS "Macros used to simulate parameterized types"
+In all cases, parameters must be single tokens
+(use \f4typedef\f1 to create typenames for 
+complex types).
+.IP "\f4#define GApredicate(\*(gt) ...\f1"
+Used to create a unique typename, which you may write
+as either \f4GApredicate(\*(gt)\f1 or \f4\*(gt_GA_predicate.
+.IP "\f4#define Graph_algdeclare(\f2G\fP,\f2V\fP,\f2E\fP) ...\f1"
+Expanding this macro creates declarations for 17
+functions implementing algortithms that operate on
+Graphs, Vertices, and Edges of type \f2G\f1, \f2V\f1, 
+and \f2E\f1, respectively.
+They also create auxiliary definitions needed by the
+functions.  The macro must be expanded 
+in any compilation unit that uses any of the algorithms, prior
+to the first such use.  Expanding the macro
+for two or more different sets of types 
+in the same compilation unit simply 
+overloads the function names.  
+.IP "\f4#define Graph_algimplement(\f2G\fP,\f2V\fP,\f2E\fP) ...\f1"
+Expanding this macro creates definitions for all 17
+functions.  Must be expanded exactly once in any executable
+that expands \f4Graph_algdeclare(\f2G\fP,\f2V\fP,\f2E\f1).
+Expanding all implement macros in the same \f4.c\f1 file
+is the only way to ensure that these definitions do
+not conflict.
+.SS "Auxiliary definition needed by Graph algorithms"
+.IP "\f4typedef int GApredicate(\f2V\fP)(const \f2V\fP* v);\f1"
+This creates the necessary type definition for parameters
+and results of the Graph algorithms.  
+.SS "Graph algorithms"
+.IP "\f4List_of_p<\f2V\fP> dfs(\f2G\fP& g,\f2V\fP* v,GApredicate(\f2V\fP)* f = 0);\f1"
+.hS
+.IP "\f4List_of_p<\f2V\fP> dfs_u(\f2G\fP& g,\f2V\fP* v,GApredicate(\f2V\fP)* f = 0);\f1"
+(and others)  See the individual \f3Graph_alg(3C++)\f1 
+manual entries for descriptions of these functions.
+.SH SEE ALSO
+.Bf
+\f3Graph(3C++)\f1
+\f3List(3C++)\f1
+\f3Set(3C++)\f1
+
+\f3artic_pts(.)\f1
+\f3bfs(.)\f1
+\f3comps(.)\f1
+\f3cycle(.)\f1
+\f3cycle_list(.)\f1
+\f3dfs(.)\f1
+.Be

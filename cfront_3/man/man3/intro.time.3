@@ -1,0 +1,242 @@
+.\" ident	@(#)Time:man/intro.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3intro\fP \f3Time(3C++)\fP " "
+.SH NAME
+intro \- introduction to the Time component
+.SH DESCRIPTION
+The facilities of \f3Time(3C++)\f1 can be viewed 
+as a replacement for (or, an interface to) 
+UNIX system facilities 
+such as those described in \f3ctime(3C)\f1.
+The most important facilities are:
+.IP "class Time - see \f3Time(.)\fP"
+.br
+Combines the notion of calendar
+date and time of day into a single abstract value
+denoting a particular epoch in absolute time.
+Times have a precision of one second and a range of 
+approximately 168 years symmetric about 
+January 1, 1970, at 0h GMT.
+.IP "class Place - see \f3Place(.)\f1"
+.br
+Timezone information for specific locations,
+including the host machine location.
+.IP "class Duration - see \f3Duration(.)\f1"
+.br
+Time differences
+.SS "Environment Requirements"
+Many operations of class \f4Time\f1 
+take optional \f4Place\f1 parameters, 
+allowing Times to be expressed or viewed relative to
+particular timezones (``local times'').  
+By default, these functions use the timezone of the 
+host machine, as determined from
+the \f4TZ\f1 environment variable (see \f3environ(5)\fR
+for a discussion of environment variables).
+To see if \f4TZ\f1 is defined on your machine and, 
+if so, what value it has, type 
+.Bf
+
+    echo $TZ
+
+.Be
+If (1) \f4TZ\f1 is undefined or 
+(2) you want your program to behave as if it were in a
+timezone different from the one in which it
+is actually located, the safest policy is to define
+and export the \f4TZ\f1 variable before executing any 
+program that includes \f4<Time.h>\f1.
+.PP
+To set the \f4TZ\f1 variable for a Place in New Jersey, 
+for example, you could enter the following command:
+.Bf
+
+    TZ="EST5EDT4;117/2:00:00,299/2:00:00"
+
+.Be
+or simply
+.Bf
+
+    TZ=EST5EDT
+
+.Be
+(the quotation marks are necessary for the more elaborate 
+form). To simulate a location in the southern hemisphere, 
+such as the Cook Islands, you could enter the following 
+command:
+.PP
+.Bf
+
+    TZ="KDT9:30KST10:00;64/5:00,303/20:00"
+
+.Be
+In each case, follow the assignment by the command
+.Bf
+
+    export TZ
+
+.Be
+The syntax of the \f4TZ\f1 variable 
+can be described as follows:
+.PP
+.if n .ta 13n 20n
+.if t .ta 1.5i 2.5i
+.PD 0
+.SM
+.in +0.5i
+\f2TZ\f1	\(->	 \f2zone\f1
+.br
+		| \f2zone signed_time\f1
+.br
+		| \f2zone signed_time zone\f1
+.br
+		| \f2zone signed_time zone dst\f1
+.br
+\f2zone\f1	\(->	  \f2letter letter letter\f1
+.br 
+\f2signed_time\f1	\(->	  \f2sign time\f1
+.br
+		| \f2time\f1
+.br
+\f2time\f1	\(->	  \f2hour\f1
+.br
+		| \f2hour : minute\f1
+.br
+		| \f2hour : minute : second\f1
+.br
+\f2dst\f1	\(->	  \f2signed_time\f1
+.br
+		| \f2signed_time ; dst_date , dst_date\f1
+.br
+		| \f2; dst_date , dst_date\f1
+.br
+\f2dst_date\f1	\(->	  \f2julian\f1
+.br
+		| \f2julian / time\f1
+.br
+\f2letter\f1	\(->	  \f2a | A | b | B | ... | z | Z\f1
+.br
+\f2hour\f1	\(->	  \f200 | 01 | ... | 23\f1
+.br
+\f2minute\f1	\(->	  \f200 | 01 | ... | 59\f1
+.br
+\f2second\f1	\(->	  \f200 | 01 | ... | 59\f1
+.br
+\f2julian\f1	\(->	  \f2001 | 002 | ...| 366\f1
+.br
+\f2sign\f1	\(->	  \f2\(mi | \(pl\f1
+.in
+.PD
+.DT
+.PP
+Note that on older systems, the above definition
+may be more complete than the
+one in \f3environ(5)\f1. 
+.PP
+If you are writing code that does not use
+local timezone information, then \f4TZ\f1
+need not be set for your program to work correctly.
+If your program uses local timezone information
+and it may be executed on machines other than 
+your host machine (for which you do not control the 
+environment), then it is possible to 
+write your program in such a way that it is able
+to cope with an unset \f4TZ\f1 variable using
+the \f3Objection(3C++)\f1 mechanism.  
+See \f3Time(.)\f1 for a discussion of how to do
+this.
+.SS "String Table"
+Times can be converted to and from character strings 
+in a wide variety of styles 
+(e.g., \f41/1/84\f1, \f4Jan 1, 1984f\f1, etc.). 
+Nonnegative Durations less than 24 hours 
+("times-of-day") also
+have a variety of possible string representations 
+(\f42:00 PM\f1, \f414:00\f1, etc.).
+The defaults are built into a string table;
+your program can get the address of this table by calling
+\f4Time::get_table()\f1 and they can install an alternate
+table by by calling \f4Time::set_table()\f1 
+(see \f3Time(.)\f1).
+The contents of this table (by index) are:
+.RS
+.TP
+.PD 0
+.B 0-11
+3-character abbreviated month names.
+.TP
+.B 12-23
+Full month names.
+.TP
+.B 24-30
+3-character abbreviated weekday names.
+.TP
+.B 31-37
+Full weekday names.
+.TP
+.B 38
+Local time format used by the
+.B %X
+field.
+.TP
+.B 39
+Local date format used by the
+.B %x
+field.
+.TP
+.B 40
+Format used if the format argument is NULL or empty.
+.TP
+.B 41-42
+Meridian names: AM, PM.
+.TP
+.B 43-46
+.B UTC
+timezone names: GMT, UTC, UCT, CUT.
+.TP
+.B 47-50
+Daylight savings time suffix names: DST.
+.TP
+.B 51-54
+Suffixes to be ignored.
+.TP
+.B 55-61
+Time part names: second, hour, minute, day, week, month, year.
+.TP
+.B 62-65
+Hours of the day names: midnight, morning, noon, evening.
+.TP
+.B 66-68
+Relative day names: yesterday, today, tomorrow.
+.TP
+.B 69-71
+Past relative time references: last, ago, past.
+.TP
+.B 72-75
+Current relative time references: this, now, current.
+.TP
+.B 75-77
+Future relative time references: next, hence, coming.
+.TP
+.B 78-81
+Noise words to be ignored: at, in, on.
+.PD
+.RE
+.SH SEE ALSO
+.Bf
+\f3ctime(3C)\f1
+\f3environ(5)\f1
+\f3Objection(3C++)\f1
+\f3Duration(.)\f1
+\f3Place(.)\f1
+\f3Time(.)\f1
+.Be

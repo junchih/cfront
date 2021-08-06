@@ -1,0 +1,328 @@
+.\" ident	@(#)Map:man/Map.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Map\fP \f33C++\fP " "
+.SH NAME
+Map \- Parameterized variable-size associative arrays
+.SH SYNOPSIS OF Map.h
+.Bf
+
+template <class \*(gt,class \*(gu> class Map{
+public:
+
+//  Constructors, destructor
+
+    Map();
+    Map(const \*(gu& u);
+    ~Map();
+
+//  Copy and assign
+
+    Map(const Map<\*(gt,\*(gu>& m);
+    Map<\*(gt,\*(gu>& operator=(const Map<\*(gt,\*(gu>& m);
+
+//  Insert and remove elements
+
+    \*(gu& operator[](const \*(gt& t);
+    int remove(const \*(gt& t);
+    void make_empty();
+
+//  Length
+
+    int size()const;
+
+//  Iterating
+
+    Mapiter<\*(gt,\*(gu> element(const \*(gt& t)const;
+    Mapiter<\*(gt,\*(gu> first()const; 
+    Mapiter<\*(gt,\*(gu> last()const;
+
+//  Stream insertion
+    
+    \f2friend\fP ostream& operator<<(ostream& os, Map<\*(gt,\*(gu>& m);
+};
+
+//  Structure used by Mapiter
+
+template <class \*(gt,class \*(gu> struct Map_pair{
+    const \*(gt key;
+    \*(gu value;
+};
+
+template <class \*(gt,class \*(gu> class Mapiter{
+public:
+
+//  Constructors, destructor
+
+    Mapiter(const Map<\*(gt,\*(gu>& m);
+    ~Mapiter();
+
+//  Copy and assign
+
+    Mapiter(const Mapiter<\*(gt,\*(gu>& mi);
+    Mapiter<\*(gt,\*(gu>& operator=(const Mapiter<\*(gt,\*(gu>& mi);
+
+//  Check the attachment
+
+    Map<\*(gt,\*(gu>* the_map();
+
+//  Test for vacuity
+
+    operator void*()const;
+
+//  Remove elements
+
+    void remove();
+
+//  Map_pair functions
+
+    Map_pair<\*(gt,\*(gu>* curr();
+    Map_pair<\*(gt,\*(gu>* next();
+    Map_pair<\*(gt,\*(gu>* prev();
+};
+.Be
+.SH DESCRIPTION
+A \f4Map<\*(gt,\*(gu>\f1 
+is a collection of \f2elements\f1, 
+consisting of a \f2key\f1 of type \*(gt 
+and a \f2value\f1 of type \*(gu.  
+The elements of a Map all have distinct keys.
+Thus it must be possible to compare values of
+type \*(gt for equality.
+Moreover, Map elements
+are ordered by key, so \*(gt must have a strong 
+total order relation defined by \f4operator<\f1.
+Additional requirements on \*(gt and \*(gu are
+described below.
+.PP
+Each Map carries a \f2default value\f1 of type \*(gu\f1.
+This is normally the value of an otherwise uninitialized 
+static object of type \*(gu, 
+but an alternate value can be specified when a Map 
+is created by using the special constructor provided for 
+this purpose.  Default values are used to initialize 
+newly-created elements (see \f4Map<\*(gt,\*(gu>::operator[ ]\f1).
+.PP
+Each Map type has an associated \f2iterator\f1
+type whose objects may be used for iterating over 
+Map elements in key order.
+.PP
+In all cases, \*(gt and \*(gu must be single tokens
+(use \f4typedef\f1 to create typenames for complex types).
+\*(gt can be any type having
+.RS
+.TP
+.PD 0
+\(bu \f4\*(gt()\f1
+.TP
+\(bu \f4\*(gt(\*(gt&)\f1
+.TP
+\(bu \f4operator<\f1 defining a strong total order relation on \*(gt.
+.PD
+.sp
+.RE
+\*(gu may be any type having
+.RS
+.TP
+.PD 0
+\(bu \f4\*(gu()\f1
+.TP
+\(bu \f4\*(gu(\*(gu&)\f1
+.TP
+\(bu \f4operator=\f1
+.PD
+.RE
+.sp
+.SH "Map<\*(gt,\*(gu>"
+.SS "Constructors, destructor"
+.IP "\f4Map();\f1"
+An empty Map whose default value is that of an otherwise
+uninitialized static object of type \*(gu.
+Runs in \f2O(1)\f1.
+.IP "\f4Map(const \*(gu& u);\f1"
+An empty Map whose default value is \f4u\f1. 
+Runs in \f2O(1)\f1.
+.IP "\f4~Map();\f1"
+Destructor.  
+All iterators currently attached to this Map will
+be informed of the Map's destruction 
+(see the function \f4Mapiter<\*(gt,\*(gu>::the_map()\f1).
+Runs in \f2O(#iterators)\f1.
+.SS "Copy and assign"
+.IP "\f4Map<\*(gt,\*(gu>(const Map<\*(gt,\*(gu>& m);\f1"
+Copy constructor.  Creates a copy of \f4m\f1, including
+its default value.
+Runs in \f2O(m.size())\f1.
+.IP "\f4Map<\*(gt,\*(gu>& operator=(const Map<\*(gt,\*(gu>& m);\f1"
+Assignment.  Creates a copy of the elements of \f4m\f1,
+but not its default value.
+Runs in \f2O(ln\ size() + ln\ m.size())\f1.
+.SS "Insert and remove elements"
+.IP "\f4\*(gu& operator[](const \*(gt& t);\f1"
+Returns a reference to the value part of the 
+element with key \f4t\f1.
+If an element having this key does not exist, 
+one is created and its value initialized with the 
+default value for this Map.
+The element value can be changed by using 
+the reference as the target of an assignment.  
+Runs in \f2O(ln\ size())\f1.
+.IP "\f4int remove(const \*(gt& t);\f1"
+Finds the element with key \f4t\f1 and removes it.
+Returns 1 if the element was found
+and 0 otherwise.
+Any iterators that refer to the removed element 
+will continue to refer to that element until they
+are incremented or decremented; that is, the
+removal appears ``delayed'' to such iterators (see
+the \f3EXAMPLE\f1).
+Runs in \f2O(ln\ size())\f1.
+.IP "\f4void make_empty();\f1"
+Removes all elements.
+Behavior is undefined if there are any
+iterators attached to the Map.
+.SS "Length"
+.IP "\f4int size()const;\f1"
+The number of elements.
+Runs in \f2O(1)\f1.
+.SS "Iterating"
+Each of the following functions returns an iterator 
+(see below) attached to this Map.  
+.IP "\f4Mapiter<\*(gt,\*(gu> element(const \*(gt& t)const;\f1"
+The iterator refers to the element with key \f4t\f1.
+If no such element exists, the
+iterator will test as vacuous.
+Runs in \f2O(ln\ size())\f1.
+.IP "\f4Mapiter<\*(gt,\*(gu> first()const; \f1"
+The iterator refers to the element with the lowest key.  
+If the Map is empty, the iterator will test as vacuous. 
+Runs in \f2O(ln\ size())\f1.
+.IP "\f4Mapiter<\*(gt,\*(gu> last()const;\f1"
+The iterator refers to the element with the highest key.  
+If the Map is empty, the iterator will test as vacuous.  
+Runs in \f2O(ln\ size())\f1.
+.SS "Stream insertion"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os, Map<\*(gt,\*(gu>& m);\f1"
+Inserts an ASCII representation of \f4m\f1 
+into \f4os\f1.  The representation is in the form
+.Bf
+    {[ key1 val1 ] [ key2 val2 ] ... [ keyn valn ]}
+.Be
+Notice that all the keys and values are separated by white space.
+Runs in \f2O(size())\f1.
+.SH " "
+.SH "Mapiter<\*(gt,\*(gu>"
+.SH " "
+For each class \f4Map<\*(gt,\*(gu>\f1, there is
+a class \f4Mapiter<\*(gt,\*(gu>\f1 whose objects,
+called \f2iterators\f1, are used for iterating over
+Map elements in key order.  
+An iterator of type \f4Mapiter<\*(gt,\*(gu>\f1
+can only be attached to a Map of type \f4Map<\*(gt,\*(gu>\f1,
+and refers to a \f2current element\f1 in that Map.  
+Incrementing or decrementing an iterator normally makes 
+the iterator refer to the next or previous element, 
+respectively, in key order.  
+Two special boundary cases exist, for which
+an iterator will test as \f2vacuous\f1 (that is, for
+which \f4operator void*\f1 will return zero).  These are:
+(1) an iterator that has been incremented after returning
+the element with the highest key and
+(2) an iterator that has been decremented after returning the 
+element with the lowest key.
+A vacuous iterator may be incremented or decremented 
+to obtain the element with the lowest or highest key, 
+respectively.
+The behavior of all iterator operations 
+except \f4the_map()\f1 are undefined when the Map to
+which an iterator is attached ceases to exist.
+.SS "Constructors, destructor"
+.IP "\f4Mapiter(const Map<\*(gt,\*(gu>& m);\f1"
+Creates a new iterator attached to Map \f4m\f1.  The iterator
+is initially vacuous. 
+Runs in \f2O(1)\f1.
+.IP "\f4~Mapiter();\f1"
+Destructor.  
+Runs in \f2O(#iterators)\f1.
+.SS "Copy and assign"
+Copying or assigning a Mapiter creates a copy of its value.
+.IP "\f4Mapiter(const Mapiter<\*(gt,\*(gu>& mi);\f1"
+Copy constructor.  
+Runs in \f2O(1)\f1.
+.IP "\f4Mapiter<\*(gt,\*(gu>& operator=(const Mapiter<\*(gt,\*(gu>& mi);\f1"
+Assignment.
+Runs in \f2O(#iterators)\f1.
+.SS "Check the attachment"
+.IP "\f4Map<\*(gt,\*(gu>* the_map();\f1"
+Returns a pointer to the Map to which this iterator is
+attached, or 0 if there is no such Map (this will happen
+if the Map is destroyed).
+Runs in \f2O(1)\f1.
+.SS "Test for vacuity"
+.IP "\f4operator void*()const;\f1"
+Returns zero if the iterator is vacuous.
+Runs in \f2O(1)\f1.
+.SS "Remove elements"
+.IP "\f4void remove();\f1"
+Removes the current element.
+If the iterator is vacuous, the Map is unchanged.
+This iterator (as well as any other iterators that refer 
+to the current element) 
+will continue to refer to the current element until they
+are incremented or decremented;
+that is, the removal appears ``delayed'' to such iterators
+(see the \f3EXAMPLE\f1).
+Runs in \f2O(ln\ size())\f1.
+.SS "Map_pair functions"
+.IP "\f4Map_pair<\*(gt,\*(gu>* curr();\f1"
+.hS
+.IP "\f4Map_pair<\*(gt,\*(gu>* next();\f1"
+.hS
+.IP "\f4Map_pair<\*(gt,\*(gu>* prev();\f1"
+Returns a pointer to a Map_pair structure that the Mapiter
+refers to.
+The \f4next\f1 function first advances the iterator, the
+\f4prev\f1 function first moves the iterator back.
+If the iterator is vacuous, a zero pointer is returned.
+.SH BUGS
+.br
+\(bu Ambiguities can occur if the type name \*(gt
+contains an underscore.
+.br
+\(bu A core dump is likely if memory is exhausted
+unless the client has provided an error handler 
+for \f4operator new\f1.
+.SH EXAMPLE
+The following program illustrates ``delayed removal''
+(see \f4Mapiter<\*(gt,\*(gu>::remove()\f1).
+It prints \f4is now the time ?\f1.
+.Bf
+
+    Map<String,int> m;
+
+    m["now"];
+    m["is"];
+    m["the"];
+    m["time"];
+    
+    Mapiter<String,int> mi(m), mj(m);
+
+    while(mi.next() && mj.next()){
+	mi.remove();
+	cout << mj.curr()->key << ' '; 
+    }
+    cout << '?';
+
+.Be
+.SH SEE ALSO
+.Bf
+\f3String(3C++)\f1
+.Be

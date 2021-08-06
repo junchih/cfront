@@ -1,0 +1,650 @@
+.\" ident	@(#)List:man/List.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3List\fP \f33C++\fP " "
+.SH NAME
+List, List_of_p \- parameterized variable-length sequences
+.SH SYNOPSIS OF List.h
+.Bf
+
+template <class \*(gt> class List {
+public:
+
+//  Constructors, destructor
+
+    List();
+    List(const \*(gt& t1);
+    List(const \*(gt& t1,const \*(gt& t2);
+    List(const \*(gt& t1,const \*(gt& t2,const \*(gt& t3);
+    List(const \*(gt& t1,const \*(gt& t2,const \*(gt& t3,
+        const \*(gt& t4);
+    ~List();
+
+//  Copy and assign
+
+    List(const List<\*(gt>& x);
+    List<\*(gt>& operator=(const List<\*(gt>& x);
+
+//  Length
+
+    int length()const;
+    operator void*()const;
+
+//  Relations
+
+    int operator==(const List<\*(gt>& x)const;
+    int operator!=(const List<\*(gt>& x)const;
+
+//  Concatenation
+
+    List<\*(gt> operator+(const \*(gt& t);
+    List<\*(gt> operator+(const List<\*(gt>& x);
+
+//  Queue operations
+
+    \*(gt* head()const;
+    \*(gt* tail()const;
+    List<\*(gt>& put(const \*(gt& t);
+    List<\*(gt>& put(const List<\*(gt>& x);
+    \*(gt unput();
+    int unput(\*(gt& t);
+    \*(gt get();
+    int get(\*(gt& t);
+    List<\*(gt>& unget(const \*(gt& t);
+    List<\*(gt>& unget(const List<\*(gt>& x);
+
+//  Array operations
+
+    \*(gt& operator[](unsigned i);
+    const \*(gt& operator[](unsigned i) const;
+
+//  Sort
+
+    void sort(int (*f)(const \*(gt&, const \*(gt&);
+
+//  Stream insertion
+    
+    \f2friend\fP ostream& operator<<(ostream& os,
+        const List<\*(gt>& x);
+};
+
+template <class \*(gt> class Const_listiter {
+public:
+
+//  Constructors, destructor
+
+    Const_listiter(const List<\*(gt>& x);
+    ~Const_listiter();
+
+//  Copy and assign 
+
+    Const_listiter(const Const_listiter<\*(gt>& it);
+    Const_listiter<\*(gt>& operator=(
+        const Const_listiter<\*(gt>& it);
+
+//  Relations
+
+    int operator==(const Const_listiter<\*(gt>& it)const;
+    int operator!=(const Const_listiter<\*(gt>& it)const;
+
+//  Check the attachment
+
+    const List<\*(gt>* the_list();
+
+//  Current element 
+
+    int at_head()const;
+    int at_end()const;
+    int position()const;
+
+//  Changing current position
+
+    void reset(unsigned i = 0);
+    void end_reset(unsigned i = 0);
+    int find_next(const \*(gt& t);
+    int find_prev(const \*(gt& t);
+    int step_next();
+    int step_prev();
+
+//  Examining next and previous elements
+
+    int peek_next(\*(gt& t)const;
+    int peek_prev(\*(gt& t)const;
+    int peek_next(\*(gt*& p)const;
+    int peek_prev(\*(gt*& p)const;
+    \*(gt* peek_next()const;
+    \*(gt* peek_prev()const;
+    int next(\*(gt& t);
+    int prev(\*(gt& t);
+    int next(\*(gt*& p);
+    int prev(\*(gt*& p);
+    \*(gt* next();
+    \*(gt* prev();
+};
+
+template <class \*(gt> class Listiter : Const_listiter<\*(gt>{
+public:
+
+//  Constructors, destructor
+
+    Listiter(List<\*(gt>& x);
+    ~Listiter();
+
+//  Copy and assign 
+
+    Listiter(const Listiter<\*(gt>& it);
+    Listiter<\*(gt>& operator=(const Listiter<\*(gt>& it);
+
+//  Relations
+
+    int operator==(const Listiter<\*(gt>& it)const;
+    int operator!=(const Listiter<\*(gt>& it)const;
+
+//  Check the attachment
+
+    List<\*(gt>* the_list();
+
+//  Inherited Const_listiter operations
+
+	\f2Current element\fP
+	\f2Changing current position\fP
+	\f2Examining next and previous elements\fP
+
+//  Changing next and previous elements
+
+    void insert_next(const \*(gt& t);
+    void insert_prev(const \*(gt& t);
+    int replace_next(const \*(gt& t);
+    int replace_prev(const \*(gt& t);
+    int remove_next();
+    int remove_prev();
+    int remove_next(\*(gt& t);
+    int remove_prev(\*(gt& t);
+};
+
+typedef voidP void*;
+
+template <class \*(gt> class List_of_p :
+         public List<voidP>{...};
+template <class \*(gt> class Const_list_of_piter :
+         public Listiter<voidP>{...};
+template <class \*(gt> class List_of_piter :
+         public Const_list_of_piter<voidP>{...};
+
+.Be
+.SH DESCRIPTION
+.PP
+A \f4List<\*(gt>\f1
+is a variable-length sequence whose \f2elements\f1
+are objects type \*(gt.
+\*(gt can be any type having
+.RS
+.TP
+.PD 0
+\(bu \f4operator=\f1
+.TP
+\(bu \f4\*(gt(\*(gt&)\f1
+.TP
+\(bu \f4operator==\f1 defining an equivalence relation on \*(gt.
+.PD
+.RE
+.sp
+A \f4List_of_p<\*(gt>\f1, also known as a \f2pointer list\f1,
+is a sequence whose elements 
+are \f2uninterpreted pointers\f1 to objects of type \*(gt;
+that is, the objects pointed to are not involved
+in pointer list operations.  For example, if an object
+pointed to by a pointer list element is deleted, 
+the pointer list operations will continue
+to function as if nothing had happened.
+\f4List_of_p<\*(gt>\f1 offers a more efficient 
+implementation of pointer lists than \f4List<\*(gt>\f1 
+when \*(gt is a pointer type.
+Each of these two classes has a companion \f2iterator\f1 
+class, whose instances may
+be used for iterating over elements.
+.PP
+The following notions are needed to explain the
+behavior of Lists ("List" in normal font can mean
+either \f4List<\*(gt>\f1 or \f4List_of_p<\*(gt>\f1).
+.br
+.RS
+\(bu\ An \f2empty\f1 List has no elements.  
+.br
+\(bu\ A \f2non-empty\f1 List has a \f2first\f1 element 
+and a \f2last\f1 element. 
+.br
+\(bu\ For a List with one element, the first and last
+elements are identical.  
+.br
+\(bu\ A \f2position\f1 designates
+the conceptual "space" between two elements.
+.br
+\(bu\ A position may therefore have an element to
+its \f2right\f1 and an element to its \f2left\f1.
+.br
+\(bu\ Sometimes there is no element to the right or left
+of a given position.  
+.br
+\(bu\ In particular, the \f2beginning\f1 of a List is the 
+position with no element to the left and the \f2end\f1 
+of a List is the position with no element to the right.  
+.br
+\(bu\ Note that for the empty List, 
+the beginning and end designate the same position.
+.br
+\(bu\ Every List may have \f2iterators\f1 attached to it.
+Each iterator when attached to a List has an associated
+\f2current position\f1 in the List.
+Many iterator operations that examine or modify List elements
+are specified with respect to the current position.
+.br
+\(bu\ Different iterators represent different \f2current positions\f1
+in a List. When one iterator modifies List elements, the current
+These current positions may be different from time to time,
+of other iterators will be automatically updated.
+.br
+\(bu\ With respect to the current position of an iterator, 
+the element to the right (when
+it exists) is the \f2next\f1 element, 
+and the element to the left (when it exists)
+is the \f2previous\f1 element.
+.br
+\(bu\ Finally, each element has a nonnegative 
+sequential \f2index\f1 which starts at zero for 
+the first element.
+.sp
+.RE
+.SH " "
+.SH "List<\*(gt>"
+.SH " "
+.SS "Constructors, destructor"
+.IP "\f4List();\f1"
+.hS
+.IP "\f4List(const \*(gt& t1);\f1"
+.hS
+.IP "\f4List(const \*(gt& t1,const \*(gt& t2);\f1"
+.hS
+.IP "\f4List(const \*(gt& t1,const \*(gt& t2,const \*(gt& t3);\f1"
+.hS
+.IP "\f4List(const \*(gt& t1,const \*(gt& t2,const \*(gt& t3,\f1"
+.IC "\f4    const \*(gt& t4);\f1"
+Constructors for Lists of zero, one, two, three, or 
+four elements, respectively.  
+The current position is 
+at the beginning of the List. 
+Runs in \f2O(1)\f1.
+.IP "\f4~List();\f1"
+Destructor.  All iterators currently attached to this
+List will be informed that this List has been destroyed (see
+\f4Listiter(\*(gt)::the_list()\f1).
+Runs in \f2O(max(length(), #iterators))\f1.
+.SS "Copy and assign"
+Copying or assigning a \f4List<\*(gt>\f1 creates
+a copy of its value.
+.IP "\f4List(const List<\*(gt>& x);\f1"
+Copy constructor.  The current position is the same
+as that of \f4x\f1.
+Runs in \f2O(x.length())\f1.
+.IP "\f4List<\*(gt>& operator=(const List<\*(gt>& x);\f1"
+Assignment.
+All iterators currently attached to the List
+will be reset to the beginning of the List.
+Runs in \f2O(length()+x.length())\f1.
+.SS "Length"
+.IP "\f4int length()const;\f1"
+The number of elements.  
+Runs in \f2O(1)\f1.
+.IP "\f4operator void*()const;\f1"
+Returns zero if and only if the List is empty.
+Most useful as an implicit conversion in contexts
+like \f4while(x)\f1.  
+Runs in \f2O(1)\f1.
+.SS "Relations"
+.IP "\f4int operator==(const List<\*(gt>& x)const;\f1"
+.hS
+.IP "\f4int operator!=(const List<\*(gt>& x)const;\f1"
+The usual equality and inequality relations.  
+Only the elements (not the current positions) are 
+compared.  
+Runs in \f2O(min(length(),x.length()))\f1.
+.SS "Concatenation"
+.IP "\f4List<\*(gt> operator+(const \*(gt& t);\f1"
+Returns a List consisting of the elements of this List
+followed by the single element \f4t\f1.
+Runs in \f2O(length())\f1.
+.IP "\f4List<\*(gt> operator+(const List<\*(gt>& x);\f1"
+Returns a List containing a copy of the elements in
+this List followed by a copy of the elements in \f4x\f1.
+Runs in \f2O(length()+x.length())\f1.
+.SS "Queue operations"
+These operations manipulate the List as a double-ended
+queue (that is, they access the ends of the List
+but not the middle).  
+.IP "\f4\*(gt* head()const;\f1"
+Returns the pointer to the first element.
+Runs in \f2O(1)\f1.
+A NULL pointer will be returned if the List is not empty.
+.IP "\f4\*(gt* tail()const;\f1"
+Returns the pointer to the last element.
+Runs in \f2O(1)\f1.
+A NULL pointer will be returned if the List is not empty.
+.IP "\f4List<\*(gt>& put(const \*(gt& t);\f1"
+Makes \f4t\f1 the last element.
+Does not affect the current position.  
+Runs in \f2O(1)\f1.
+.IP "\f4List<\*(gt>& put(const List<\*(gt>& x);\f1"
+Appends the elements of \f4x\f1 to the 
+end of the List.
+Does not affect the current position.  
+Runs in \f2O(x.length())\f1.
+.IP "\f4\*(gt unput();\f1"
+Removes and returns the last element.
+If the current position is at the end of the List, 
+it is decremented; otherwise, the current position
+remains unchanged.  Updates all iterators currently attached 
+to this List.  
+Runs in \f2O(#iterators)\f1.
+\f3Preconditions:\f1 The List is not empty.
+.IP "\f4int unput(\*(gt& t);\f1"
+Attempts to remove the last element and 
+returns non-zero if the removal succeeded.
+If the removal succeeded, the removed element is 
+assigned to \f4t\f1.  If the removal failed, the
+value of \f4t\f1 is undefined.
+If the current position is at the end of the List, 
+it is decremented by 1; otherwise, the current position
+is unchanged.  Updates all iterators currently attached 
+to this List.  
+Runs in \f2O(#iterators)\f1.
+.IP "\f4\*(gt get();\f1"
+Removes and returns the first element.
+If the current position is at the beginning of the List, 
+it remains unchanged; otherwise, the current position
+is decremented by 1.
+Updates all iterators currently attached to this List.
+Runs in \f2O(#iterators)\f1.
+\f3Preconditions:\f1  The List is not empty.
+.IP "\f4int get(\*(gt& t);\f1"
+Attempts to remove the first element and and 
+returns non-zero if the removal succeeded.
+If the removal succeeded, the first element is assigned
+to \f4t\f1.  If the removal failed, the value of \f4t\f1
+is undefined.  If the current position is at the
+beginning of the List, it remains unchanged; otherwise,
+the current position is decremented by 1.
+Updates all iterators currently attached to this List.
+Runs in \f2O(#iterators)\f1.
+.IP "\f4List<\*(gt>& unget(const \*(gt& t);\f1"
+Makes \f4t\f1 the first element of the List.
+Increments the current position by 1.
+Updates all iterators currently attached to the List.
+Runs in \f2O(#iterators)\f1.
+.IP "\f4List<\*(gt>& unget(const List<\*(gt>& x);\f1"
+Prepends the elements of \f4x\f1 to this List.
+Increments the current position by \f4x.length()\f1.
+Updates all iterators currently attached to this List.
+Runs in \f2O(#iterators)\f1.
+.SS "Array operations"
+These operations manipulate Lists as if they were
+randomly accessible arrays.
+.IP "\f4\*(gt& operator[](unsigned i);\f1"
+Returns a reference to the element with index \f4i\f1.
+Worst case order estimate for random access
+is \f2O(length())\f1,
+but the last position accessed is cached, allowing
+access to adjacent elements in \f2O(1)\f1.
+\f3Preconditions:\f1 \f4i\f1 is a valid index in this List.
+.IP "\f4const \*(gt& operator[](unsigned i) const;\f1"
+Returns a const reference to the element with index \f4i\f1.
+Same performance and preconditions as the regular \f4operator[]\f1.
+This operator can work on constant lists.
+.SS "Sort"
+.IP "\f4void sort(int (*f)(const \*(gt&,const \*(gt&));\f1"
+Sorts the List in place using the user-defined 
+function \f4f\f1 to define a total order relation 
+on \*(gt.
+Resets the current position and the position of
+all iterators to the beginning of the List.
+Runs in \f2O(NlnN)\f1, where \f2N=length()\f1.
+.SS "Stream insertion"
+.IP "\f4\f2friend\fP ostream& operator<<(ostream& os,const List<\*(gt>& x);\f1"
+Inserts an ASCII representation of \f4x\f1 
+into \f4os\f1.
+Runs in \f2O(x.length())\f1.
+.SH " "
+.SH "Const_listiter<\*(gt>"
+.hS
+.SH "Listiter<\*(gt>"
+.SH " "
+For certain List applications, a single
+current position is inadequate 
+(think of trying to reverse a List in place).
+To keep track of additional positions,
+one or more \f2iterators\f1 may be created. 
+Any number of iterators may
+be attached to the same List concurrently, and each
+keeps track of a single position in that List.
+.PP
+Const_listiter
+provides all the operations of Listiter except for those that
+change the List to which the iterator is attached.  
+It can be used to iterate over a constant List.
+.PP
+The behavior of all iterator operations 
+except \f4the_list()\f1  is undefined when the 
+List to which the iterator is attached ceases to exist.
+.SS "Constructors, destructor"
+.IP "\f4Listiter(const List<\*(gt>& x);\f1"
+Creates an iterator attached to List \f4x\f1 
+whose position is at the beginning of \f4x\f1.
+Runs in \f2O(1)\f1.
+.IP "\f4~Listiter();\f1"
+Destructor.  
+Runs in \f2O(#iterators)\f1.
+.SS "Copy and assign"
+Copying or assigning a Listiter creates a 
+copy of its value.
+.IP "\f4Listiter(const Listiter<\*(gt>& it);\f1"
+Copy constructor.  
+Runs in \f2O(1)\f1.
+.IP "\f4Listiter(\*(gt)& operator=(const Listiter<\*(gt>& it);\f1"
+Assignment.  
+Runs in \f2O(#iterators)\f1.
+.SS "Relations"
+.IP "\f4int operator==(const Listiter<\*(gt>& it)const;\f1"
+.hS
+.IP "\f4int operator!=(const Listiter<\*(gt>& it)const;\f1"
+Equality and inequality.
+Two iterators are equal if (1) they are both attached
+to the same List and (2) they both have the same
+position within that List.  
+Runs in \f2O(1)\f1.
+.SS "Check the attachment"
+.IP "\f4List<\*(gt>* the_list();\f1"
+Returns a pointer to the List to which this iterator
+is attached, or 0 if there is no such List (this can
+happen if the List is destroyed).
+.SS "List operation analogues"
+For each \f4List<\*(gt>\f1 operation that is defined 
+with respect to the current position, \f4Listiter<\*(gt>\f1
+has an operation with identical syntax.
+The semantics of these operations differ in that
+iterator operations are defined with respect
+to the iterator's own private position, rather than the 
+List's current position
+The effect of a change made through
+an iterator is well-defined with respect to the 
+List and all other iterators currently attached to the List.
+Runs in \f2O(1)\f1.
+.SS "Current element"
+.IP "\f4int at_head()const;\f1"
+.hS
+.IP "\f4int at_end()const;\f1"
+Returns non-zero if the current position is at the
+beginning (end) of the List.
+Runs in \f2O(1)\f1.
+.IP "\f4int position()const;\f1"
+Returns the index of the next element.  
+Runs in \f2O(1)\f1.
+.SS "Changing current position"
+.IP "\f4void reset(unsigned i = 0);\f1"
+Moves the current position to the 
+left of the element with index \f4i\f1.
+If \f4i>=length()\f1, 
+the current position is moved to the end of the List.
+Runs in \f2O(length())\f1.
+.IP "\f4void end_reset(unsigned i = 0);\f1"
+Moves the current position to the left
+of the element with index \f4length()\(mii\f1.
+If \f4i>=length()\f1, 
+the current position is moved to the beginning of 
+the List.
+Runs in \f2O(length())\f1.
+.IP "\f4int find_next(const \*(gt& t);\f1"
+Scans rightward from the current position
+until either (1) an element with the value \f4t\f1 
+is found, or (2) the end of the List is reached.
+Returns non-zero if the search succeeded.
+If the search fails,
+the current position remains unchanged.
+If the search succeeds, 
+the current position is changed so 
+that it is immediately to the left of the element; 
+that is, the element will be the next element.  
+Note that if the next element has the value \f4t\f1,
+the search will succeed but the current position will
+remain unchanged.
+Runs in \f2O(the_list().length())\f1.
+.IP "\f4int find_prev(const \*(gt& t);\f1"
+Like \f4find_next(const \*(gt& t)\f1, except 
+that the scan moves leftward from the 
+current position.
+Note that if the previous element has the value \f4t\f1,
+the search will succeed but the current position will
+remain unchanged.
+Runs in \f2O(the_list().length())\f1.
+.IP "\f4int step_next();\f1"
+.hS
+.IP "\f4int step_prev();\f1"
+Increments (decrements) the current position.
+Has no effect if the current position cannot be 
+incremented (decremented).
+Returns non-zero if the current position changed.
+Runs in \f2O(1)\f1.
+.SS "Examining next and previous elements"
+.IP "\f4int peek_next(\*(gt& t)const;\f1"
+.hS
+.IP "\f4int peek_prev(\*(gt& t)const;\f1"
+Assigns the value of the next (previous) element
+to \f4t\f1.  The value of \f4t\f1 is undefined
+if there is no next (previous) element.  Returns
+non-zero if the value of \f4t\f1 is defined.
+Does not affect the current position.  
+Runs in \f2O(1)\f1.
+.IP "\f4int peek_next(\*(gt*& p);\f1"
+.hS
+.IP "\f4int peek_prev(\*(gt*& p);\f1"
+Assigns a pointer to the next (previous) element 
+to \f4p\f1.  The value of \f4p\f1 is undefined
+if there is no next (previous) element.  Returns
+non-zero if the value of \f4p\f1 is defined.
+Does not affect the current position.  
+Runs in \f2O(1)\f1.
+.IP "\f4\*(gt* peek_next()const;\f1"
+.hS
+.IP "\f4\*(gt* peek_prev()const;\f1"
+Returns the value of the next (previous) element,
+without affecting the current position.  
+Runs in \f2O(1)\f1.
+\f3Preconditions:\f1 There is a next (previous) element.
+.IP "\f4int next(\*(gt& t);\f1"
+.hS
+.IP "\f4int prev(\*(gt& t);\f1"
+Like \f4int peek_next(\*(gt& t)\f1 
+(\f4int peek_prev(\*(gt& t)\f1)
+except that the current position is moved to the
+right (left) by one element.  
+Runs in \f2O(1)\f1.
+.IP "\f4int next(\*(gt*& p);\f1"
+.hS
+.IP "\f4int prev(\*(gt*& p);\f1"
+Like \f4peek_next(\*(gt*& p)\f1 
+(\f4peek_prev(\*(gt*& p)\f1)
+except that the current position is moved to the
+right (left) by one element.  
+Runs in \f2O(1)\f1.
+.IP "\f4\*(gt* next();\f1"
+.hS
+.IP "\f4\*(gt* prev();\f1"
+Like \f4peek_next()\f1 
+(\f4peek_prev()\f1)
+except that the current position is moved to the
+right (left) by one element.  
+.SH " "
+.SS "Changing next and previous elements"
+.IP "\f4void insert_next(const \*(gt& t);\f1"
+.hS
+.IP "\f4void insert_prev(const \*(gt& t);\f1"
+Inserts \f4t\f1 to the right (left)
+of the current position.
+Updates all iterators 
+currently attached to this List.  
+Runs in \f2O(#iterators)\f1.
+.IP "\f4int replace_next(const \*(gt& t);\f1"
+.hS
+.IP "\f4int replace_prev(const \*(gt& t);\f1"
+Replaces the next (previous) element 
+by \f4t\f1.  Has no effect if the element to 
+be replaced does not exist.  
+Returns non-zero if replacement occurred.
+Runs in \f2O(1)\f1.
+.IP "\f4int remove_next();\f1"
+.hS
+.IP "\f4int remove_prev();\f1"
+Attempts to remove the next (previous) element
+and returns non-zero if removal occurred.
+Updates all iterators 
+currently attached to this List.  
+Runs in \f2O(#iterators)\f1.
+.IP "\f4int remove_next(\*(gt& t);\f1"
+.hS
+.IP "\f4int remove_prev(\*(gt& t);\f1"
+Like \f4remove_next()\f1 (\f4remove_prev()\f1)
+except that the removed value is assigned to \f4t\f1.
+Runs in \f2O(#iterators)\f1.
+.SH "List_of_p<\*(gt>"
+.hS
+.SH "Const_list_of_piter<\*(gt>"
+.hS
+.SH "List_of_piter<\*(gt>"
+.SH " "
+The above description holds, \f2mutatis mutandis\f1,
+for \f4List_of_p<\*(gt>\f1, 
+\f4Const_list_of_piter<\*(gt>\f1, and \f4List_of_piter<\*(gt>\f1,
+with the following exceptions:
+.RS
+\(bu\ While certain \f4List<\*(gt>\f1,
+\f4Const_listiter<\*(gt>\f1,
+and \f4Listiter<\*(gt>\f1 
+operations return pointers to elements,
+the corresponding \f4List_of_p<\*(gt>\f1,
+\f4Const_list_of_piter<\*(gt>\f1,
+and \f4List_of_piter<\*(gt>\f1
+operations return the elements themselves; 
+that is, they return \f4\*(gt*\f1, 
+not \f4\*(gt**\f1, as might be expected.
+.br
+\(bu\ \f4List_of_p<\*(gt>\f1 elements are automatically 
+dereferenced by the stream insertion operator.
+.RE
+.SH SEE ALSO
+\f3Set(3C++)\f1

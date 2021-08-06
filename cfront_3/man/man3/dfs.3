@@ -1,0 +1,57 @@
+.\" ident	@(#)Graph_alg:man/dfs.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3dfs\fP \f3Graph_alg(3C++)\fP " "
+.SH NAME
+dfs, dfs_u \- depth-first traversal of Graphs
+.SH SYNOPSIS OF Graph_alg.h
+.Bf
+
+#include <List.h>
+
+#define GApredicate(\*(gt) ...
+#define Graph_algdeclare(\f2G\fP,\f2V\fP,\f2E\fP)...
+#define Graph_algimplement(\f2G\fP,\f2V\fP,\f2E\fP)...
+
+\f2Expanding Graph_algdeclare(G,V,E) produces the following text:\fP
+
+    typedef int GApredicate(\f2V\fP)(const \f2V\fP* v);
+    List_of_p<\f2V\fP> dfs(\f2G\fP& g,\f2V\fP* v,GApredicate(\f2V\fP)* f = 0);
+    List_of_p<\f2V\fP> dfs_u(\f2G\fP& g,\f2V\fP* v,GApredicate(\f2V\fP)* f = 0);
+
+.Be
+.SH DESCRIPTION
+Given a Graph \f4g\fP, 
+these functions start at Vertex \f4v\f1 and perform a 
+depth-first traversal of the connected component 
+containing \f4v\f1 (see \f3comps(.)\f1).  
+They return a list of pointers
+to the Vertices in visitation order.
+As usual, functions with the \f4_u\f1 suffix treat the
+Graph as undirected, while those without the suffix treat
+the Graph as directed.
+An optional client-supplied function
+will be called upon arrival at each Vertex;
+a zero returned by the function terminates 
+the traversal.
+.SH COMPLEXITY
+\f2O(max(v,e))\f1, where \f2v\f1
+is the number of Vertices and \f2e\f1
+is the number of Edges in the component.
+.SH NOTES
+For breadth-first traversal, use \f3bfs(.)\f1.
+.SH SEE ALSO
+.Bf
+\f3intro(.)\f1
+\f3bfs(.)\f1
+\f3comps(.)\f1
+\f3List(3C++)\f1
+.Be

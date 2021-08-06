@@ -1,0 +1,601 @@
+.\" ident	@(#)Graph:man/Graph.3	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3Graph\fP \f33C++\fP " "
+.SH NAME
+Graph, Vertex, and Edge \- entities and relationships
+.SH SYNOPSIS OF Graph.h
+.Bf
+.sp 0.5v
+#include <Set.h>
+
+class Graph;
+class Vertex;
+class Edge;
+
+class Val_v_ticket;
+class Vis_e_ticket;
+class Val_v_ticket;
+class Val_e_ticket;
+
+class Graph{
+public:
+
+//  Constructors, destructor
+
+    Graph();
+    ~Graph();
+
+//  Copy and assign
+
+    Graph(const Graph& g);
+    Graph& operator=(const Graph& g);
+
+//  Relations
+
+    int operator==(const Graph& g)const;
+    int operator!=(const Graph& g)const;
+
+//  Connectivity information
+
+    const Set_of_p<Vertex>& vertices()const;
+    const Set_of_p<Edge>& edges()const;
+    int contains(const Vertex* v)const;
+    int contains(const Edge* e)const;
+
+//  Insert and remove Vertices and Edges 
+
+    int insert(Vertex* v);
+    int insert(Edge* e);
+    int remove(const Vertex* v);
+    int remove(const Edge* e);
+
+//  Induced Graph
+
+    Graph induced_graph(const Set_of_p<Vertex>& s)const;
+};
+class Vertex{
+public:
+
+//  Constructors, destructor
+
+    Vertex();
+    ~Vertex();
+
+//  Copy and assign
+
+    private: 
+        Vertex(const Vertex& v);
+        Vertex& operator=(const Vertex& v); 
+    public:
+
+//  Connectivity information
+
+    Set_of_p<Graph> graphs()const;
+    Set_of_p<Edge> edges()const;
+    Set_of_p<Edge> edges_g(const Graph& g)const;
+    Set_of_p<Edge> in_edges()const;
+    Set_of_p<Edge> out_edges()const;
+    Set_of_p<Edge> loop_edges()const;
+    Set_of_p<Edge> in_edges_g(const Graph& g)const;
+    Set_of_p<Edge> out_edges_g(const Graph& g)const;
+    Set_of_p<Edge> loop_edges_g(const Graph& g)const;
+    int in_graph(const Graph& g)const;
+
+//  Traversal support for simple marking
+
+    static Vis_v_ticket get_vis_v_ticket();
+    int set_visited();
+    int set_visited(const Vis_v_ticket& t);
+    int reset_visited();
+    int reset_visited(const Vis_v_ticket& t);
+    int visited();
+    int visited(const Vis_v_ticket& t);
+    static void free_vis_v_ticket(Vis_v_ticket& t);
+
+//  Traversal support for integer marking
+
+    static Val_v_ticket get_val_v_ticket();
+    int val_set(int val);
+    int val_set(const Val_v_ticket& t, int val);
+    int val();
+    int val(const Val_v_ticket& t);
+    static void free_val_v_ticket(Val_v_ticket& t);
+};
+
+//  Remove Vertex marks
+
+void reset_visited(Set_of_p<Vertex>& s);
+void reset_visited(const Vis_v_ticket& t,
+    Set_of_p<Vertex>& s);
+void reset_val(Set_of_p<Vertex>& s);
+void reset_val(const Val_v_ticket& t,
+    Set_of_p<Vertex>& s);
+
+class Edge{
+public:
+
+//  Constructors, destructor
+
+    Edge(Vertex* src,Vertex* dest);
+    ~Edge();
+
+//  Copy and assign
+
+    Edge(const Edge& e);
+    Edge& operator=(const Edge& e);
+
+//  Connectivity information
+
+    Vertex* src()const;
+    Vertex* dst()const;
+    const Set_of_p<Graph>& graphs()const;
+    int in_graph(const Graph& g)const;
+
+//  Traversal support for simple marking
+
+    static Vis_e_ticket get_vis_e_ticket();
+    int set_visited();
+    int set_visited(const Vis_e_ticket& t);
+    int reset_visited();
+    int reset_visited(const Vis_e_ticket& t);
+    int visited();
+    int visited(const Vis_e_ticket& t);
+    static void free_vis_e_ticket(Vis_e_ticket& t);
+
+//  Traversal support for more detailed marking
+
+    static Val_e_ticket get_val_e_ticket();
+    int val_set(int val);
+    int val_set(const Val_e_ticket& t, int val);
+    int val();
+    int val(const Val_e_ticket& t);
+    static void free_val_e_ticket(Val_e_ticket&) t;
+};
+
+//  Remove Edge marks
+
+void reset_visited(Set_of_p<Edge>& s);
+void reset_visited(const Vis_e_ticket& t,
+    Set_of_p<Edge>& s);
+void reset_val(Set_of_p<Edge>& s);
+void reset_val(const Val_e_ticket& t,
+    Set_of_p<Edge>& s);
+
+//  Macros needed to derive from Graph, Vertex, and Edge
+
+#define Graphdeclare1(\f2G\fP,\f2V\fP,\f2E\fP) ...
+#define derivedGraph(\f2G\fP,\f2V\fP,\f2E\fP) ...
+#define derivedVertex(\f2G\fP,\f2V\fP,\f2E\fP) ...
+#define derivedEdge(\f2G\fP,\f2V\fP,\f2E\fP) ...
+#define Graphdeclare2(\f2G\fP,\f2V\fP,\f2E\fP) ...
+
+\f2Expanding Graphdeclare1(G,V,E) produces the following text:\fP
+
+    class \f2G\fP;
+    class \f2V\fP;
+    class \f2E\fP;
+
+.Be
+.SH DESCRIPTION
+.PP
+Objects of class \f4Graph\fP
+can be used to maintain relationships 
+(modeled by objects of class \f4Edge\f1)
+among entities 
+(modeled by objects of class \f4Vertex\f1).
+The three classes can be used directly to maintain
+``vanilla'' relationships among vanilla entities; 
+in this case, the macros defined in the header file 
+will not be needed, and can be safely ignored by
+the reader.
+Usually, however, the classes will be used
+to derive other, application-specific, classes that
+model a particular application domain.  
+For example, a parcel-routing application 
+might require the name of a city
+in each of its Vertices and an inter-city delivery
+time in each of its Edges.  Macros are needed
+to define such derived classes.
+.PP
+The facilities provided are basic; 
+they allow clients to create and inspect individual relationships, 
+but they do not provide more complex analyses, such as 
+determining which entities are related
+to one another by transitivity
+(using graph theory terminology,
+the ``components'' of a graph).
+Users with such requirements can either develop 
+the needed facilities themselves or use the
+algorithms described in 
+\f3Graph_alg(3C++)\f1.
+.PP
+Internally, Graphs are implemented as collections of 
+pointers.  Adding a Vertex to a Graph 
+stores a Vertex pointer
+in the Graph's private data structure; 
+it does not make a copy of the Vertex.
+The same is true of Edges.  
+Similarly, when a Vertex (or Edge) is removed from a Graph, 
+the pointer is deleted from the Graph's private data structure,
+but the Vertex (or Edge) continues to exist.
+Allocating and managing
+space for Vertex and Edge objects
+is entirely the client's responsibility.  
+Care must therefore be taken to avoid dangling 
+references and the other well-known pitfalls of pointers.
+On the other hand, Graphs can share Vertices 
+and Edges, which may be an advantage in some 
+applications.
+.PP
+With respect to a given Vertex, three kinds of Edges 
+can be distinguished:
+an \f2out-Edge\f1 originates at the Vertex; 
+an \f2in-Edge\f1 terminates at the Vertex; 
+a \f2loop-Edge\f1 both originates and terminates
+at the Vertex.
+.PP
+The basic graph theoretic notions of ``directed'' 
+and ``undirected'' are not built into class
+Graph; rather, they are properties that may 
+be \f2imputed\f1 to Graphs by client code, simply by
+choosing whether or not to treat Edge directionality 
+as significant.  \f3Graph_alg(3C++)\f1
+contains directed and undirected versions of several 
+basic graph algorithms.
+.PP
+\f2Traversing\f1 a Graph means visiting its Vertices
+(or Edges) in some order.  Well-known examples include
+breadth-first and depth-first traversal.
+Many common Graph applications require the ability 
+to traverse a Graph.  
+There are no traversal algorithms built into
+the Graph class \f2per se\f1; clients can use traversal
+routines in \f3Graph_alg(3C++)\f1,
+or they can write their own.
+To support traversal, Vertex and Edge objects have 
+member functions needed to ``mark'' Vertices and Edges 
+as having been visited.  
+Several non-member functions are provided
+to remove marks made at Vertex and Edge objects.
+.PP
+(If less than two traversals are to take place concurrently,
+the following discussion of ``tickets'' can be safely ignored.)
+.PP
+To permit \f2concurrent traversals\f1,
+a traversal must obtain a ``ticket'' allowing
+it to leave its unique mark on Vertices or Edges.
+Two kinds of tickets are provided for marking:
+Vis_v_tickets are used for marking Vertices;
+Vis_e_tickets are used for marking Edges.
+A mark can be viewed as a boolean value which 
+is either non-zero (marked) or zero (unmarked).
+In some traversal algorithms, simple boolean marks
+will not suffice; an integer mark is needed, for example, 
+to keep track of the number of times an Edge or Vertex 
+has been visited in a particular traversal.
+Two analogous kinds of tickets 
+(Val_v_tickets and Val_e_tickets) 
+are provided for this purpose.
+Tickets are reusable resources that should be 
+returned to the available ticket pool when they are no 
+longer needed.  
+.SH " "
+.SH "class Graph"
+.SH " "
+.SS "Constructors, destructor"
+.IP "\f4Graph();\f1"
+The empty Graph.
+.IP "\f4~Graph();\f1"
+Destructor.  
+Does not destroy Edges or Vertices
+belonging to this Graph 
+(this is the client's responsibility).
+.SS "Copy and assign"
+.IP "\f4Graph(const Graph& g);\f1"
+.hS
+.IP "\f4Graph& operator=(const Graph& g);\f1"
+Copying or assigning
+a Graph creates a Graph that shares Vertices 
+and Edges with \f4g\f1.
+.SS "Relations"
+.IP "\f4int operator==(const Graph& g)const;\f1"
+.hS
+.IP "\f4int operator!=(const Graph& g)const;\f1"
+Determines whether or not this Graph points
+to the same Vertex and Edge objects as \f4g\f1.
+Note that equality is NOT graph isomorphism.
+.SS "Connectivity information"
+.IP "\f4const Set_of_p<Vertex>& vertices()const;\f1"
+.hS
+.IP "\f4const Set_of_p<Edge>& edges()const;\f1"
+Returns the set of pointers to all Vertices (Edges) of the Graph.
+.IP "\f4int contains(const Vertex* v)const;\f1"
+.hS
+.IP "\f4int contains(const Edge* e)const;\f1"
+Returns non-zero if the Graph contains a given Vertex (Edge).
+.SS "Insert and remove Vertices and Edges"
+The following functions return non-zero if the Graph
+changes as a result of the call.
+.IP "\f4int insert(Vertex* v);\f1"
+.hS
+.IP "\f4int insert(Edge* e);\f1"
+Inserts a given Vertex (Edge) into the Graph.
+.IP "\f4int remove(const Vertex* v);\f1"
+.hS
+.IP "\f4int remove(const Edge* e);\f1"
+Removes a given Vertex (Edge) from the Graph.
+.SS "Induced Graph"
+.IP "\f4Graph induced_graph(const Set_of_p<Vertex>& s)const;\f1"
+Returns the maximal subgraph of the Graph, 
+all of whose Vertices are in \f4s\f1.
+.SH " "
+.SH "class Vertex" 
+.SH " "
+.SS "Constructors, destructor"
+.IP "\f4Vertex();\f1"
+Creates a Vertex.
+.IP "\f4~Vertex();\f1"
+Destructor.  
+The Vertex is removed from all Graphs 
+to which it belongs and then destroyed.  
+Edges incident on this Vertex become invalid,
+but are not destroyed; if such Edges belong to
+Graphs, they are removed.
+Invalid Edges must not be used in any
+Graph or Edge operation, although this condition
+is not checked for.  
+.SS "Copy and assign"
+Vertices cannot be copied or assigned.
+.SS "Connectivity information"
+.IP "\f4Set_of_p<Graph> graphs()const;\f1"
+The set of Graphs to which this Vertex belongs.
+.IP "\f4Set_of_p<Edge> edges()const;\f1"
+The set of all Edges (both in-Edges and out-Edges) 
+incident upon this Vertex.
+.IP "\f4Set_of_p<Edge> edges_g(const Graph& g)const;\f1"
+Like \f4edges()\f1, except that only Edges
+belonging to Graph \f4g\f1 are considered.
+.IP "\f4Set_of_p<Edge> in_edges()const;\f1"
+.hS
+.IP "\f4Set_of_p<Edge> out_edges()const;\f1"
+.hS
+.IP "\f4Set_of_p<Edge> loop_edges()const;\f1"
+The set of all in-Edges (out-Edges, loop-Edges) 
+at this Vertex.
+.IP "\f4Set_of_p<Edge> in_edges_g(const Graph& g)const;\f1"
+.hS
+.IP "\f4Set_of_p<Edge> out_edges_g(const Graph& g)const;\f1"
+.hS
+.IP "\f4Set_of_p<Edge> loop_edges_g(const Graph& g)const;\f1"
+Like the above, except that only Edges
+belonging to Graph \f4g\f1 are considered.
+.IP "\f4int in_graph(const Graph& g)const;\f1"
+Returns non-zero if this Vertex belongs to Graph \f4g\f1.
+.SS "Traversal support for simple marking"
+.IP "\f4static Vis_v_ticket get_vis_v_ticket();\f1"
+Returns a ticket for the simple marking of Vertices.
+.IP "\f4int set_visited();\f1"
+.hS
+.IP "\f4int set_visited(const Vis_v_ticket& t);\f1"
+Marks this Vertex, using a ``default ticket'' or ticket \f4t\f1.  
+(The default ticket may be used for one traversal; all other traversals that may
+be activated concurrently need to use a ticket obtained through
+\f4get_vis_v_ticket.\f1)
+Returns the previous mark (where 1 signifies ``marked''
+and 0 signifies ``unmarked''), or zero if the Vertex
+has not been marked using this ticket.
+.IP "\f4int reset_visited();\f1"
+.hS
+.IP "\f4int reset_visited(const Vis_v_ticket& t);\f1"
+Unmarks this Vertex using the default ticket or
+ticket \f4t\f1.  Has no effect if the 
+Vertex is not already marked by this ticket.
+Returns the previous value of the mark.
+.IP "\f4int visited();\f1"
+.hS
+.IP "\f4int visited(const Vis_v_ticket& t);\f1"
+Returns non-zero if the Vertex is 
+currently marked by the default ticket or ticket \f4t\f1.
+.IP "\f4static void free_vis_v_ticket(Vis_v_ticket& t);\f1"
+Returns \f4t\f1 to the pool of available 
+Vertex-marking tickets.  
+Does not remove marks made with this ticket.
+.SS "Traversal support for integer marking"
+.IP "\f4static Val_v_ticket get_val_v_ticket();\f1"
+Returns a ticket that may be used
+to mark Vertices with integer values.
+.IP "\f4int val_set(int val);\f1"
+.hS
+.IP "\f4int val_set(const Val_v_ticket& t, int val);\f1"
+Marks this Vertex with the value \f4val\f1.
+Returns the previous value, or zero if the Vertex
+has not been marked using the default ticket or 
+ticket \f4t\f1.
+.IP "\f4int val();\f1"
+.hS
+.IP "\f4int val(const Val_v_ticket& t);\f1"
+Returns non-zero if the Vertex is
+currently marked by the default ticket or ticket \f4t\f1.
+.IP "\f4static void free_val_v_ticket(Val_v_ticket& t);\f1"
+Returns \f4t\f1 to the pool of available 
+Vertex-value tickets.  
+Does not remove marks made with this ticket.
+.SS "Remove Vertex marks"
+.IP "\f4void reset_visited(Set_of_p<Vertex>& s);\f1"
+Removes visited marks at each Vertex in \f4s\f1 using the 
+default ticket. 
+.IP "\f4void reset_visited(const Vis_v_ticket& t,\f1"
+.IC "\f4    Set_of_p<Vertex>& s);\f1"
+Removes visited marks at each Vertex in \f4s\f1 using
+ticket \f4t\f1.
+.IP "\f4void reset_val(Set_of_p<Vertex>& s);\f1"
+Removes val marks at each Vertex in \f4s\f1 using the 
+default ticket 
+.IP "\f4void reset_val(const Val_v_ticket& t,\f1"
+.IC "\f4    Set_of_p<Vertex>& s);\f1"
+Removes val marks at each Vertex in \f4s\f1 using
+ticket \f4t\f1.
+.SH " "
+.SH "class Edge" 
+.SH " "
+.SS "Constructors, destructor"
+.IP "\f4Edge(Vertex* src,Vertex* dest);\f1"
+Creates an Edge whose source and destination
+Vertices are pointed to by \f4src\f1 and \f4dest\f1,
+respectively.  That is, the resulting Edge becomes 
+an out-Edge of \f4*src\f1 and an in-Edge of \f4*dest\f1.
+.IP "\f4~Edge();\f1"
+Destructor.  The Edge is removed from all Graphs to
+which it belongs and destroyed.  Does not destroy the
+Vertices associated with the Edge.
+.SS "Copy and assign"
+.IP "\f4Edge(const Edge& e);\f1"
+.hS
+.IP "\f4Edge& operator=(const Edge& e);\f1"
+Copying or assigning
+an Edge creates an Edge that shares Vertices 
+with \f4e\f1.
+.SS "Connectivity information"
+.IP "\f4Vertex* src()const;\f1"
+Returns the Vertex which is the source of this Edge.  
+.IP "\f4Vertex* dst()const;\f1"
+Returns the Vertex which is the destination of this Edge.  
+.IP "\f4const Set_of_p<Graph>& graphs()const;\f1"
+Returns the set of Graphs to which this Edge 
+belongs.
+.IP "\f4int in_graph(const Graph& g)const;\f1"
+Returns non-zero if this Edge belongs to Graph \f4g\f1.
+.SS "Traversal support for simple marking"
+The semantics of the member functions listed in the
+Synopsis are the same as
+described for Vertices.
+.SS "Traversal support for more detailed marking"
+The semantics of the member functions listed in the 
+Synopsis are the same as 
+described for Vertices.
+.SS "Remove Edge marks"
+.IP "\f4void reset_visited(Set_of_p<Edge>& s);\f1"
+.hS
+.IP "\f4void reset_visited(const Vis_e_ticket& t,\f1"
+.IC "\f4    Set_of_p<Edge>& s);\f1"
+.hS
+.IP "\f4void reset_val(Set_of_p<Edge>& s);\f1"
+.hS
+.IP "\f4void reset_val(const Val_e_ticket& t,Set_of_p<Edge>& s);\f1"
+Similar to the functions described under \f3Remove Vertex 
+marks\f1, except that these remove marks on Edges.
+.SS "Macros needed to derive from Graph, Vertex, and Edge"
+We use the symbols \f2G\f1, \f2V\f1, and \f2E\f1 for
+the the names of classes derived 
+from \f4Graph\f1, \f4Vertex\f1, and \f4Edge\f1, 
+respectively.
+\f2G\f1 must be an identifier other than \f4Graph\f1,
+\f2V\f1 must be an identifier other than \f4Vertex\f1, 
+and \f2E\f1 must be an identifier other than \f4Edge\f1.
+Furthermore, \f2G\f1, \f2V\f1, and \f2E\f1 may not be
+the names of previously-derived Graph, Vertex, and Edge
+classes; this restriction implies that each use of the
+macros creates three new derived classes.
+Deriving a Graph, Vertex, or Edge class requires the client 
+programmer to first define the ``extensions'' to the base class 
+(the only \f2required\f1 extensions are the 
+constructors for \f2G\f1 and \f2E\f1)
+and then complete the definition
+by invoking either \f4derivedGraph(\f2G\fP,\f2V\fP,\f2E\fP)\f1,
+\f4derivedVertex(\f2G\fP,\f2V\fP,\f2E\fP)\f1, 
+or \f4derivedEdge(\f2G\fP,\f2V\fP,\f2E\fP)\f1, 
+depending on the base class being extended
+(see the \f3EXAMPLE\f1).
+.IP "\f4#define Graphdeclare1(\f2G\fP,\f2V\fP,\f2E\fP) ...\f1"
+This macro must be expanded exactly once in any compilation
+unit that derives \f2G\f1, \f2V\f1, and \f2E\f1, prior
+to the first such derivation.  It makes preliminary 
+declarations needed by the derivations.
+.IP "\f4#define derivedGraph(\f2G\fP,\f2V\fP,\f2E\fP) ...\f1"
+This macro must be expanded anywhere within the public part 
+of class \f2G\f1.  
+Class \f2G\f1 must be publicly derived from
+\f4Graph\f1 and must have a constructor.
+.IP "\f4#define derivedVertex(\f2G\fP,\f2V\fP,\f2E\fP) ...\f1"
+This macro must be expanded anywhere within the public part of 
+class \f2V\f1.  
+Class \f2V\f1 must be publicly derived from
+\f4Vertex\f1.
+.IP "\f4#define derivedEdge(\f2G\fP,\f2V\fP,\f2E\fP) ...\f1"
+This macro must be expanded anywhere within the public part of 
+class \f2E\f1.  Class \f2E\f1 must be publicly derived from
+\f4Edge\f1 and must have a constructor, typically
+\f2E(V*,V*)\f1.
+.IP "\f4#define Graphdeclare2(\f2G\fP,\f2V\fP,\f2E\fP) ...\f1"
+This macro must be expanded exactly once in any compilation
+unit that expands \f4Graphdeclare1(\f2G\f1,\f2V\f1,\f2E\f1)\f1,
+following the derivation of \f2G\f1, \f2V\f1, and \f2E\f1.
+.SH " "
+.SH "class \f2G\f1"
+.hS
+.SH "class \f2V\f1"
+.hS
+.SH "class \f2E\f1"
+.SH " "
+The descriptions of \f4Graph\f1, \f4Vertex\f1, 
+and \f4Edge\f1, 
+apply, \f2mutatis mutandis\f1, to derived classes 
+\f2G\f1, \f2V\f1, and \f2E\f1, respectively.
+That is, \f2G\f1, \f2V\f1, and \f2E\f1 have the same 
+operations as their respective base classes, 
+except that arguments and return types 
+are \f2G\f1, \f2V\f1, and \f2E\f1
+instead of \f4Graph\f1, \f4Vertex\f1, and \f4Edge\f1,
+respectively.
+.SH "EXAMPLE"
+Define a Graph with named Vertices and weighted Edges.
+.Bf
+
+\f2My_graph.h:\fP
+
+    #include <Graph.h>
+    #include <String.h>
+
+    Graphdeclare1(My_graph,My_vertex,My_edge)
+
+    class My_vertex : public Vertex {
+        String name;
+    public:
+	derivedVertex(My_graph,My_vertex,My_edge)
+	My_vertex(const String& id):name(id){ }
+    };
+    class My_edge : public Edge {
+	int weight;
+    public:
+	derivedEdge(My_graph,My_vertex,My_edge)
+	My_edge(My_vertex* v1,My_vertex* v2,int w)
+            :(v1,v2),weight(w){ }
+    };
+    class My_graph : public Graph {
+    public:
+	derivedGraph(My_graph,My_vertex,My_edge)
+	My_graph(){ }
+    };
+    Graphdeclare2(My_graph,My_vertex,My_edge)
+
+.Be
+.SH BUGS
+An Edge becomes useless when either or
+both of its Vertices is destroyed, and should not be
+passed to any Graph or Edge operation, although this
+condition is not checked for.
+.SH SEE ALSO
+.Bf
+\f3Graph_alg(3C++)\f1 
+\f3Set(3C++)\f1
+\f3String(3C++)\f1
+.Be

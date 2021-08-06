@@ -1,0 +1,219 @@
+.  \"ident	"@(#)cls4:man/stream/manip.3	1.2"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any
+.  \"actual or intended publication of such source code.
+.TH MANIP 3C++ "C++ Stream Library" " "
+.SH NAME
+manipulators \- iostream out of band manipulations
+.SH SYNOPSIS
+.ft B
+.ta1i 2i
+.nf
+#include <iostream.h>
+#include <iomanip.h>
+
+IOMANIPdeclare(T) ;
+
+class SMANIP(T) {
+	SMANIP(T)( ios& (*)(ios&,T), T);
+	friend	istream& operator>>(istream&, SMANIP(T)&);
+	friend	ostream& operator<<(ostream&, SMANIP(T)&);
+};
+class SAPP(T) {
+	SAPP(T)( ios& (*)(ios&,T));
+	SMANIP(T) operator()(T);
+};
+class IMANIP(T) {
+	IMANIP(T)( istream& (*)(istream&,T), T);
+	friend	istream& operator>>(istream&, IMANIP(T)&);
+};
+class IAPP(T) {
+	IAPP(T)( istream& (*)(istream&,T));
+	IMANIP(T) operator()(T);
+};
+class OMANIP(T) {
+	OMANIP(T)( ostream& (*)(ostream&,T), T);
+	friend	ostream& operator<<(ostream&, OMANIP(T)&);
+};
+class OAPP(T) {
+	OAPP(T)( ostream& (*)(ostream&,T));
+	OMANIP(T) operator()(T);
+};
+class IOMANIP(T) {
+	IOMANIP(T)( iostream& (*)(iostream&,T), T);
+	friend	istream& operator>>(iostream&, IOMANIP(T)&);
+	friend	ostream& operator<<(iostream&, IOMANIP(T)&);
+};
+class IOAPP(T) {
+	IOAPP(T)( iostream& (*)(iostream&,T));
+	IOMANIP(T) operator()(T);
+};
+
+IOMANIPdeclare(int);
+IOMANIPdeclare(long);
+
+SMANIP(long)	resetiosflags(long);
+SMANIP(int)	setfill(int);
+SMANIP(long)	setiosflags(long);
+SMANIP(int)	setprecision(int);
+SMANIP(int)	setw(int w);
+.fi
+.ft R
+.SH DESCRIPTION
+Manipulators are values that may be "inserted into" or
+"extracted from" streams to achieve some effect
+(other than to insert or extract a value representation),
+with a convenient syntax.
+They enable one to embed a function call
+in an expression containing a series of insertions or extractions.
+For example, the predefined manipulator for \f(CWostream\fPs,
+\f3flush\fP, can be used as follows:
+.RS 10
+\f3cout << flush\fP
+.RE
+to flush \f(CWcout\fP.
+Several iostream classes supply manipulators:
+see \f2ios(3C++)\fP, \f2istream(3C++)\fP, and \f2ostream(3C++)\fP.
+\f3flush\fP is a simple manipulator;
+some manipulators take arguments, such as the predefined
+\f(CWios\fP manipulators, \f3setfill\fP and \f3setw\fP (see below).
+The header file \f(CWiomanip.h\fP supplies macro definitions
+which programmers can use to define new parameterized manipulators.
+.PP
+Ideally, the types relating to manipulators would be parameterized
+as "templates."
+The macros defined in \f(CWiomanip.h\f1 are used to simulate templates.
+\f3IOMANIPdeclare(T)\f1 declares 
+the various classes and operators.
+(All code is declared inline so that no separate definitions are required.)
+Each of the other \f3T\f1s is used to construct the real names and therefore
+must be a single identifer.
+Each of the other macros also requires an identifier
+and expands to a name.
+.PP
+In the following descriptions, assume:
+.br
+\(em \f3t\f1 is a \f3T\f1, or type name.
+.br
+\(em \f3s\f1 is an \f(CWios\f1.
+.br
+\(em \f3i\f1 is an \f(CWistream\f1.
+.br
+\(em \f3o\f1 is an \f(CWostream\f1.
+.br
+\(em \f3io\f1 is an \f(CWiostream\f1.
+.br
+\(em \f3f\f1 is an \f(CWios& (*)(ios&)\f1.
+.br
+\(em \f3if\f1 is an \f(CWistream& (*)(istream&)\f1.
+.br
+\(em \f3of\f1 is an \f(CWostream& (*)(ostream&)\f1.
+.br
+\(em \f3iof\f1 is an \f(CWiostream& (*)(iostream&)\f1.
+.br
+\(em \f3n\fP is an \f(CWint\fP.
+.br
+\(em \f3l\fP is a \f(CWlong\fP.
+.sp
+.nf
+.in -.5i
+\f3s<<SMANIP(T)(f,t)\f1
+\f3s>>SMANIP(T)(f,t)\f1
+\f3s<<SAPP(T)(f)(t)\f1
+\f3s>>SAPP(T)(f)(t)\f1
+.in
+.fi
+Returns \f3f(s,t)\f1, where \f3s\f1 is the left operand of
+the insertion or extractor operator
+(i.e., \f3s\fP, \f3i\fP, \f3o\fP, or \f3io\fP).
+.sp
+.nf
+.in -.5i
+\f3i>>IMANIP(T)(if,t)\f1
+\f3i>>IAPP(T)(if)(t)\f1
+.in
+.fi
+Returns \f3if(i,t)\f1.
+.sp
+.nf
+.in -.5i
+\f3o<<OMANIP(T)(of,t)\f1
+\f3o<<OAPP(T)(of)(t)\f1
+.in
+.fi
+Returns \f3of(o,t)\f1.
+.sp
+.nf
+.in -.5i
+\f3io<<IOMANIP(T)(iof,t)\f1
+\f3io>>IOMANIP(T)(iof,t)\f1
+\f3io<<IOAPP(T)(iof)(t)\f1
+\f3io>>IOAPP(T)(iof)(t)\f1
+.in
+.fi
+Returns \f3iof(io,t)\f1.
+.PP
+.sp
+.in -.5i
+\f(CWiomanip.h\f1 contains two declarations, \f(CWIOMANIPdeclare(int)\f1
+and \f(CWIOMANIPdeclare(long)\fP
+and some manipulators that take an \f(CWint\fP or a \f(CWlong\fP argument.
+These manipulators all have to do with changing the format state
+of a stream; see \f2ios(3C++)\fP for further details.
+.sp
+.nf
+.in -.5i
+\f3o<<setw(n)\f1
+\f3i>>setw(n)\f1
+.in
+.fi
+Sets the field width of
+the stream (left-hand operand: \f3o\fP or \f3i\fP) to \f3n\f1.
+.sp
+.nf
+.in -.5i
+\f3o<<setfill(n)\f1
+\f3i>>setfill(n)\f1
+.in
+.fi
+Sets the fill character of the stream (\f3o\fP or \f3i\fP, or)
+to be \f3n\fP.
+.sp
+.nf
+.in -.5i
+\f3o<<setprecision(n)\f1
+\f3i>>setprecision(n)\f1
+.in
+.fi
+Sets the precision of the stream (\f3o\fP or \f3i\fP)
+to be \f3n\fP.
+.sp
+.nf
+.in -.5i
+\f3o<<setiosflags(l)\f1
+\f3i>>setiosflags(l)\f1
+.in
+.fi
+Turns on in the stream (\f3o\fP or \f3i\fP)
+the format flags marked in \f3l\fP.
+(Calls \f3o.setf(l)\fP or \f3i.setf(l)\fP).
+.sp
+.nf
+.in -.5i
+\f3o<<resetiosflags(l)\f1
+\f3i>>resetiosflags(l)\f1
+.in
+.fi
+Clears in the stream (\f3o\fP or \f3i\fP)
+the format bits specified by \f3l\fP.
+(Calls \f3o.setf(0,l)\fP or \f3i.setf(0,l)\fP).
+.SH CAVEATS
+Syntax errors will be reported if
+\f3IOMANIPdeclare(T)\f1 occurs more than once in a file with the
+same \f3T\f1.
+.SH SEE ALSO
+ios(3C++),
+istream(3C++),
+ostream(3C++)

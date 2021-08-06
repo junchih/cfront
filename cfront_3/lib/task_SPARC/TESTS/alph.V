@@ -1,0 +1,10 @@
+Alphonse: 4
+Gaston: 4
+Alphonse: 3
+Gaston: 3
+Alphonse: 2
+Gaston: 2
+Alphonse: 1
+Gaston: 1
+Alphonse: 0
+Gaston: 0

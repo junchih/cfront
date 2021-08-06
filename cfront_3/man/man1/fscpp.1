@@ -1,0 +1,48 @@
+.\" ident	@(#)CC:man/fscpp.1	3.2
+.\"
+.\" C++ Standard Components, Release 3.0.
+.\"
+.\" Copyright (c) 1991, 1992 AT&T and UNIX System Laboratories, Inc.
+.\" Copyright (c) 1988, 1989, 1990 AT&T.  All Rights Reserved.
+.\"
+.\" THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T and UNIX System
+.\" Laboratories, Inc.  The copyright notice above does not evidence
+.\" any actual or intended publication of such source code.
+.\" 
+.TH \f3fscpp\f1 \f31C++\f1 " "
+.SH NAME
+fscpp \- /lib/cpp replacement for C++ libraries
+.SH SYNOPSIS
+.B 
+/lib/fscpp [ \fIcpp options\fP ]
+.SH DESCRIPTION
+.I fscpp
+is a replacement for 
+\f3cpp(1)\f1.
+.I fscpp
+does everything \f3cpp(1)\f1 does, but also 
+filters the result through \f3fsipp\f1,
+the \f3fs(3C++)\f1 instrumenting filter.
+.I fscpp
+works by first invoking \f3cpp(1)\f1 on the standard input,
+and then filtering the result through \f3fsipp\f1.
+Users can have 
+.I fscpp 
+invoked automatically during \f3CC(1C++)\f1 by
+setting their 
+.B cppC
+environment variable to the location of 
+.IR fscpp .
+.SH ENVIRONMENT
+The following are the user-settable environment variables:
+.PP
+.nf
+CCROOTDIR	C++ home directory (normally set by \f3CC(1C++)\f1)
+cppC		preprocessor invoked by \f3CC(1C++)\f1
+realcppC	real preprocessor (default: /lib/cpp)
+fsippC		\f3fs(3C++)\f1 instrumenting filter (default: $CCROOTDIR/fsipp)
+.fi
+.SH "SEE ALSO"
+\f3CC(1C++)\f1,
+\f3cpp(1)\f1,
+\f3fs(3C++).

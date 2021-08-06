@@ -1,0 +1,536 @@
+.  \"ident	"@(#)cls4:man/task/queue.3	1.1"
+.  \"Copyright (c) 1984 AT&T
+.  \"All Rights Reserved        
+.  \"THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T
+.  \"The copyright notice above does not evidence any           
+.  \"actual or intended publication of such source code.
+.TH QUEUE 3C++ "C++ Task Library" " "
+.SH NAME
+queue \- qheads and qtails for the C++ task library
+.SH SYNOPSIS
+\f3
+.nf
+#include <task.h>
+
+enum qmodetype { EMODE, WMODE, ZMODE };
+
+class qhead : public object {
+public:
+			qhead(qmodetype =WMODE, int =10000);
+			~qhead();
+	qhead*		cut();
+	object*		get();
+	objtype		o_type();
+	int		pending();
+	void		print(int, int =0);
+	int		putback(object*);
+	int		rdcount();
+	int		rdmax();
+	qmodetype	rdmode();
+	void		setmode(qmodetype);
+	void		setmax(int);
+	void		splice(qtail*);
+	qtail*		tail();
+};
+
+class qtail : public object {
+public:
+			qtail(qmodetype =WMODE, int =10000);
+			~qtail();
+	qtail*		cut();
+	qhead*		head();
+	objtype		o_type();
+	int		pending();
+	void		print(int, int =0);
+	int		put(object*);
+	int		rdspace();
+	int		rdmax();
+	qmodetype	rdmode();
+	void 		splice(qhead*);
+	void		setmode(qmodetype);
+	void		setmax(int);
+};
+
+\fP
+.fi
+.SH DESCRIPTION
+Classes \f(CWqhead\fP and \f(CWqtail\fP
+enable a wide range of message-passing and data-buffering schemes
+to be implemented simply with the C++ task system.
+Both classes are derived from the base class \f(CWobject\fP,
+which is described on the task(3C++) manual page.
+In general, class \f(CWqhead\fP provides facilities
+for taking objects off a queue,
+and class \f(CWqtail\fP provides facilities
+for putting objects on a queue.
+The objects transmitted through a queue must be of class \f(CWobject\fP
+or of some class derived from it.
+.P
+A queue is a data structure with an 
+associated list of \f(CWobject\fPs in first-in, first-out order.
+Each queue also has associated \f(CWqhead\fP and \f(CWqtail\fP
+objects attached (one of each).
+No public functions are provided to operate on queues directly.
+Rather all access to a queue is through either the attached \f(CWqhead\fP
+or the attached \f(CWqtail\fP.
+To create a queue, the programmer must declare a \f(CWqhead\fP object
+and then use that object to call 
+.B qhead::tail()
+or must declare a \f(CWqtail\fP object
+and then use that object to call
+.B qtail::head().
+For example:
+.RS 5
+.nf
+\f(CW
+qhead qh;
+qtail* qtp = qh.tail();
+\fP
+.fi
+.RE
+Once the queue is established,
+\f(CWobject\fPs are added to it with
+.B qtail::put()
+and \f(CWobject\fPs are removed from it with
+.B qhead::get().
+.P
+Objects derived from class \f(CWobject\fP
+have definitions of when they are 
+.I ready
+and
+.I pending 
+(not ready).
+\f(CWqhead\fP objects are ready
+when the queue is not empty
+and pending when the queue is empty.
+\f(CWqtail\fP objects are ready
+when the queue is not full,
+and pending when the queue is full.
+.P
+Queues have three attributes:  mode, maximum size, and count.
+The size and count attributes apply to the queue itself,
+while the mode attribute applies independently to the \f(CWqhead\fP
+and \f(CWqtail\fP of a queue.
+These attributes are described below.
+.P
+Both classes \f(CWqhead\fP and \f(CWqtail\fP
+have a mode (set by the constructor)
+that controls what happens when an object of that class
+is pending.
+The default is WMODE (wait mode).
+With WMODE, a \f(CWtask\fP that executes
+.B qhead::get()
+on an empty queue will be suspended
+until that queue becomes non-empty.
+Similarly, with WMODE a \f(CWtask\fP that executes
+.B qtail::put()
+on a full queue will be suspended
+until that queue has room for the \f(CWobject\fP
+to be added to the queue.
+In EMODE (error mode), calling
+.B qhead::get()
+for an empty queue or calling
+.B qtail::put()
+for a full queue
+will cause a run time error.
+In ZMODE (zero mode), if
+.B qhead::get()
+is executed on an empty queue
+it will return the NULL pointer instead of a pointer to an object.
+In ZMODE, if
+.B qtail::put()
+is executed on a full queue,
+it will return 0 instead of 1.
+The modes of a queue's head and tail need not be the same.
+Classes \f(CWqhead\fP and \f(CWqtail\fP both provide
+a function,
+.B setmode(),
+which will reset the mode.
+.P
+Queues also have a maximum size,
+which is set to 10000 by default.
+That is, the queue can hold up to 10000 pointers to objects.
+It does not, however, preallocate space.
+The size of a queue can be reset with either
+.B qhead::setmax()
+or
+.B qtail::setmax().
+.P
+The count is the number of objects on a queue.
+.P
+Both the \f(CWqhead\fP and \f(CWqtail\fP constructors
+optionally take mode and size arguments.
+.P
+The public member functions supplied in the task system classes
+\f(CWqhead\fP and \f(CWqtail\fP
+are listed and described in the next two sections.
+The following symbols are used:
+.RS 10
+.TP 4
+.B qh
+a \f(CWqhead\fP object
+.TP 4
+.B qt
+a \f(CWqtail\fP object
+.TP 4
+.B t
+a \f(CWtask\fP object
+.TP 4
+.B qhp
+a pointer to a \f(CWqhead\fP
+.TP 4
+.B qtp
+a pointer to a \f(CWqtail\fP
+.TP 4
+.B op
+a pointer to an \f(CWobject\fP
+.TP 4
+.B tp
+a pointer to a \f(CWtask\fP
+.TP 4
+.B i, j
+\f(CWint\fPs
+.TP 4
+.B eo
+an \f(CWobjtype\fP enumeration
+.TP 4
+.B eq
+a \f(CWqmodetype\fP enumeration
+.RE
+.SS "Class qhead"
+.P
+Class \f(CWqhead\fP has one form of constructor:
+.TP
+.B "qhead qh( eq, j )"
+Constructs a \f(CWqhead\fP object, \f3qh\fP.
+Both arguments are optional and have default values.
+\f3eq\fP represents the \f2mode\fP (see above),
+which can be WMODE, EMODE, or ZMODE.
+WMODE is the default.
+\f3j\fP represents the maximum length of the queue attached to \f3qh\fP;
+the default is 10000.
+.P
+The public member functions of class \f(CWqhead\fP
+are (in alphabetical order):
+.TP
+.B "qhp = qh.cut()"
+Splits \f3qh\fP in two.
+.B qhead::cut()
+returns a pointer to a new \f(CWqhead\fP,
+which is attached to the original queue.
+\f(CWobject\fPs that are already on the queue
+and \f(CWobject\fPs that are
+.B qtail::put()
+on the original queue must be retrieved via \f3qhp\fP.
+.B qhead::cut()
+modifies \f3qh\fP
+to point to a new empty queue.
+A new \f(CWqtail\fP must be established for \f3qh\fP
+(with 
+.B "qh.tail()"
+).
+\f(CWobject\fPs that are 
+.B qtail::put()
+to the new \f(CWqtail\fP,
+can be retrieved via a
+.B "qh.get()" .
+.sp
+Thus,
+.B qhead::cut()
+can be used to insert a filter into an existing queue,
+without changing the appearance of the queue to anyone using it,
+and without halting the flow of \f(CWobject\fPs through the queue.
+The filter will intercept \f(CWobject\fPs that are 
+.B qtail::put()
+on the original \f(CWqtail\fP
+when it does a 
+.B qhead::get() 
+on the new \f(CWqhead\fP.
+Then the filter can 
+.B qtail::put()
+\f(CWobject\fPs on the new \f(CWqtail\fP,
+where execution of
+.B qhead::get()
+on the original \f(CWqhead\fP will retrieve them.
+In other words, the filter \f(CWtask\fP uses the newly established
+\f(CWqhead\fP and \f(CWqtail\fP,
+while other \f(CWtasks\fP continue to 
+.B put()
+and
+.B get()
+from the original \f(CWqtail\fP and \f(CWqhead\fP.
+.B qhead::splice()
+can be used to restore the queue to its original configuration.
+.TP
+.B "op = qh.get()"
+Returns a pointer to the \f(CWobject\fP at the head of the queue,
+if the queue is not empty.
+If the queue is empty,
+.B qhead::get() 's
+behavior depends on the mode of \f3qh\fP.
+In WMODE, a \f(CWtask\fP that executes
+.B qhead::get()
+on an empty queue will be suspended
+until that queue becomes non-empty,
+when the operation can complete successfully.
+In EMODE, it will cause a run time error.
+In ZMODE, 
+it will return the NULL pointer instead of a pointer to an \f(CWobject\fP.
+.TP
+.B "eo = qh.o_type()"
+Returns the class type of the object
+(\f(CWobject::QHEAD\fP).
+.B o_type()
+is a virtual function.
+.TP
+.B "i = qh.pending()"
+Returns TRUE if the queue attached to \f3qh\fP is empty, and FALSE otherwise.
+.B pending()
+is a virtual function.
+.TP
+.B "qh.print( i )"
+Prints the contents of \f3qh\fP on
+\f(CWstdout\fP.
+It calls the
+.B print()
+function for the \f(CWobject\fP base class.
+\f3i\fP specifies the amount of information to be printed.
+It can be 0, for the minimum amount of information,
+or VERBOSE, for more information.
+A second integer argument is for internal use and defaults to 0.
+.B print()
+is a virtual function.
+.TP
+.B "i = qh.putback( op )"
+Puts the \f(CWobject\fP denoted by \f3op\fP
+back on the head of the queue attached to \f3qh\fP,
+and returns 1 on success.
+This allows a \f(CWqhead\fP to operate as a stack.
+A \f(CWtask\fP calling
+.B qhead::putback()
+competes for queue space with \f(CWtask\fPs using
+.B qtail::put().
+Calling
+.B qhead::putback()
+for a full queue causes a run time error in both EMODE and WMODE,
+and returns NULL in ZMODE.
+.TP
+.B "i = qh.rdcount()"
+Returns the current number of \f(CWobject\fPs in the queue attached to \f3qh\fP.
+.TP
+.B "i = qh.rdmax()"
+Returns the maximum size of the queue attached to \f3qh\fP.
+.TP
+.B "eq = qh.rdmode()"
+Returns the current mode of \f3qh\fP, WMODE, EMODE, or ZMODE.
+.TP
+.B "qh.setmode( eq )"
+Sets the mode of \f3qh\fP to \f3eq\fP,
+which can be WMODE, EMODE, or ZMODE.
+.TP
+.B "qh.setmax( i )"
+Sets the maximum size of the queue attached to \f3qh\fP to \f3i\fP
+It is legal to decrease the maximum below the current number
+of \f(CWobjects\fP on the queue.
+Doing so means that no more \f(CWobject\fPs can be put on the queue
+until the queue has been drained below the new limit.
+.TP
+.B "qh.splice( qtp )"
+Reverses the action of a previous
+.B qhead::cut().
+.B qhead::splice()
+merges the queue attached to \f3qh\fP
+with the queue attached to \f3qtp\fP.
+The list of \f(CWobjects\fP on the latter queue precede
+those on the former queue in the merged list.
+.B qhead::splice()
+deletes \f3qh\fP and \f3qtp\fP.
+\f3qh\fP is meant to be a \f(CWqhead\fP that was previously
+.B cut(),
+and \f3qtp\fP is meant to be the pointer returned by that
+.B cut().
+If in merging the queues 
+.B qhead::splice()
+causes an empty queue to become non-empty
+or a full queue to become non-full,
+it will alert all \f(CWtask\fPs waiting for that state change,
+and add them to the scheduler's 
+.I run chain.
+(See 
+.B object::alert()
+on the task(3C++) manual page.)
+.TP
+.B "qtp = qh.tail()"
+Creates a \f(CWqtail\fP object for the queue
+attached to \f3qh\fP (if none exists)
+and returns a pointer, \f3qtp\fP, to the new \f(CWqtail\fP object.
+.SS "Class qtail"
+.P
+Class \f(CWqtail\fP has one form of constructor:
+.TP
+.B "qtail qt( eq, j )"
+Constructs a \f(CWqtail\fP object, \f3qt\fP.
+Both arguments are optional and have default values.
+\f3eq\fP represents the \f2mode\fP (see above),
+which can be WMODE, EMODE, or ZMODE.
+WMODE is the default.
+\f3j\fP represents the maximum length of the queue attached to \f3qt\fP;
+the default is 10000.
+.P
+.P
+The public member functions of class \f(CWqtail\fP
+are (in alphabetical order):
+.TP
+.B "qtp = qt.cut()"
+Splits the queue to which it is applied in two.
+.B qtail::cut()
+returns a pointer to a new \f(CWqtail\fP,
+which is attached to the original queue.
+\f(CWobject\fPs already on the original queue can still be retrieved
+with a
+.B qhead::get()
+to the original \f(CWqhead\fP.
+(This is the primary functional difference between
+.B qhead::cut()
+and
+.BR qtail::cut() .)
+.B qtail::cut()
+modifies \f3qt\fP
+to point to a new empty queue.
+A new \f(CWqhead\fP must be established for \f3qt\fP.
+\f(CWobject\fPs that are
+.B qtail::put()
+to \f3qt\fP
+must be retrieved via the new \f(CWqhead\fP.
+\f(CWobject\fPs that are
+.B qtail::put()
+to \f3qtp\fP
+will be retrieved via the original \f(CWqhead\fP.
+.sp
+Thus,
+.B qtail::cut()
+can be used to insert a filter into an existing queue,
+without changing the appearance of the queue to anyone using it,
+and without halting the flow of \f(CWobject\fPs through the queue.
+The filter will intercept \f(CWobject\fPs that are
+.B qtail::put()
+on the original \f(CWqtail\fP
+when it does a 
+.B qhead::get() 
+on the new \f(CWqhead\fP.
+Then the filter can 
+.B qtail::put()
+\f(CWobject\fPs on the new \f(CWqtail\fP,
+where execution of
+.B qhead::get()
+on the original \f(CWqhead\fP will retrieve them.
+In other words, the filter \f(CWtask\fP uses the newly established
+\f(CWqhead\fP and \f(CWqtail\fP,
+while other \f(CWtasks\fP continue to 
+.B put()
+and
+.B get()
+from the original \f(CWqtail\fP and \f(CWqhead\fP.
+.B qtail::splice()
+can be used to restore the queue to its original configuration.
+.TP
+.B "qhp = qt.head()"
+Creates a \f(CWqhead\fP object for the queue
+attached to \f3qt\fP (if none exists)
+and returns a pointer to the new \f(CWqhead\fP object.
+.TP
+.B "eo = qt.o_type()"
+Returns the class type of the object
+(\f(CWobject::QTAIL\fP).
+.B o_type()
+is a virtual function.
+.TP
+.B "i = qt.pending()"
+Returns TRUE if the queue attached to \f3qt\fP is full, and FALSE otherwise.
+.B pending()
+is a virtual function.
+.TP
+.B "qt.print( i )"
+Prints the contents of \f3qt\fP on
+\f(CWstdout\fP.
+It calls the
+.B print()
+function for the \f(CWobject\fP base class.
+\f3i\fP specifies the amount of information to be printed.
+It can be 0, for the minimum amount of information,
+or VERBOSE, for more information.
+A second integer argument is for internal use and defaults to 0.
+.B print()
+is a virtual function.
+.TP
+.B "i = qt.put( op )"
+Adds the \f(CWobject\fP denoted by \f3op\fP to the tail of the queue
+attached to \f3qt\fP,
+and returns 1 on success.
+If the queue is full,
+.B qtail::put() 's
+behavior depends on the mode of \f3qt\fP.
+In WMODE, a \f(CWtask\fP that executes 
+.B qtail::put()
+on a full queue will be suspended
+until that queue becomes non-full,
+when the operation can complete successfully.
+In EMODE, it will cause a run time error.
+In ZMODE, it will return NULL.
+.TP
+.B "i = qt.rdspace()"
+Returns the number of \f(CWobject\fPs that can be inserted into the queue
+attached to \f3qt\fP
+before it becomes full.
+.TP
+.B "i = qt.rdmax()"
+Returns the maximum size of the queue attached to \f3qt\fP.
+.TP
+.B "eq = qt.rdmode()"
+Returns the current mode of \f3qt\fP, WMODE, EMODE, or ZMODE.
+.TP
+.B "qt.splice( qhp )"
+Reverses the action of a previous
+.B qtail::cut().
+.B qtail::splice()
+merges the queue attached to \f3qt\fP
+with the queue attached to \f3qhp\fP.
+The list of \f(CWobjects\fP on the former queue precede
+those on the latter queue in the merged list.
+.B qtail::splice()
+deletes \f3qt\fP and
+\f3qhp\fP.
+\f3qt\fP is meant to be a \f(CWqtail\fP that was previously
+.B cut(),
+and \f3qhp\fP is meant to be the pointer returned by that
+.B cut().
+If in merging the queues
+.B qtail::splice()
+causes an empty queue to become non-empty
+or a full queue to become non-full,
+it will alert all \f(CWtask\fPs waiting for that state change,
+and add them to the scheduler's 
+.I run chain.
+(See 
+.B object::alert()
+on the task(3C++) manual page.)
+.TP
+.B "qt.setmode( eq )"
+Sets the mode of \f3qt\fP to \f3eq\fP,
+which can be WMODE, EMODE, or ZMODE.
+.TP
+.B "qt.setmax( i )"
+Sets the maximum size of the queue attached to \f3qt\fP to \f3i\fP.
+It is legal to decrease the maximum below the current number
+of \f(CWobject\fPs on the queue.
+Doing so means that no more \f(CWobject\fPs can be put on the queue
+until the queue has been drained below the new limit.
+.SH DIAGNOSTICS
+See task(3C++).
+.SH SEE ALSO
+TASK.INTRO(3C++), task(3C++), interrupt(3C++), tasksim(3C++)
+.br
+Stroustrup, B. and Shopiro, J. E.,
+"A Set of C++ Classes for Co-routine Style Programming,"
+in
+.I "AT&T C++ Language System Release 2.0 Library Manual."

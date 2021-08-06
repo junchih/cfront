@@ -1,0 +1,100 @@
+.  "\ident	"@(#)cls4:man/complex/cplxexp.3	1.1"
+.TH CPLXEXP 3C++ "C++ Complex Math Library" " "
+.SH NAME
+exp, log, pow, sqrt \- exponential, logarithm, power, square root functions for the C++ complex library
+.SH SYNOPSIS
+.nf
+.ta 1i 2.5i
+.B #include <complex.h>
+.PP
+\f3
+class complex {
+
+public:
+	friend complex	exp(complex);
+	friend complex	log(complex);
+	friend complex	pow(double, complex);
+	friend complex	pow(complex, int);
+	friend complex	pow(complex, double);
+	friend complex	pow(complex, complex);
+	friend complex	sqrt(complex);
+.br
+};
+\fP
+.fi
+.SH DESCRIPTION
+The following math functions are overloaded by the complex library,
+where:
+ \(em \f3x\fP, \f3y\fP, and \f3z\fP are of type \f(CWcomplex\fP.
+.P
+.TP 15
+\f3z = exp(x)\fP
+Returns
+.B e\u\s8x\s10\d .
+.P
+.TP 15
+\f3z = log(x)\fP
+Returns the natural logarithm of
+.B x.
+.P
+.TP 15
+\f3z = pow(x, y)\fP
+Returns
+.B x\u\s8y\s10\d .
+.P
+.TP 15
+\f3z = sqrt(x)\fP
+Returns the square root of
+.B x,
+contained in the first or fourth quadrants of the complex plane.
+.SH SEE ALSO
+CPLX.INTRO(3C++),
+cartpol(3C++),
+cplxerr(3C++),
+cplxops(3C++),
+and
+cplxtrig(3C++).
+.SH DIAGNOSTICS
+.B exp
+returns
+.B "(0, 0)"
+when the real part of x is so small,
+or the imaginary part is so large,
+as to cause overflow.
+When the real part is large enough to cause overflow,
+.B exp
+returns
+.B "(HUGE, HUGE)"
+if the cosine and sine of the imaginary part of x are positive,
+.B "(HUGE, \-HUGE)"
+if the cosine is positive and the sine is not,
+.B "(\-HUGE, HUGE)"
+if the sine is positive and the cosine is not,
+and
+.B "(\-HUGE, \-HUGE)"
+if neither sine nor cosine is positive.
+In all these cases,
+.I errno
+is set to
+.SM
+.BR ERANGE\*S .
+.PP
+.B log\^
+returns
+.SM
+.B (\-HUGE, 0)
+and sets
+.I errno\^
+to
+.SM
+.B EDOM
+when
+.I x\^
+is
+.B (0, 0).
+A message indicating \s-1SING\s+1 error
+is printed on the standard error output.
+.PP
+These error-handling procedures may be changed with the function
+.B complex_error
+(cplxerr(3C++)).

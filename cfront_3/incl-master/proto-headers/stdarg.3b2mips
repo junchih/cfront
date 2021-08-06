@@ -1,0 +1,93 @@
+/*
+ *  stdarg.h for MIPS-based systems
+ *
+ *  This header file is designed to work with both
+ *  the AT&T 3B2/600GR and AT&T 7040 (Pyramid)
+ *  MIPS-based machines.
+ *
+ *  The C compilation systems have a complicated
+ *  structure that must be initialized when starting to
+ *  use a variable argument list.
+ */
+#ifndef _STDARG_H
+#define _STDARG_H
+/* make sure that /usr/include/stdvar_dcl.h is not included */
+#define _STDVAR_DCL_H
+
+/*
+ * The following code is a portable C++ implementation
+ * of the "alignof" operation.  It uses the template
+ * feature of C++ 3.0 to define a function that can
+ * determine the alignment requirements for each datatype.
+ */
+static int dvz;
+template <class T>
+struct Ttmp { char c; T t; };
+template <class T>
+inline alignof(T *) {
+	return (sizeof(Ttmp<T>) - sizeof(T));
+}
+#define _VA_ALIGNOF_ATTLC(mode) (alignof((mode *)(&dvz)))
+
+#define _VA_MAGIC ((short)0x8291) 
+#define _VA_BAD_ADDR ((void*)0x7ffff0ff) 
+
+typedef struct {
+	void *_va_bad_addr;
+	short _va_extract_count; 
+	short _va_alist_pos;  
+	short _va_magic;
+	char _va_first_parm_type;
+	int :8;
+	double *_va_flt_buf_ptr; 
+	void *_va_stack_ptr; 
+}__va_buf;
+
+typedef __va_buf va_list;
+
+    /* For varargs to work on MIPS, 
+     * you need to know what the type of the first *real* parameter is
+     * (watch out for structure-returning functions), where the va_alist
+     * occurs in the parameter list, and what the alignments are of
+     * structs.
+     * Although stdarg calling convention passes floating point in
+     * integer registers, we still must be able to handle case when
+     * varargs "va_list" object is passed to va_arg() within a
+     * stdarg routine (and vice-versa).
+     */
+
+#define va_start(list,name) {\
+	(list)._va_stack_ptr =  /* pointer into data stack */\
+ 		(void *)((char *)&name + \
+		((sizeof(name)+(sizeof(int)-1)) & ~(sizeof(int)-1)) );\
+	(list)._va_bad_addr = _VA_BAD_ADDR; \
+	(list)._va_magic = _VA_MAGIC;\
+}
+#define va_arg(list,mode) \
+	((mode *)\
+	_va_arg(list,\
+		sizeof(mode),\
+		_VA_ALIGNOF_ATTLC(mode))) [-1]
+
+#define _va_arg(alist,size,align) \
+(\
+	/* this little trick works when "align" is a power of two */ \
+	(alist)._va_stack_ptr = \
+	    (void*) \
+	    ((((unsigned)(alist)._va_stack_ptr+((align<4)?4:align)-1) \
+			& -((align<4)?4:align)) \
+		+ ((size<4)?4:size)) \
+)
+
+extern void va_end(va_list);
+
+#define va_end(list) (void)0
+
+#include <stdio.h>
+extern "C" {
+extern int vprintf(const char*, va_list),
+	vfprintf(FILE*, const char*, va_list),
+	vsprintf(char*, const char*, va_list);
+}
+
+#endif 	/* _STDARG_H */
