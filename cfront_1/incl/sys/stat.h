@@ -1,5 +1,5 @@
-/* @(#) stat.h 1.4 2/16/87 11:02:38 */
-/*ident	"@(#)cfront:incl/sys/stat.h	1.4"*/
+/* @(#) stat.h 1.3 1/27/86 17:47:11 */
+/*ident	"@(#)cfront:incl/sys/stat.h	1.3"*/
 /*
  * Structure of the result of stat
  */
@@ -32,5 +32,5 @@ struct	stat
 #define	S_IWRITE	00200		/* write permission, owner */
 #define	S_IEXEC	00100		/* execute/search permission, owner */
 
-extern int stat (const char*, struct stat*),
-           fstat (int, struct stat*);
+extern int stat (const char*, stat*),
+           fstat (int, stat*);

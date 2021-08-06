@@ -1,8 +1,5 @@
-/* @(#) utmp.h 1.3 2/16/87 11:02:43 */
-/*ident	"@(#)cfront:incl/utmp.h	1.3"*/
-
-#ifndef UTMPH
-#define UTMPH
+/* @(#) utmp.h 1.2 1/27/86 17:47:25 */
+/*ident	"@(#)cfront:incl/utmp.h	1.2"*/
 
 /*	<sys/types.h> must be included.					*/
 
@@ -52,6 +49,3 @@ struct utmp
 #define	BOOT_MSG	"system boot"
 #define	OTIME_MSG	"old time"
 #define	NTIME_MSG	"new time"
-
-#endif
-

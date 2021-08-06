@@ -1,4 +1,5 @@
-/*ident	"@(#)cfront:lib/task/qhead.c	1.3" */
+/* @(#) qhead.c 1.2 1/27/86 17:48:07 */
+/*ident	"@(#)cfront:lib/task/qhead.c	1.2"*/
 #include "task.h"
 
 /*	a qhead's qh_queue has its pointer q_ptr pointing the last
@@ -13,9 +14,12 @@
 	the list manipulations."
 */
 
-/* construct qhead <--> (possible)oqueue --> 0 */
 qhead.qhead(int mode, int max) : (QHEAD)
+/*
+	construct qhead <--> (possible)oqueue --> 0
+*/
 {
+DB(("x%x->qhead( %d, %d )\n", this, mode, max));
 	if (0 < max) {
 		qh_queue = new oqueue(max);
 		qh_queue->q_head = this;
@@ -24,9 +28,12 @@ qhead.qhead(int mode, int max) : (QHEAD)
 }
 
 
-/* destroy q if not pointed to by a qtail */
 qhead.~qhead()
+/*
+	destroy q if not pointed to by a qtail
+*/
 {
+DB(("x%x->~qhead()\n", this));
 	oqueue* q = qh_queue;
 
 	if (q->q_tail)
@@ -37,9 +44,15 @@ qhead.~qhead()
 }
 
 
-/* remove and return object from head of q */
-object* qhead.get()
+object*
+qhead.get()
+/*
+	remove and return object from head of q
+	alert tasks blocked on full queue
+	sleep if queue is empty
+*/
 {
+DB(("x%x->qhead::get()\n", this));
 	register oqueue* q = qh_queue;
 ll:
 	if (q->q_count) {
@@ -68,9 +81,13 @@ ll:
 	}
 }
 
-/* create a tail for this queue */
-qtail* qhead.tail()
+qtail*
+qhead.tail()
+/*
+	create a tail for this queue
+*/
 {
+DB(("x%x->qhead::tail()\n", this));
 	oqueue* q = qh_queue;
 	register qtail* t = q->q_tail;
 
@@ -84,10 +101,14 @@ qtail* qhead.tail()
 }
 
 
-/* make room for a filter upstream from this qhead */
-/* result:  (this)qhead<-->newq    (new)qhead<-->oldq ?<-->qtail? */
-qhead* qhead.cut()
+qhead*
+qhead.cut()
+/*
+	make room for a filter upstream from this qhead
+	result:  (this)qhead<-->newq    (new)qhead<-->oldq ?<-->qtail?
+*/
 {
+DB(("x%x->qhead::cut()\n", this));
 	oqueue* oldq = qh_queue;
 	qhead* h = new qhead(qh_mode,oldq->q_max);
 	oqueue* newq = h->qh_queue;
@@ -102,13 +123,16 @@ qhead* qhead.cut()
 }
 
 
-/* this qhead is supposed to be upstream to the qtail t
-   add the contents of this's queue to t's queue
-   destroy this, t, and this's queue
-   alert the spliced qhead and qtail if a significant state change happened
+void
+qhead.splice(qtail* t)
+/*
+	this qhead is supposed to be upstream to the qtail t
+	add the contents of this's queue to t's queue
+	destroy this, t, and this's queue
+	alert the spliced qhead and qtail if a significant state change happened
 */
-void qhead.splice(qtail* t)
 {
+DB(("x%x->qhead::splice( x%x )\n", this,t));
 	oqueue* qt = t->qt_queue;
 	oqueue* qh = qh_queue;
 
@@ -121,7 +145,7 @@ void qhead.splice(qtail* t)
 		object* ooh = qh->q_ptr;
 		object* oot = qt->q_ptr;
 		qt->q_ptr = ooh;
-		if (qtcount) {			/* add the contents of qh to qt */
+		if (qtcount) {		/* add the contents of qh to qt */
 			object* tf = oot->o_next;
 			oot->o_next = ooh->o_next;
 			ooh->o_next = tf;
@@ -142,9 +166,13 @@ void qhead.splice(qtail* t)
 }
 
 
-/* insert new object at head of queue (after queue->q_ptr) */
-int qhead.putback(object* p)
+int
+qhead.putback(object* p)
+/*
+	insert new object at head of queue (after queue->q_ptr)
+*/
 {
+DB(("x%x->qhead::putback( x%x )\n", this,p));
 	oqueue* q = qh_queue;
 
 	if (p->o_next) task_error(E_BACKOBJ,this);
@@ -173,8 +201,10 @@ ll:
 }
 
 
-void qhead.print(int n)
+void
+qhead.print(int n)
 {
+DB(("x%x->qhead::print( %d )\n", this, n));
 	oqueue* q = qh_queue;
 
 	printf("qhead (%d): mode=%d, max=%d, count=%d, tail=%d\n",
@@ -191,8 +221,10 @@ void qhead.print(int n)
 }
 
 
-void oqueue.print(int n)
+void
+oqueue.print(int n)
 {
+DB(("x%x->wqueue::print( %d )\n", this, n));
 	object* p = q_ptr;
 
 	if (q_count == 0) return;

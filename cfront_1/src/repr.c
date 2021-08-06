@@ -1,4 +1,5 @@
-/*ident	"@(#)cfront:src/repr.c	1.4" */
+/* @(#) repr.c 1.3 1/27/86 17:49:25 */ 
+/*ident	"@(#)cfront:src/repr.c	1.3" */
 /**************************************************************************
 
 	repr.c: stage main (views: main err)
@@ -96,7 +97,6 @@ void otbl_init()
 	new_op(":" ,COLON);
 	new_op("=" ,ASSIGN);
 	new_op("," ,CM);
-	new_op("," ,G_CM);
 
 	new_op(";" ,SM);
 	new_op("{" ,LC);
@@ -130,7 +130,6 @@ void otbl_init()
 	new_op("inline function call",ICALL);
 	new_op("cast",CAST);
 	new_op("inline argument",ANAME);
-	new_op(".*",MEMPTR);
 
 	new_op("class", COBJ);
 	new_op("enum", EOBJ);
@@ -152,6 +151,4 @@ void otbl_init()
 	new_op("integer constant",ICON);
 	new_op("float constant",FCON);
 	new_op("string",STRING);
-	new_op("label",LABEL);
-	new_op("'class', 'struct', or 'union'",AGGR);
 }

@@ -1,9 +1,5 @@
-/* @(#) math.h 1.6 2/16/87 11:02:22 */
-/*ident	"@(#)cfront:incl/math.h	1.6"*/
-
-#ifndef MATHH
-#define MATHH
-
+/* @(#) math.h 1.4 1/27/86 17:46:49 */
+/*ident	"@(#)cfront:incl/math.h	1.4"*/
 #ifndef _POLY9
 extern int errno, signgam;
 
@@ -47,16 +43,6 @@ extern double asin(double), acos(double), atan(double), atan2(double,double);
 #if gcos
 #define MAXFLOAT	((float)1.7014118219281863150e+38)
 #endif
-#if uts
-#define MAXDOUBLE       7.2370055773322630e+75
-#define MAXFLOAT        ((float)MAXDOUBLE)
-#endif
-#ifdef sun
-#define MAXFLOAT	99.e999	/* IEEE infinity */
-#endif
-#ifdef pyr
-#define MAXFLOAT        ((float)1.701411733192644299e38)
-#endif
 #define HUGE	MAXFLOAT
 
 #define _ABS(x)	((x) < 0 ? -(x) : (x))
@@ -91,5 +77,3 @@ struct exception {
 
 #define PI	3.1415926535897932384
 #define	PI2	6.2831853071795864769
-
-#endif

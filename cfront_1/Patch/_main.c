@@ -1,10 +1,10 @@
-/*ident	"@(#)cfront:patch/_main.c	1.3"*/
+/*ident	"@(#)cfront:patch/_main.c	1.2"*/
 /* _main for the patch version of the C++ translator*/
 /* See patch.c for details*/
 struct __link {
 	struct __link *next;
-	char (*ctor)();
-	char (*dtor)();
+	int (*ctor)();
+	int (*dtor)();
 	};
 extern struct __link *__HEAD ;
 struct __link *__HEAD = (__link *)0;

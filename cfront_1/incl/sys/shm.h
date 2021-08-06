@@ -1,4 +1,4 @@
-/* @(#) shm.h 1.2 2/16/87 11:02:38 */
+/* @(#) shm.h 1.2 1/27/86 17:47:10 */
 /*ident	"@(#)cfront:incl/sys/shm.h	1.2"*/
 /*
 **	IPC Shared Memory Facility.

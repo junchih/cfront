@@ -1,8 +1,5 @@
-/* @(#) search.h 1.4 2/16/87 11:02:28 */
-/*ident	"@(#)cfront:incl/search.h	1.4"*/
-
-#ifndef SEARCHH
-#define SEARCHH
+/* @(#) search.h 1.3 1/27/86 17:46:57 */
+/*ident	"@(#)cfront:incl/search.h	1.3"*/
 
 /* BSEARCH(3C) */
 extern char *bsearch(const char*, char*, unsigned, int, int);
@@ -16,11 +13,7 @@ extern int hcreate(unsigned);
 extern void hdestroy ();
 
 /* LSEARCH(3C) */                       
-#ifndef PFSEEN
-#define PFSEEN
 typedef int (*PF) ();
-#endif
-
 extern char *lsearch (const char*,  char*, unsigned*, unsigned, PF);
 extern char *lfind (const char*, char*, unsigned*, unsigned, PF);
 
@@ -31,5 +24,3 @@ extern char *tsearch (const char*, char**, int);
 extern char *tfind (const char*, char**, int);
 extern char *tdelete (const char*, char**, int);
 extern void twalk(char*,void (*)());
-
-#endif

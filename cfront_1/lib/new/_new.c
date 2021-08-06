@@ -1,15 +1,16 @@
-/*ident	"@(#)cfront:lib/new/_new.c	1.3" */
-
+/* @(#) _new.c 1.2 1/27/86 17:47:52 */
+/*ident	"@(#)cfront:lib/new/_new.c	1.2"*/
 typedef void (*PFVV)();
 
 extern PFVV _new_handler;
 
-extern void* operator new(long size)
+extern void*
+operator new(long size)
 {
 	extern char* malloc(unsigned);
 	char* p;
 
-	while ( (p=malloc(unsigned(size)))==0 ) {
+	while ( (p=malloc(size))==0 ) {
 		if(_new_handler)
 			(*_new_handler)();
 		else

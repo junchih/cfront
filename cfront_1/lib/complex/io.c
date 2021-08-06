@@ -1,4 +1,5 @@
-/*ident	"@(#)cfront:lib/complex/io.c	1.4" */
+/* @(#) io.c 1.2 1/27/86 17:47:36 */
+/*ident	"@(#)cfront:lib/complex/io.c	1.2"*/
 #include "complex.h"
 
 ostream&

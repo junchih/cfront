@@ -1,4 +1,5 @@
-/*ident	"@(#)cfront:lib/stream/streambuf.c	1.4" */
+/* @(#) streambuf.c 1.2 1/27/86 17:48:04 */
+/*ident	"@(#)cfront:lib/stream/streambuf.c	1.2"*/
 #include "stream.h"
 
 /*
@@ -6,15 +7,18 @@
 	Returns:	EOF on error
 			0 on success
 */
-int streambuf::doallocate()
+int streambuf.allocate()
 {
-	if ((base = new char[BUFSIZE]) != NULL) {
-		pptr = gptr = base;
-		eptr = base + BUFSIZE;
-		alloc = 1;
-		return 0;
-	} else
-		return EOF;
+	if (base == NULL) {
+		if ((base = new char[BUFSIZE]) != NULL) {
+			pptr = gptr = base;
+			eptr = base + BUFSIZE;
+			alloc = 1;
+			return 0;
+		} else
+			return EOF;
+	}
+	return 0;
 }
 
 /*
@@ -23,7 +27,7 @@ int streambuf::doallocate()
 	Returns:	EOF on error
 			the argument on success
 */
-int streambuf::overflow(int c)
+virtual int streambuf.overflow(int c)
 {
 	if (allocate() == EOF) return EOF;
 	if (c != EOF) *pptr++ = c;
@@ -35,7 +39,7 @@ int streambuf::overflow(int c)
 	Returns:	EOF on error or end of input
 			next character on success
 */
-int streambuf::underflow()
+virtual int streambuf.underflow()
 {
 	return EOF;
 }

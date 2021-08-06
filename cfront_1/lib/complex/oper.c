@@ -1,4 +1,5 @@
-/*ident	"@(#)cfront:lib/complex/oper.c	1.4" */
+/* @(#) oper.c 1.2 1/27/86 17:47:38 */
+/*ident	"@(#)cfront:lib/complex/oper.c	1.2"*/
 #include "complex.h"
 #include "const.h"
 

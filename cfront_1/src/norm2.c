@@ -1,4 +1,5 @@
-/*ident	"@(#)cfront:src/norm2.c	1.6" */
+/* @(#) norm2.c 1.3 1/27/86 17:49:18 */ 
+/*ident	"@(#)cfront:src/norm2.c	1.3" */
 /************************************************************************
 
 	C++ source for cfront, the C++ compiler front-end
@@ -12,18 +13,16 @@ norm2.c:
 
 	"normalization" handles problems which could have been handled
 	by the syntax analyser; but has not been done. The idea is
-	to simplify the grammar and the actions associated with it,
+	to simplify the grammar and the actions accociated with it,
 	and to get a more robust error handling
 
 ****************************************************************************/
 
 #include "cfront.h"
 #include "size.h"
-const NBITE = (CHUNK-8)/sizeof(name)-1;
-const EBITE = (CHUNK-8)/sizeof(expr)-1;
-const SBITE = (CHUNK-8)/sizeof(stmt)-1;
+extern char* malloc(int);
 
-fct::fct(Ptype t, Pname arg, TOK known)
+fct.fct(Ptype t, Pname arg, TOK known)
 {
 	Nt++;
 	base = FCT;
@@ -58,71 +57,94 @@ fct::fct(Ptype t, Pname arg, TOK known)
 }
 
 Pexpr expr_free;
+#define EBITE 250
 
-expr::expr(TOK ba, Pexpr a, Pexpr b)
+expr.expr(TOK ba, Pexpr a, Pexpr b)
 {
 	register Pexpr p;
 
 	if (this) goto ret;
 
 	if ( (p=expr_free) == 0 ) {
-		register Pexpr q = (Pexpr) chunk(1);
+		register Pexpr q = (Pexpr) malloc(EBITE*sizeof(class expr));
 		for (p=expr_free=&q[EBITE-1]; q<p; p--) p->e1 = p-1;
 		(p+1)->e1 = 0;
+/*fprintf(stderr, "malloc %d expr_free=%d p+1=%d\n", EBITE*sizeof(class expr), expr_free, p+1);*/
 	}
 	else
 		expr_free = p->e1;
 
+	/* beware of alignment differences */
+	if ( sizeof(expr)&1 ) {
+		register char* pp = (char*)(p+1);
+		while ( (char*)p<pp) *--pp = 0;
+	}
+	else if (sizeof(expr)&2 ) {
+		register short* pp = (short*)(p+1);
+		while ( (short*)p<pp ) *--pp = 0;
+	}
+	else {
+		register int* pp = (int*)(p+1);
+		while ( (int*)p<pp ) *--pp = 0;
+	}
+
 	this = p;
+/*fprintf(stderr,"expr.ctor(%d,%d,%d)->%d\n",ba,a,b,this); fflush(stderr);*/
 
-	permanent = 0;
-	tp = 0;
-	tp2 = 0;
-
-	Ne++;	// excluding names
 ret:
+	Ne++;
 	base = ba;
 	e1 = a;
 	e2 = b;
 }
 
-expr::~expr()
+expr.~expr()
 {
 	NFe++;
+/*fprintf(stderr,"%d->expr.dtor(%d %d %d)\n",this,base,e1,e2); */
 	e1 = expr_free;
 	expr_free = this;
 	this = 0;
 }
 
 Pstmt stmt_free;
+#define SBITE 250
 
-stmt::stmt(TOK ba, loc ll, Pstmt a)
+stmt.stmt(TOK ba, loc ll, Pstmt a)
 {
 	register Pstmt p;
 
 	if ( (p=stmt_free) == 0 ) {
-		register Pstmt q = (Pstmt) chunk(1);
+		register Pstmt q = (Pstmt) malloc(SBITE*sizeof(class stmt));
 		for (p=stmt_free=&q[SBITE-1]; q<p; p--) p->s_list = p-1;
 		(p+1)->s_list = 0;
 	}
 	else
 		stmt_free = p->s_list;
 
+	/* beware of alignment differences */
+	if ( sizeof(stmt)&1 ) {
+		register char* pp = (char*)(p+1);
+		while ( (char*)p<pp) *--pp = 0;
+	}
+	else if (sizeof(stmt)&2 ) {
+		register short* pp = (short*)(p+1);
+		while ( (short*)p<pp ) *--pp = 0;
+	}
+	else {
+		register int* pp = (int*)(p+1);
+		while ( (int*)p<pp ) *--pp = 0;
+	}
+
 	this = p;
 
-	permanent = 0;
-	e = e2 = 0;
-	memtbl = 0;
-	else_stmt = 0;
-	s_list = 0;
-
 	Ns++;
-	base = ba;
+	base=ba;
 	where = ll;
 	s=a;
 }
 
-stmt::~stmt()
+stmt.~stmt()
 {
 	NFs++;
 	s_list = stmt_free;
@@ -130,15 +152,17 @@ stmt::~stmt()
 	this = 0;
 }
 
-classdef::classdef(TOK b)
+classdef.classdef(TOK b, Pname n)
 {
 	base = CLASS;
 	csu = b;
+	pubmem = n;
 	memtbl = new table(CTBLSIZE,0,0);
 }
 
-basetype::basetype(TOK b, Pname n)
+basetype.basetype(TOK b, Pname n)
 {
+/*fprintf(stderr,"%d->basetype.basetype(%d %d)\n",this,b,n);*/
 	Nbt++;
 	switch (b) {
 	case 0:				break;
@@ -170,28 +194,40 @@ basetype::basetype(TOK b, Pname n)
 		base = b;
 		b_name = n;
 		break;
-	case SIGNED:
-	case VOLATILE:
-		error('w',"\"%k\" not implemented (ignored)",b);
-		break;
 	default:
 		error('i',"badBT:%k",b);
 	}
 }
 
+#define NBITE 250
 Pname name_free;
 
-name::name(char* s) : (NAME,0,0)
+name.name(char* s) : (NAME,0,0)
 {
 	register Pname p;
 
 	if ( (p=name_free) == 0 ) {
-		register Pname q = (Pname) chunk(1);
+		register Pname q = (Pname) malloc(NBITE*sizeof(class name));
 		for (p=name_free=&q[NBITE-1]; q<p; p--) p->n_tbl_list = p-1;
 		(p+1)->n_tbl_list = 0;
+/*fprintf(stderr, "malloc %d name_free=%d p+1=%d\n", NBITE*sizeof(class name), name_free, p+1); */
 	}
 	else
 		name_free = p->n_tbl_list;
+
+	/* beware of alignment differences */
+	if ( sizeof(name)&1 ) {
+		register char* pp = (char*)(p+1);
+		while ( (char*)p<pp) *--pp = 0;
+	}
+	else if (sizeof(name)&2 ) {
+		register short* pp = (short*)(p+1);
+		while ( (short*)p<pp ) *--pp = 0;
+	}
+	else {
+		register int* pp = (int*)(p+1);
+		while ( (int*)p<pp ) *--pp = 0;
+	}
 
 	this = p;
 //fprintf(stderr,"%d: new name %s %d ll %d bl %d\n",this,s,base,lex_level,bl_level);
@@ -200,30 +236,10 @@ name::name(char* s) : (NAME,0,0)
 	string = s;
 	where = curloc;
 	lex_level = bl_level;
-
-	// beware of alignment differences & pointer-zeros that are not int-zeros
-	tp = 0;
-	n_initializer = 0;
-	n_table = 0;
-	n_oper = 0;
-	n_sto = 0;
-	n_stclass = 0;
-	n_scope = 0;
-	n_union = 0;
-	n_evaluated = 0;
-	n_xref = 0;
-	n_protect = 0;
-	n_addr_taken = 0;
-	n_used = 0;
-	n_assigned_to = 0;
-	n_val = 0;
-	n_offset = 0;
-	n_list = 0;
-	n_tbl_list = 0;
-	n_qualifier = 0;
 }
 
-name::~name()
+
+name.~name()
 {
 	NFn++;
 /*fprintf(stderr,"delete %d: %s %d\n",this,string,base);*/
@@ -233,125 +249,56 @@ name::~name()
 }
 
 
-nlist::nlist(Pname n)
+nlist.nlist(Pname n)
 {
-//	if (n == 0) error('i',"nlist.nlist(0)");
+	Pname nn;
+
+	if (n==0) error('i',"nlist.nlist(0)");
 
 	head = n;
-	for (Pname nn=n; nn->n_list; nn=nn->n_list);
+	for (nn=n; nn->n_list; nn=nn->n_list);
 	tail = nn;
 	Nl++;
 }
 
-void nlist::add_list(Pname n)
+void nlist.add_list(Pname n)
 {
-	if (n->tp && (n->tp->defined & IN_ERROR)) return;
+	if (n->tp->defined & IN_ERROR) return;
+	Pname nn;
 
 	tail->n_list = n;
-	for (Pname nn=n; nn->n_list; nn=nn->n_list);
+	for (nn=n; nn->n_list; nn=nn->n_list);
 	tail = nn;
 }
 
 int NFl;
 
-Pname name_unlist(Pnlist l)
+Pname name_unlist(class nlist * l)
 {
+	Pname n;
 	if (l == 0) return 0;
-	Pname n = l->head;
+	n = l->head;
 	NFl++;
-//fprintf(stderr,"name_unlist %d\n",l);
 	delete l;
 	return n;
 }
 
-Pstmt stmt_unlist(Pslist l)
+Pstmt stmt_unlist(class slist * l)
 {
+	Pstmt s;
 	if (l == 0) return 0;
-	Pstmt s = l->head;
+	s = l->head;
 	NFl++;
-//fprintf(stderr,"stmt_unlist %d\n",l);
 	delete l;
 	return s;
 }
 
-Pexpr expr_unlist(Pelist l)
+Pexpr expr_unlist(class elist * l)
 {
+	Pexpr e;
 	if (l == 0) return 0;
-	Pexpr e = l->head;
+	e = l->head;
 	NFl++;
-//fprintf(stderr,"expr_unlist %d\n",l);
 	delete l;
 	return e;
-}
-
-void sig_name(Pname n)
-{
-	static char buf[256];
-	buf[0] = '_';
-	buf[1] = 'O';
-	char* p = n->tp->signature(buf+2);
-	if (255 < p-buf) error('i',"sig_name():N buffer overflow");
-	n->string = buf;
-	n->tp = 0;
-}
-
-Ptype tok_to_type(TOK b)
-{
-	Ptype t;
-	switch (b) {
-	case CHAR:	t = char_type; break;
-	case SHORT:	t = short_type; break;
-	case LONG:	t = long_type; break;
-	case UNSIGNED:	t = uint_type; break;
-	case FLOAT:	t = float_type; break;
-	case DOUBLE:	t = double_type; break;
-	case VOID:	t = void_type; break;
-	default:	error("illegalK:%k",b);
-	case INT:	t = int_type;
-	}
-	return t;
-}
-
-Pbase defa_type;
-Pbase moe_type;
-Pexpr dummy;
-Pexpr zero;
-
-Pclass ccl;
-Plist modified_tn = 0;
-
-static name sta_name_dummy;
-Pname sta_name = &sta_name_dummy;
-
-TOK back;
-
-void memptrdcl(Pname bn, Pname tn, Ptype ft, Pname n)
-{
-	Pptr p = new ptr(PTR,0);
-	p->memof = Pclass(Pbase(bn->tp)->b_name->tp);
-	Pbase b = new basetype(TYPE,tn);
-	PERM(p);
-	Pfct f = Pfct(ft);
-	Ptype t = n->tp;
-	if (t) {
-		p->typ = t;
-	ltlt:
-		switch (t->base) {
-		case PTR:
-		case RPTR:
-		case VEC:
-			if (Pptr(t)->typ == 0) {
-				Pptr(t)->typ = b;
-				break;
-			}
-			t = Pptr(t)->typ;
-			goto ltlt;
-		default:
-			error('s',"P toMFT too complicated");
-		}
-	}
-	else
-	p->typ = b;	
-	f->returns = p;
-	n->tp = f;
 }

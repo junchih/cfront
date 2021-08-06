@@ -1,33 +1,21 @@
-/* @(#) stdio.h 1.14 2/16/87 11:02:31 */
-/*ident	"@(#)cfront:incl/stdio.h	1.14"*/
+/* @(#) stdio.h 1.8 1/31/86 13:40:51 */
+/*ident	"@(#)cfront:incl/stdio.h	1.8"*/
 
-#ifndef STDIOH
-#define STDIOH
+#define	BUFSIZ 1024
+#define	_NFILE 20
 
-#if pyr
-#  define       BUFSIZ 2048
-#  define       _NFILE 62
-#else
-#  define       BUFSIZ 1024
-#  define       _NFILE 20
+#ifndef va_start
+typedef char *va_list;  //for the declaration of vprintf, vfprintf, vsprintf.
 #endif
 
 # ifndef FILE
 extern	struct	_iobuf {
-#if vax || u3b || u3b2 || u3b5 || mc68k || sun || pyr
 	int	_cnt;
 	char	*_ptr;
-#else
-	char 	*_ptr;
-	int 	_cnt;
-#endif
 	char	*_base;
-#   ifdef BSD
-	int	_bufsiz;
-	short	_flag;
-#   else
+//	int	_bufsiz;	//Add this line for bsd 4.2 or later
+//	short	_flag;		//Replace next line for bsd 4.2 or later
 	char	_flag;
-#   endif
 	char	_file;
 } _iob[_NFILE];
 # endif
@@ -39,14 +27,8 @@ extern	struct	_iobuf {
 #define	_IOMYBUF  0010
 #define	_IOEOF    0020
 #define	_IOERR    0040
-#if pyr || sun
-#  define       _IOLBF    0200
-#  define       _IORW     0400
-#else
-#  define       _IOLBF    0100
-#  define       _IORW     0200
-#endif
-
+#define	_IOLBF    0100
+#define	_IORW     0200
 #define	NULL 0
 #define	FILE struct _iobuf
 #define	EOF (-1)
@@ -57,7 +39,6 @@ extern int _filbuf(FILE*);
 #define	stdin (&_iob[0])
 #define	stdout (&_iob[1])
 #define	stderr (&_iob[2])
-
 #define	getc(p) (--(p)->_cnt>=0? *(p)->_ptr++&0377:_filbuf(p))
 #define	getchar() getc(stdin)
 #define putc(x,p) (--(p)->_cnt>=0? ((int)(*(p)->_ptr++=(unsigned)(x))):_flsbuf((unsigned)(x),p))
@@ -74,31 +55,23 @@ extern char* fgets(char*, int, FILE*);
 
 #define L_ctermid	9
 #define L_cuserid	9
-#if pyr
-#  define L_tmpnam        19
-#else
-# if sun
-#  define       P_tmpdir "/usr/tmp/"
-# else
-#  define       P_tmpdir "/tmp/"
-# endif
-# define       L_tmpnam (sizeof(P_tmpdir) + 15)
-#endif
+#define	P_tmpdir "/tmp/"
+#define	L_tmpnam (sizeof(P_tmpdir) + 15)
 
 extern char* gets(char*);
-extern int puts(const char*);
-extern int fputs(const char*, FILE*);
+extern puts(const char*);
+extern fputs(const char*, FILE*);
 extern int printf(const char* ...);
 extern int fprintf(FILE*, const char* ...);
 extern int sprintf(char*, const char* ...);
 extern int scanf(const char* ...);
 extern int fscanf(FILE*, const char* ...);
 extern int sscanf(char*, const char* ...);
-extern int fread(char*, unsigned int, int, FILE*);
-extern int fwrite(const char*, unsigned int, int, FILE*);
+extern int fread(char*, int, int, FILE*);
+extern int fwrite(const char*, int, int, FILE*);
 extern int fclose(FILE*);
-extern int fflush(FILE*);
-extern void clearerr(FILE*);
+extern fflush(FILE*);
+extern clearerr(FILE*);
 extern int fseek(FILE*, long, int);
 extern void rewind(FILE*);
 extern int getw(FILE*);
@@ -107,7 +80,7 @@ extern FILE* popen(const char*, const char*);
 extern int pclose(FILE*);
 extern int putw(int, FILE*);
 extern int fputc(int, FILE*);
-extern void setbuf(FILE*, char*);
+extern setbuf(FILE*, char*);
 extern int ungetc(int, FILE*);
 
 extern void exit(int);
@@ -120,11 +93,15 @@ extern long atol(const char*);
 #define _bufend(p)	_bufendtab[(p)->_file]
 #define _bufsiz(p)	(_bufend(p) - (p)->_base)
 
-extern FILE     *tmpfile ();
+extern FILE      *tmpfile ();
 extern char	*ctermid(char*),
                 *cuserid(char*),
                 *tempnam(char*, char*),
                 *tmpnam(char*);
+extern int      vprintf(char*, va_list),
+                vfprintf(FILE*, char*, va_list), 
+                vsprintf(char*, char*, va_list),
+		setvbuf(FILE*, char*, int, int); 
 
 extern void perror (const char*);
 
@@ -132,5 +109,3 @@ extern int errno;
 extern char* sys_errlist[];
 extern int sys_nerr;
 extern unsigned char *_bufendtab[];
-
-#endif /* STDIOH */

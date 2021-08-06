@@ -1,16 +1,5 @@
-/* @(#) fcntl.h 1.3 2/16/87 11:02:07 */
-/*ident	"@(#)cfront:incl/fcntl.h	1.3"*/
-
-
-#ifndef  FCNTLH
-#define FCNTLH
-
-#if pyr
-
-#include "/usr/include/fcntl.h"
-
-#else
-
+/* @(#) fcntl.h 1.2 1/27/86 17:46:41 */
+/*ident	"@(#)cfront:incl/fcntl.h	1.2"*/
 /* Flag values accessible to open(2) and fcntl(2) */
 /*  (The first three can only be set by open) */
 #define	O_RDONLY 0
@@ -53,8 +42,4 @@ struct flock {
 	/* Remove lock(s) */
 #define	F_UNLCK	03
 
-#endif /* not pyr */
-
 extern int fcntl (int, int, int);
-
-#endif

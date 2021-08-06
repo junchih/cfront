@@ -1,8 +1,5 @@
-/* @(#) libc.h 1.4 2/16/87 11:02:21 */
-/*ident	"@(#)cfront:incl/libc.h	1.4"*/
-
-#ifndef LIBCH
-#define LIBCH
+/* @(#) libc.h 1.3 1/27/86 17:46:47 */
+/*ident	"@(#)cfront:incl/libc.h	1.3"*/
 
 	/*	some functions from the UNIX manual section 3
 
@@ -36,5 +33,3 @@ extern int system(const char*);
 extern char* ttyname(int);
 extern int isatty(int);
 extern int ttyslot();
-
-#endif

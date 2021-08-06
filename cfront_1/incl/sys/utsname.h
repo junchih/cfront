@@ -1,4 +1,4 @@
-/* @(#) utsname.h 1.3 2/16/87 11:02:39 */
+/* @(#) utsname.h 1.3 1/27/86 17:47:14 */
 /*ident	"@(#)cfront:incl/sys/utsname.h	1.3"*/
 struct utsname {
 	char	sysname[9];

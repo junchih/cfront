@@ -1,8 +1,8 @@
-#ident	"@(#)cfront:scratch/makefile	1.4"
+#ident	"@(#)cfront:scratch/makefile	1.3"
 LIBFILES=_ctor..o _delete..o _dtor..o _handler..o \
 _main..o _new..o _vec..o dtors..o exit..o
 
-SRCFILES=alloc..o dcl..o dcl2..o dcl3..o del..o error..o \
+SRCFILES=alloc..o dcl..o dcl2..o del..o error..o \
 expand..o expr..o expr2..o lalex..o lex..o \
 main..o norm..o norm2..o print..o repr..o \
 simpl..o size..o table..o typ..o typ2..o \
@@ -58,9 +58,6 @@ dcl..o:	src/dcl..c
 
 dcl2..o:	src/dcl2..c
 	cc -c src/dcl2..c
-
-dcl3..o:	src/dcl3..c
-	cc -c src/dcl3..c
 
 del..o:	src/del..c
 	cc -c src/del..c

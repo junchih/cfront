@@ -1,4 +1,4 @@
-/* @(#) ipc.h 1.4 2/16/87 11:02:35 */
+/* @(#) ipc.h 1.4 1/27/86 17:47:05 */
 /*ident	"@(#)cfront:incl/sys/ipc.h	1.4"*/
 /* Common IPC Access Structure */
 // <sys/types.h> must be included.

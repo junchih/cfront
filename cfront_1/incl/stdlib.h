@@ -1,13 +1,8 @@
-/* @(#) stdlib.h 1.6 2/16/87 11:02:32 */
-/*ident	"@(#)cfront:incl/stdlib.h	1.6"*/
-
-
-#ifndef STDLIBH
-#define STDLIBH
-
+/* @(#) stdlib.h 1.4 1/27/86 17:47:01 */
+/*ident	"@(#)cfront:incl/stdlib.h	1.4"*/
 extern int     abort();
 extern double  atof (const char*);
-extern int     atoi (const char*);
+extern long    atoi (const char*);
 extern long    atol (const char*);
 extern char*   calloc (unsigned,unsigned);
 extern void    exit (int);
@@ -20,5 +15,3 @@ extern void    srand  (unsigned);
 extern double  strtod (const char*, char**);
 extern long    strtol (const char*, char**, int);
 extern int     system (const char*);
-
-#endif

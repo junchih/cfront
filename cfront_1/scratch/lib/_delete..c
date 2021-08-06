@@ -1,18 +1,26 @@
 #line 1 "../../lib/new/_delete.c"
 
-/* <<cfront 1.2.1 2/16/87>> */
+/* <<cfront 10/10/85>> */
 /* < ../../lib/new/_delete.c */
-char *_new(); char _delete(); char *_vec_new(); char _vec_delete();
+int * _new ( ) ; 
+int _delete ( ) ; 
+int * _vec_new ( ) ; 
+int _vec_delete ( ) ; 
 
 #line 1 "../../lib/new/_delete.c"
 
-#line 2 "../../lib/new/_delete.c"
-extern int free ();
-char _delete (_au0_p )char *_au0_p ;
-{ 
+#line 3 "../../lib/new/_delete.c"
+int free ( ) ; 
+
 #line 5 "../../lib/new/_delete.c"
-if (_au0_p )free ( ((char *)_au0_p )) ;
-}
-;
+int _delete ( _auto_p ) int * _auto_p ; 
+
+#line 6 "../../lib/new/_delete.c"
+{ 
+#line 6 "../../lib/new/_delete.c"
+if ( _auto_p ) free ( ( ( char * ) ( _auto_p ) ) ) 
+#line 6 "../../lib/new/_delete.c"
+; 
+} ; 
 
 /* the end */

@@ -1,8 +1,5 @@
-/* @(#) plot.h 1.4 2/16/87 11:02:25 */
-/*ident	"@(#)cfront:incl/plot.h	1.4"*/
-
-#ifndef PLOTH
-#define PLOTH
+/* @(#) plot.h 1.3 1/27/86 17:46:52 */
+/*ident	"@(#)cfront:incl/plot.h	1.3"*/
 
 extern int arc (int, int, int, int, int, int),
            circle (int, int, int),
@@ -16,5 +13,3 @@ extern int arc (int, int, int, int, int, int),
            openpl (),
            point (int, int),
            space (int, int, int, int);
-
-#endif

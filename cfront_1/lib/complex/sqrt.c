@@ -1,4 +1,5 @@
-/*ident	"@(#)cfront:lib/complex/sqrt.c	1.4" */
+/* @(#) sqrt.c 1.2 1/27/86 17:47:43 */
+/*ident	"@(#)cfront:lib/complex/sqrt.c	1.2"*/
 # include "complex.h"
 
 

@@ -1,9 +1,5 @@
-/* @(#) string.h 1.5 2/16/87 11:02:34 */
-/*ident	"@(#)cfront:incl/string.h	1.5"*/
-
-#ifndef C_STRINGH
-#define C_STRINGH
-
+/* @(#) string.h 1.3 1/27/86 17:47:04 */
+/*ident	"@(#)cfront:incl/string.h	1.3"*/
 extern char
 	*strcpy(char*, const char*),
 	*strncpy(char*, const char*, int),
@@ -26,6 +22,3 @@ extern char
 	*memcpy(char *, const char *, int),
 	*memset(char *, int, int);
 extern int memcmp(const char *, const char *, int);
-
-#endif
-

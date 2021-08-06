@@ -1,9 +1,5 @@
-/* @(#) common.h 1.3 2/16/87 11:01:58 */
-/*ident	"@(#)cfront:incl/common.h	1.3"*/
-
-#ifndef COMMONH
-#define COMMONH
-
+/* @(#) common.h 1.2 1/27/86 17:46:34 */
+/*ident	"@(#)cfront:incl/common.h	1.2"*/
 class istream;
 class ostream;
 
@@ -25,5 +21,3 @@ struct common {
 	virtual istream&	read(istream& s) { return s; }
 		common() {}
 };
-
-#endif

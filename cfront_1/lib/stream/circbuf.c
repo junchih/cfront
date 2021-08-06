@@ -1,4 +1,5 @@
-/*ident	"@(#)cfront:lib/stream/circbuf.c	1.4" */
+/* @(#) circbuf.c 1.2 1/27/86 17:48:00 */
+/*ident	"@(#)cfront:lib/stream/circbuf.c	1.2"*/
 #include "stream.h"
 
 /*
@@ -7,7 +8,7 @@
  *	Returns:	EOF on error
  *			the input character on success
  */
-int circbuf::overflow(int c)
+virtual int circbuf.overflow(int c)
 {
 	if (allocate() == EOF) return EOF;
 
@@ -22,7 +23,7 @@ int circbuf::overflow(int c)
  *	Returns:	EOF on error or end of input
  *			next character on success
  */
-int circbuf::underflow()
+virtual int circbuf.underflow()
 {
 	return EOF;
 }

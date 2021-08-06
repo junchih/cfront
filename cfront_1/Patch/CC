@@ -1,26 +1,21 @@
+#ident	"@(#)cfront:patch/CC	1.5"
 #!/bin/sh
-#ident	"@(#)cfront:patch/CC	1.15"
-
-trap 'rm -f __err$$ $B$ISUF; exit' 1 2 3 15
-
 LIB_ID=${LIB_ID-C}
 LIBRARY=${LIBRARY--l${LIB_ID}}
 NMFLAGS=${NMFLAGS-}
-C= EE=0 FON= XON=
+C= EE=0 FON=
 O=
 PON= R= SUF= X= Y= DASHR= PLUSI=
 Z=
-E=0 
-OF= CF= SF= IF=
+E=0
+CF=
 P=
-CPLUS=-Dc_plusplus=1
 OO="a.out"
 I=${I-"/usr/include/CC"}
 ISUF="..c"
 MVLIST=
 ccC=${ccC-cc}
 cfrontC=${cfrontC-cfront}
-patchC=${patchC-patch}
 cppC=${cppC-/lib/cpp}
 G=0
 for A do
@@ -29,8 +24,6 @@ for A do
 		O="$O $A"
 		;;
 	+i)	PLUSI=1
-		;;
-	+x)	XON=1
 		;;
 	+*)	O="$O $A"
 		;;
@@ -55,64 +48,54 @@ for A do
 	-r)	DASHR=1
 		Z="$Z $A"
 		;;
-	-S*)	SF=1
+	-c)	CF=1
 		;;
-	-P*)	IF=1
-		;;
-	-c*)	CF=1
-		;;
-	-o*)	if [ "$A" != "-o" ]
-		then
-		  	OO=`echo $A | cut -d"o" -f2-`
-                  	A="-o $OO"
-		else
-			OX=1
-                fi
-		OF="$OF $A"
+	-o)	X="$X $A"
 		Z="$Z $A"
+		OX=1
 		;;
 	-.c)	echo "bad suffix option: -.c" 1>&2
 		;;
 	-.*)	SUF=`expr "$A" : '-\(.*\)'`
 		;;
-	*.[Cc])	if	test -f $A
+	*.c)	if	test -f $A
 		then
-			B=`basename $A .[Cc]`
+			B=`basename $A .c`
 			if	test $PON
 			then
 				if test $SUF
 				then
 					echo "$cppC $O  $A > $B$SUF:" 1>&2
-					$cppC $Y $CPLUS -I$I  $A >$B$SUF
+					$cppC $Y -I$I  $A >$B$SUF
 					E=$?
 				else
-					$cppC $Y $CPLUS -I$I  $A
+					$cppC $Y -I$I  $A
 					E=$?
+					case $E in
+					0)	;;
+					*)	break
+						;;
+					esac
 				fi
-				case $E in
-				0)	;;
-				*)	G=0; break
-					;;
-				esac
 			elif	test $FON
 			then
 				if test $SUF
 				then
 					echo "$cfrontC $O  $A > $B$SUF:" 1>&2
-					$cppC -C $Y $CPLUS -I$I  $A | $cfrontC +L +f$A $O > $B$SUF
+					$cppC -C $Y -I$I  $A | $cfrontC +L +f$A $O > $B$SUF
 					E=$?
 				else	
-					$cppC -C $Y $CPLUS -I$I  $A | $cfrontC +L +f$A $O
+					$cppC -C $Y -I$I  $A | $cfrontC +L +f$A $O
 					E=$?
+					case $E in
+					0)	;;
+					*)	break
+						;;
+					esac
 				fi
-				case $E in
-				0)	;;
-				*)	G=0; break
-					;;
-				esac
 			else
 				echo "CC $O $A:" 1>&2
-				$cppC -C $Y $CPLUS -I$I  $A | $cfrontC +L +f$A $O > $B$ISUF
+				$cppC -C $Y -I$I  $A | $cfrontC +L +f$A $O > $B$ISUF
 				E=$?
 				R=1
 				C="$C $B$ISUF"
@@ -122,17 +105,9 @@ for A do
 					MVLIST="$MVLIST $B"
 					G=1
 					;;
-				127)    echo "Too many compilation errors" 1>&2
-					G=0
-					;;
-				999)	echo "CC argument error" 1>&2
-					G=0
-					;;
 				1)	echo "1 error" 1>&2
-					G=0
 					;;
 				*)	echo "$E errors" 1>&2
-					G=0
 					;;
 				esac
 			fi
@@ -140,46 +115,18 @@ for A do
 			echo "$A not found" 1>&2
 		fi
 		;;
-	*.i)    if test $PON
-		then
-			echo "CC -E $A incompatible: ignoring $A" 1>&2
-	        elif test $FON
-		then
-			echo "CC -F $A incompatible: ignoring $A" 1>&2
-  		else	
-			B=`basename $A .i`
-			echo "CC $O $A:" 1>&2
-			$cfrontC +L +f$A $O < $A > $B$ISUF
-			E=$?
-			R=1
-			C="$C $B$ISUF"
-			case $E in
-			0)	X="$X $B$ISUF"
-				Z="$Z $B.o"
-				MVLIST="$MVLIST $B"
-				G=1
-				;;
-			*)	G=0
-				;;
-			esac
-		fi
+	*.i)	X="$X $A"
+		B=`basename $A .i`
+		Z="$Z $B.o"
 		;;
-	*)	if test $XON
-		then	
-			O="$O +x$A"
-			XON=""
+	*)	X="$X $A"
+		Z="$Z $A"
+		if test $OX
+		then
+			OO=$A
+			OX=""
 		else
-			Z="$Z $A"
-			if test $OX
-			then
-				OO=$A
-				OF="$OF $A"
-				OX=""
-			else
-				G=1
-				X="$X $A"
-				
-			fi
+			G=1
 		fi
 		;;
 	esac
@@ -197,37 +144,18 @@ case $G in
 			mv temp$$ $f
 		done
 	fi
-	if test $SF					# -S: generate .s files
+	if test $CF					# -c: skip link edit
 	then
-		echo "$ccC $P -S $X" 1>&2
-		$ccC $P -S $X 
-		EE=$?
-		for A in $MVLIST
-		do
-			mv $A..s $A.s
-		done
-	elif test $IF					# -P: generate .i file
-	then
-		echo "$ccC $P -P $X" 1>&2
-		$ccC $P -P $X 
-		EE=$?
-		for A in $MVLIST
-		do
-			mv $A..i $A.i
-		done
-	elif test $CF					# -c: skip link edit
-	then
-		echo "$ccC $P -c $X" 1>&2
-		$ccC $P -c $X
+		echo "$ccC $P -c $X $LIBRARY" 1>&2
+		$ccC $P -c $X $LIBRARY
 		EE=$?
 		for A in $MVLIST
 		do
 			mv $A..o $A.o
 		done
-
 	else
-		echo "$ccC $P $OF $X $LIBRARY" 1>&2
-		$ccC $P -c $X >__err$$			# compile, no load
+		echo "$ccC $P $X $LIBRARY" 1>&2
+		$ccC $P -c $X >__err			# compile, no load
 		EE=$?
 		for A in $MVLIST
 		do
@@ -235,27 +163,24 @@ case $G in
 		done
 		case $EE in
 		0)	#echo "ld $Z $LIBRARY -lc"
-			$ccC $P $Z $LIBRARY > __err$$		# load
+			$ccC $P $Z $LIBRARY > __err		# load
 			EE=$?
-			if test $EE != 0 -o -s __err$$
+			if test $EE != 0 -o -s __err
 			then
-				cat __err$$
+				cat __err
 			elif test  "$DASHR" != 1		# find ctors/dtors
 			then
-				$patchC $OO
+				patch $OO
 			fi
 			;;
 		esac
-		rm __err$$
+		rm __err
 	fi
 esac
 
-if	test "$R" 
+if	test "$R" -a ! "$PLUSI"
 then
-	if test ! "$PLUSI"
-	then
-		rm $C
-	fi
+	rm $C
 fi
 
 case $E in
@@ -263,5 +188,4 @@ case $E in
 	;;
 *)	exit $E
 esac
-
 

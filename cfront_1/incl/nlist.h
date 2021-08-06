@@ -1,10 +1,9 @@
-/* @(#) nlist.h 1.4 2/16/87 11:02:24  */
-/*ident	"@(#)cfront:incl/nlist.h	1.4"*/
+/* @(#) nlist.h 1.3 1/27/86 17:46:51  */
+/*ident	"@(#)cfront:incl/nlist.h	1.3"*/
+/*
+*/
 
-#ifndef NLISTH
-#define NLISTH
-
-#if vax | u3b | M32 | u3b15 | u3b5 | u3b2
+#if vax || u3b || M32 || u3b15 || u3b5 || u3b2
 
 /* symbol table entry structure */
 
@@ -36,5 +35,3 @@ struct nlist
 #endif
 
 extern int nlist (const char*, nlist*);
-
-#endif

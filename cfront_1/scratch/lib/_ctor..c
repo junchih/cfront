@@ -1,14 +1,17 @@
 #line 1 "../../lib/static/_ctor.c"
 
-/* <<cfront 1.2.1 2/16/87>> */
+/* <<cfront 10/10/85>> */
 /* < ../../lib/static/_ctor.c */
-char *_new(); char _delete(); char *_vec_new(); char _vec_delete();
+int * _new ( ) ; 
+int _delete ( ) ; 
+int * _vec_new ( ) ; 
+int _vec_delete ( ) ; 
 
 #line 1 "../../lib/static/_ctor.c"
+typedef int ( * PFV ) ( ) ; 
 
-#line 2 "../../lib/static/_ctor.c"
-typedef char (*PFV )();
-extern PFV _ctors [1];
-PFV _ctors [1]= { 0 } ;
+#line 4 "../../lib/static/_ctor.c"
+extern PFV _ctors [ 1] ; 
+PFV _ctors [ 1] = { 0 } ; 
 
 /* the end */

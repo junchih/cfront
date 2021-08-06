@@ -1,4 +1,5 @@
-/*ident	"@(#)cfront:lib/static/dtors.c	1.2" */
+/* @(#) dtors.c 1.1 1/27/86 17:47:57 */
+/*ident	"@(#)cfront:lib/static/dtors.c	1.1"*/
 
 typedef void (*PFV)();
 

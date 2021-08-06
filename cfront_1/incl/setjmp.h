@@ -1,20 +1,8 @@
-/* @(#) setjmp.h 1.3 2/16/87 11:02:29 */
-/*ident	"@(#)cfront:incl/setjmp.h	1.3"*/
-
-#ifndef SETJMPH
-#define SETJMPH
-
+/* @(#) setjmp.h 1.2 1/27/86 17:46:58 */
+/*ident	"@(#)cfront:incl/setjmp.h	1.2"*/
 #ifndef _JBLEN
 
-#if pyr
-#define _JBLEN 6
-#endif
-
-#if sun
-#define _JBLEN 15
-#endif
-
-#if vax | M32 | u3b15 | u3b5 | u3b2
+#if vax || M32 || u3b15 || u3b5 || u3b2
 #define _JBLEN	10
 #endif
 
@@ -36,5 +24,3 @@ extern int setjmp(jmp_buf);
 extern void longjmp(jmp_buf, int);
 
 #endif
-#endif
-

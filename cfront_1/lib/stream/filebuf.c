@@ -1,4 +1,5 @@
-/*ident	"@(#)cfront:lib/stream/filebuf.c	1.3" */
+/* @(#) filebuf.c 1.2 1/27/86 17:48:01 */
+/*ident	"@(#)cfront:lib/stream/filebuf.c	1.2"*/
 #include "stream.h"
 
 /* define some UNIX calls */
@@ -14,19 +15,24 @@ extern int creat (char *, int);
  *	Return:		NULL if failure
  *			this if success
  */
-filebuf* filebuf::open (char *name, open_mode om)
+filebuf* filebuf.open (char *name, open_mode om)
 {
 	switch (om) {
 	case input:	
 		fd = ::open(name, 0);
 		break;
 	case output:	
-		fd = creat(name, 0664);
+		if ((fd = ::open(name,1)) < 0) fd = creat(name, 664);
 		break;
 	case append:	
-		fd = ::open(name, 1);
-		if (fd < 0) fd = creat(name, 0664);
-		if (fd >= 0) (void)lseek(fd, 0, 2);
+		if ((fd = ::open(name,1)) < 0)
+			fd = creat(name, 664);
+		else {
+			if (lseek(fd, 0, 2) < 0) {
+				(void)::close(fd);
+				fd = -1;
+			}
+		}
 		break;
 	}
 
@@ -41,21 +47,18 @@ filebuf* filebuf::open (char *name, open_mode om)
  *	Returns:	EOF on error
  *			0 on success
  */
-int filebuf::overflow(int c)
+int filebuf.overflow(int c)
 {
 	if (!opened || allocate()==EOF) return EOF;
 
-	if (fp != NULL) {		// stdio compatibility
-		fflush(fp);
-		return 0;
-	}
-	else if (base == eptr) {	// unbuffered IO
+	if (base == eptr) {
+		/* unbuffered IO */
 		if (c != EOF) {
 			*pptr = c;
 			if (write(fd, pptr, 1) != 1) return EOF;
 		}
-	}
-	else {				// buffered IO
+	} else {
+		/* buffered IO */
 		if (pptr > base)
 			if (write(fd, base, pptr-base) != pptr-base) return EOF;
 		pptr = gptr = base;
@@ -69,21 +72,15 @@ int filebuf::overflow(int c)
  *	Returns:	EOF on error or end of input
  *			next character on success
  */
-int filebuf::underflow()
+int filebuf.underflow()
 {
 	int count;
-	extern int strlen(char *);
 
 	if (!opened || allocate()==EOF) return EOF;
 
-	if (fp!=NULL) {			// stdio compatibility
-		if (fgets(base+1, eptr-base-1, fp) == NULL) return EOF;
-		count = strlen(base+1);
-	}
-	else {				// normal stream io
-		if ((count=read(fd, base+1, eptr-base-1)) < 1) return EOF;
-	}
-	gptr = base+1;			// leave room for putback
-	pptr = gptr+count;
+	if ((count=read(fd, base, eptr-base)) < 1) return EOF;
+
+	gptr = base;
+	pptr = base + count;
 	return *gptr & 0377;
 }

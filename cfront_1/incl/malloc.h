@@ -1,8 +1,5 @@
-/* @(#) malloc.h 1.3 2/16/87 11:02:21 */
-/*ident	"@(#)cfront:incl/malloc.h	1.3"*/
-
-#ifndef MALLOCH
-#define MALLOCH
+/* @(#) malloc.h 1.2 1/27/86 17:46:48 */
+/*ident	"@(#)cfront:incl/malloc.h	1.2"*/
 
 /*
 	Constants defining mallopt operations
@@ -35,5 +32,3 @@ extern char *realloc(char*, unsigned);
 extern int mallopt(int, int);
 extern mallinfo mallinfo(int);
 extern char *calloc (unsigned, unsigned);
-
-#endif

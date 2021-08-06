@@ -1,9 +1,5 @@
-/* @(#) pwd.h 1.5 2/16/87 11:02:27 */
-/*ident	"@(#)cfront:incl/pwd.h	1.5"*/
-
-#ifndef PWDH
-#define PWDH
-
+/* @(#) pwd.h 1.4 1/27/86 17:46:54 */
+/*ident	"@(#)cfront:incl/pwd.h	1.4"*/
 #ifndef FILE
 #       include <stdio.h>
 #endif
@@ -35,6 +31,3 @@ extern passwd *fgetpwent (FILE*);
 extern void setpwent ();
 extern void endpwent ();
 extern int putpwent (const passwd*, FILE*);
-
-#endif
-

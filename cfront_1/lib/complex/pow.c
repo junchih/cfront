@@ -1,12 +1,14 @@
-/*ident	"@(#)cfront:lib/complex/pow.c	1.5" */
+/* @(#) pow.c 1.2 1/27/86 17:47:40 */
+/*ident	"@(#)cfront:lib/complex/pow.c	1.2"*/
 #include "complex.h"
 
-complex pow(double base, complex z)
+complex
+pow(double base, complex z)
 /*
 	real to complex power: base**z.
 */
 {
-	complex y;
+	register complex y;
 	
 	if (base == 0) return y;	/* even for singularity */
 
@@ -21,13 +23,13 @@ complex pow(double base, complex z)
 }
 
 
-complex  pow(complex a, int n)
+complex
+pow(complex a, int n)
 /*
 	complex to integer power: a**n.
 */
 {
-	complex x; 
-	complex p = 1;
+	register complex x, p = 1;
 
 	if (n == 0) return p;
 
@@ -35,8 +37,7 @@ complex  pow(complex a, int n)
 		n = -n;
 		x = 1/a;
 	}
-	else
-	 	x = a;
+	else 	x = a;
 
 	for( ; ; ) {
 		if(n & 01) {
@@ -54,7 +55,8 @@ complex  pow(complex a, int n)
 	return p;
 }
 
-complex pow(complex a, double b)
+complex
+pow(complex a, double b)
 /*
 	complex to real power: a**b.
 */
@@ -67,7 +69,8 @@ complex pow(complex a, double b)
 }
 
 
-complex pow(complex base, complex sup)
+complex
+pow(complex base, complex sup)
 /*
 	complex to complex power: base**sup.
 */

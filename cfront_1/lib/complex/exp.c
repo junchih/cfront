@@ -1,4 +1,5 @@
-/*ident	"@(#)cfront:lib/complex/exp.c	1.5" */
+/*#ident	"@(#)cfront:lib/complex/exp.c	1.3"*/
+
 #include "complex.h"
 #include "const.h"
 

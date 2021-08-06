@@ -1,5 +1,6 @@
-/*ident	"@(#)cfront:src/typedef.h	1.4" */
-typedef unsigned char TOK;
+/* @(#) typedef.h 1.3 1/27/86 17:49:37 */ 
+/*ident	"@(#)cfront:src/typedef.h	1.3" */
+typedef short TOK;
 typedef class node * PP;
 typedef char bit;
 typedef int (*PFI)();
@@ -29,6 +30,5 @@ typedef class gen* Pgen;
 typedef class ref * Pref;
 typedef class name_list * Plist;
 typedef class iline * Pin;
-typedef class nlist * Pnlist;
-typedef class slist * Pslist;
-typedef class elist * Pelist;
+
+#define forever for(;;)

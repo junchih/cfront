@@ -1,9 +1,5 @@
-/* @(#) dial.h 1.4 2/16/87 11:02:04 */
-/*ident	"@(#)cfront:incl/dial.h	1.4"*/
-
-#ifndef DIALH
-#define DIALH
- 
+/* @(#) dial.h 1.3 1/27/86 17:46:38 */
+/*ident	"@(#)cfront:incl/dial.h	1.3"*/
 #ifndef IUCLC
 #include <sys/termio.h>
 #endif
@@ -47,5 +43,3 @@ typedef struct {
 
 extern int dial(CALL);
 extern void undial(int);
-
-#endif

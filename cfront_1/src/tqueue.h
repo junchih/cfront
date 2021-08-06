@@ -1,11 +1,12 @@
-/*ident	"@(#)cfront:src/tqueue.h	1.4" */
+/* @(#) tqueue.h 1.3 1/27/86 17:49:34 */ 
+/*ident	"@(#)cfront:src/tqueue.h	1.3" */
 #ifndef EOF
 #include <stdio.h>
-#else
-extern printf(const char* ...);
-extern fprintf(const FILE*, const char* ...);
-
 #endif
+
+extern  printf(       char* ...);
+extern fprintf(FILE*, char* ...);
+
 struct toknode {
 	TOK      tok;			/* token for parser */
 	YYSTYPE  retval;			/* $arg */

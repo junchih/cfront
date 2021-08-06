@@ -1,9 +1,5 @@
-/* @(#) mon.h 1.3 2/16/87 11:02:23 */
-/*ident	"@(#)cfront:incl/mon.h	1.3"*/
-
-#ifndef MONH
-#define MONH
-
+/* @(#) mon.h 1.2 1/27/86 17:46:50 */
+/*ident	"@(#)cfront:incl/mon.h	1.2"*/
 struct hdr {
 	char	*lpc;
 	char	*hpc;
@@ -22,12 +18,5 @@ typedef unsigned short WORD;
 #define MSCALE0	4
 #define NULL	0
 
-#ifndef PFSEEN
-#define PFSEEN
 typedef int (*PF) ();
-#endif
-
 extern  void monitor (PF, PF, WORD*, int, int);
-
-#endif
-

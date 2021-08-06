@@ -1,9 +1,5 @@
-/* @(#) time.h 1.4 2/16/87 11:02:41 */
-/*ident	"@(#)cfront:incl/time.h	1.4"*/
-
-#ifndef C_TIMEH
-#define C_TIMEH
-
+/* @(#) time.h 1.2 1/27/86 17:47:18 */
+/*ident	"@(#)cfront:incl/time.h	1.2"*/
 struct	tm {	/* see ctime(3) */
 	int	tm_sec;
 	int	tm_min;
@@ -25,5 +21,3 @@ extern void tzset();
 extern long timezone;
 extern int daylight;
 extern char *tzname[2];
-
-#endif

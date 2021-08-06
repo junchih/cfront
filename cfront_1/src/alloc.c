@@ -1,61 +1,115 @@
-/*ident	"@(#)cfront:src/alloc.c	1.5" */
+/* @(#) alloc.c 1.3 1/27/86 17:48:32 */ 
+/*ident	"@(#)cfront:src/alloc.c	1.3" */
 #include "cfront.h"
-#include "size.h"
 
 extern void free(char*);
-extern char* malloc(unsigned);
-extern char* calloc(unsigned,unsigned);
-int Nchunk;
+extern char *malloc(unsigned);
+extern void print_free();
+
+typedef class header HEADER;
+
+static HEADER *morecore(unsigned);
+
+int maxalloc = 0;	// largest object allocated
+
+class header {	/* free block header */
+public:
+	HEADER	*next;	/* next free block */
+	unsigned size;	/* size of this free block */
+};
+
+static HEADER base;	/* empty list to get started */
+HEADER *allocp = NULL;	/* last allocated block */
 
 void print_free()
 {
-	fprintf(stderr,"free store: %d bytes alloc()=%d free()=%d\n",Nfree_store,Nalloc, Nfree);
-	fprintf(stderr,"%d chunks: %d (%d)\n",Nchunk,CHUNK,Nchunk*CHUNK);
+	register HEADER* p, *q = 0;
+	register int amount = 0;
+	register int number = 0;
+
+	for (p=allocp; q!=allocp; q=p=p->next) {
+		number++;
+		amount += p->size;
+	}
+	fprintf(stderr,"print_free: %d %d\n",number,amount*sizeof(HEADER) );
 }
 
-
-void* chunk(int i)	// get memory that is not to be freed
+char *malloc(unsigned nbytes)	/* general-purpose storage allocator */
 {
-	register char* cp = malloc(i*CHUNK-8);
-	if (cp == 0) {			// no space
-		free((char*)gtbl);	// get space for error message
-		if (Nspy) print_free();
-		error('i',"free store exhausted");
-	}
-	Nchunk += i;
-	Nfree_store += i*CHUNK;
-	return cp;
-}
+	register HEADER *p, *q;
+	register int nunits;
 
-void* operator new(long sz)	// get memory that might be freed
-{
-	char* p = calloc(sz,1);
-
-//fprintf(stderr,"alloc(%d)->%d\n",sz,p);
-	if (p == 0) {			// no space
-		free((char*)gtbl);	// get space for error message
-		if (Nspy) print_free();
-		error('i',"free store exhausted");
-	}
 	Nalloc++;
-	Nfree_store += sz+sizeof(int*);
-	return p;
+	nunits = 1+(nbytes+sizeof(HEADER)-1)/sizeof(HEADER);
+	if ((q = allocp) == NULL) {	/* no free list yet */
+		base.next = allocp = q = &base;
+		base.size = 0;
+	}
+	for (p=q->next; ; q=p, p=p->next) {
+		if (p->size >= nunits) {	/* big enough */
+			if (p->size == nunits)	/* exactly */
+				q->next = p->next;
+			else {	/* allocate tail end */
+				p->size -= nunits;
+				p += (int)p->size;
+				p->size = nunits;
+			}
+			allocp = q;
+
+//error('d',"malloc(%d %d)->%d %d\n",nbytes,nunits*sizeof(HEADER),p+1,p+nunits);
+			if (maxalloc < nunits) maxalloc = nunits;
+
+			register int* x = (int*)(p+1);
+	 		register int* y = (int*)(p+nunits);
+			while (x < y) *--y = 0;
+			return (char*) x;
+		}
+		if (p == allocp)  /* wrapped around free list */
+			if ((p = morecore(nunits)) == NULL)
+				return(NULL);	/* none left */
+	}
+}
+
+#define	NALLOC	1024	/* #units to allocate at once */
+
+static HEADER *morecore(unsigned nu)	/* ask system for memory */
+{
+	extern char *sbrk(int);
+	register HEADER *up;
+	register int rnu2;
+	
+	register int rnu = NALLOC * ((nu+NALLOC-1) / NALLOC);
+	register char* cp = sbrk(rnu2 = rnu*sizeof(HEADER));
+	Nfree_store += rnu2;
+	if ((int)cp == -1) error('i',"free store exhausted");	// no space at all
+	up = (HEADER*)cp;
+	up->size = rnu;
+	int ma = maxalloc;
+	maxalloc = rnu;
+	free((char*)(up+1));	// put it on the free list
+	maxalloc = ma;
+	return allocp;
 }
 
 int NFn, NFtn, NFbt, NFpv, NFf, NFe, NFs, NFc;
 
-void operator delete (void* p)
+void free(char* ap)		/* put block on free list */
 {
-	if (p == 0) return;
+	if (ap == 0) return;
 
-//fprintf(stderr,"free(%d) %d\n",p,((int*)p)[-1]-(int)p-1+sizeof(int*));
+	register HEADER* p = (HEADER*)ap - 1;	/* point to header */
+
+	if (maxalloc < p->size) error('i',"free store corrupted (%d)",ap);
+
+	Nfree++;
 
 if (Nspy) {
-	Pname pp = (Pname) p;
+	Pname pp = (Pname) ap;
 	TOK t = pp->base;
-	Nfree++;
-	Nfree_store -= ((int*)p)[-1]-(int)p-1+sizeof(int*);
-	switch (t) {	// can be fooled by character strings
+	char* s = 0;
+
+	switch (t) {
+
 	case INT: case CHAR: case TYPE: case VOID: case SHORT: case LONG:
 	case FLOAT: case DOUBLE: case COBJ: case EOBJ: case FIELD:
 			NFbt++; break;
@@ -69,5 +123,19 @@ if (Nspy) {
 			NFc++; break;
 	}
 }
-	free((char*)p);
+	for ( register HEADER* q=allocp; !(p > q && p < q->next); q=q->next)
+		if (q >= q->next && (p > q || p < q->next))
+			break;	/* at one end or other */
+
+	if (p+p->size == q->next) { /* join to upper nbr */
+		p->size += q->next->size;
+		p->next = q->next->next;
+	} else
+		p->next = q->next;
+	if (q+q->size == p) {	/* join to lower nbr */
+		q->size += p->size;
+		q->next = p->next;
+	} else
+		q->next = p;
+	allocp = q;
 }

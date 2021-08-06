@@ -1,4 +1,5 @@
-/*ident	"@(#)cfront:lib/complex/error.c	1.5" */
+/*#ident	"@(#)cfront:lib/complex/error.c	1.3"*/
+
 #include "complex.h"
 
 int

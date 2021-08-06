@@ -1,8 +1,5 @@
-/* @(#) ustat.h 1.3 2/16/87 11:02:42 */
-/*ident	"@(#)cfront:incl/ustat.h	1.3"*/
-
-#ifndef USTATH
-#define USTATH
+/* @(#) ustat.h 1.2 1/27/86 17:47:24 */
+/*ident	"@(#)cfront:incl/ustat.h	1.2"*/
 
 /* <sys/types.h> must be included    */
 
@@ -14,5 +11,3 @@ struct  ustat {
 };
 
 extern int ustat(int, ustat*);
-
-#endif

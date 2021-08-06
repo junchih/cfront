@@ -1,9 +1,13 @@
-/*ident	"@(#)cfront:lib/task/qtail.c	1.3" */
+/* @(#) qtail.c 1.2 1/27/86 17:48:08 */
+/*ident	"@(#)cfront:lib/task/qtail.c	1.2"*/
 #include "task.h"
 
-/* construct qtail <--> oqueue */
 qtail.qtail(int mode, int max) : (QTAIL)
+/*
+	construct qtail <--> oqueue
+*/
 {
+DB(("x%x->qtail( %d, %d )\n", this, mode, max));
 	if (0 < max) {
 		qt_queue = new class oqueue(max);
 		qt_queue->q_tail = this;
@@ -11,9 +15,12 @@ qtail.qtail(int mode, int max) : (QTAIL)
 	qt_mode = mode;
 }
 
-/* destroy q if not also pointed to by a qhead */
 qtail.~qtail()
+/*
+	destroy q if not also pointed to by a qhead
+*/
 {
+DB(("x%x->~qtail()\n", this));
 	oqueue* q = qt_queue;
 
 	if (q->q_head)
@@ -23,9 +30,13 @@ qtail.~qtail()
 }
 
 
-/* insert object at rear of q (becoming new value of oqueue->q_ptr) */
-int qtail.put(object* p)
+int
+qtail.put(object* p)
+/*
+	insert object at rear of q (becoming new value of oqueue->q_ptr)
+*/
 {
+DB(("x%x->qtail::put( x%x )\n", this, p));
 	register oqueue* q = qt_queue;
 ll:
 	if (p->o_next) task_error(E_PUTOBJ,this);
@@ -59,9 +70,13 @@ ll:
 }
 
 
-/* create head for this q */
-qhead* qtail.head()
+qhead*
+qtail.head()
+/*
+	create head for this q
+*/
 {
+DB(("x%x->qtail::head()\n", this));
 	oqueue* q = qt_queue;
 	register qhead* h = q->q_head;
 
@@ -75,9 +90,13 @@ qhead* qtail.head()
 }
 
 
-/* result:  ?qhead<-->? oldq<-->(new)qtail  newq<-->(this)qtail */
-qtail* qtail.cut()
+qtail*
+qtail.cut()
+/*
+	result:  ?qhead<-->? oldq<-->(new)qtail  newq<-->(this)qtail
+*/
 {
+DB(("x%x->qtail::cut()\n", this));
 	oqueue* oldq = qt_queue;
 	qtail* t = new qtail(qt_mode,oldq->q_max);
 	oqueue* newq = t->qt_queue;
@@ -92,15 +111,21 @@ qtail* qtail.cut()
 }
 
 
-/* this qtail is supposed to be downstream from the qhead h */
-void qtail.splice(qhead* h)
+void
+qtail.splice(qhead* h)
+/*
+	this qtail is supposed to be downstream from the qhead h
+*/
 {
+DB(("x%x->qtail::splice( x%x )\n", this,h));
 	h->splice(this);
 }
 
 
-void qtail.print(int n)
+void
+qtail.print(int n)
 {
+DB(("x%x->qtail::print( %d )\n", this,n));
 	int m = qt_queue->q_max;
 	int c = qt_queue->q_count;
 	class qhead * h = qt_queue->q_head;

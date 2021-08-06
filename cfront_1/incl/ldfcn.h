@@ -1,9 +1,5 @@
-/* @(#) ldfcn.h 1.8 2/16/87 11:02:20 */
-/*ident	"@(#)cfront:incl/ldfcn.h	1.8"*/
-
-#ifndef LDFCNH
-#define LDFCNH
-
+/* @(#) ldfcn.h 1.6 1/30/86 17:45:38 */
+/*ident	"@(#)cfront:incl/ldfcn.h	1.6"*/
 #ifndef FILE
 #       include <stdio.h>
 #endif
@@ -122,22 +118,19 @@ extern int ldaclose (LDFILE*),
            ldclose (LDFILE*),
            ldfhread (LDFILE*, FILHDR*),
            ldlinit (LDFILE*, long),
-           ldlitem (LDFILE*, unsigned short, LINENO*),
-           ldlread (LDFILE*, long, unsigned short, LINENO*),
+           ldlitem (LDFILE*, unsigned short, LINENO),// must include <linenum.h>
+           ldlread (LDFILE*, long, unsigned short, LINENO),
            ldlseek (LDFILE*,unsigned short),
            ldnlseek (LDFILE*, const char*),
            ldnrseek (LDFILE*, const char*),
-           ldnshread (LDFILE*, const char*, SCNHDR*),
+           ldnshread (LDFILE*, unsigned short, SCNHDR*),//must include<scnhdr.h>
            ldnsseek (LDFILE*, const char*),
            ldohseek (LDFILE*),
            ldrseek (LDFILE*, unsigned short),
-           ldshread (LDFILE*, unsigned short, SCNHDR*),
+           ldshread (LDFILE*, const char*, SCNHDR*),
            ldsseek (LDFILE*, unsigned short),
-           ldtbread (LDFILE*, long, SYMENT*),  
+           ldtbread (LDFILE*, long, SYMENT*),  // must include <syms.h>
            ldtbseek (LDFILE*);
-
 extern long ldtbindex (LDFILE*),
             sgetl (char*);
 extern void sputl (long, char*);
-
-#endif

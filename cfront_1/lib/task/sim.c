@@ -1,8 +1,11 @@
-/*ident	"@(#)cfront:lib/task/sim.c	1.3" */
+/* @(#) sim.c 1.2 1/27/86 17:48:09 */
+/*ident	"@(#)cfront:lib/task/sim.c	1.2"*/
+/* @(#) sim.c 1.1 1/17/85 14:49:52 */
 #include "task.h"
 
 histogram.histogram(int nb, int ll, int rr)
 {
+DB(("x%x->histogram( %d, %d, %d )\n", this,nb,ll,rr));
 	register int i;
 	if (rr<=ll || nb<1) task_error(E_HISTO,0);
 	if (nb%2) nb++;
@@ -21,6 +24,7 @@ histogram.histogram(int nb, int ll, int rr)
 void histogram.add(int a)
 /* add a to one of the bins, adjusting histogram, if necessary */
 {
+DB(("x%x->histogram::add( %d )\n", this,a));
 	register int i, j;
 
 	/* make l <= a < r, */

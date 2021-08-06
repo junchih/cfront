@@ -1,4 +1,4 @@
-/* @(#) lock.h 1.2 2/16/87 11:02:36 */
+/* @(#) lock.h 1.2 1/27/86 17:47:07 */
 /*ident	"@(#)cfront:incl/sys/lock.h	1.2"*/
 /*
  * flags for locking procs and texts

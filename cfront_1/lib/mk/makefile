@@ -1,18 +1,31 @@
-#ident	"@(#)cfront:lib/mk/makefile	1.7"
+#ident	"@(#)cfront:lib/mk/makefile	1.6"
 O_COMPLEX	=	abs.o arg.o cos.o error.o exp.o io.o log.o oper.o \
 			polar.o pow.o sin.o sqrt.o
 O_GENERIC	=	generic.o
 O_NEW		=	_delete.o _handler.o _new.o _vec.o
 O_STATIC	=	_ctor.o _dtor.o _main.o exit.o dtors.o
 O_STREAM	=	circbuf.o filebuf.o in.o out.o streambuf.o
+O_TASK		=	obj.o qhead.o qtail.o sched.o sim.o \
+			swap.o task.o timer.o
 OFILES	=	$(O_COMPLEX) $(O_GENERIC) $(O_NEW) \
-		$(O_STATIC) $(O_STREAM) $(O_TASK)
+			$(O_STATIC) $(O_STREAM) $(O_TASK)
 CC	=	CC
 CCFLAGS	=
 
-libC.a:	$(OFILES)
+libC.a:	$(O_COMPLEX) $(O_GENERIC) $(O_NEW) $(O_STATIC) $(O_STREAM) Task
 	ar r libC.a $(OFILES)
 	if test "$(BSD)" ; then ranlib libC.a; fi
+
+
+Task:
+	if vax; then \
+		$(CC) $(CCFLAGS) -c -I../task ../task/*.c ../task/vax_swap.s; \
+		mv vax_swap.o swap.o ; \
+	elif u3b||u3b5||u3b2 ; then \
+		$(CC) $(CCFLAGS) -c -I../task ../task/*.c ../task/3b_swap.s; \
+		mv 3b_swap.o swap.o ; \
+	else echo "task lib not implemented on this machine"; \
+	fi
 
 abs.o:	../complex/abs.c
 	$(CC) $(CCFLAGS) -I../complex -c ../complex/abs.c
@@ -96,28 +109,4 @@ out.o:	../stream/out.c
 
 streambuf.o:	../stream/streambuf.c
 	$(CC) $(CCFLAGS) -I../stream -c ../stream/streambuf.c
-
-obj.o:	../task/obj.c
-	$(CC) $(CCFLAGS) -I../task -c ../task/obj.c
-
-qhead.o:	../task/qhead.c
-	$(CC) $(CCFLAGS) -I../task -c ../task/qhead.c
-
-qtail.o:	../task/qtail.c
-	$(CC) $(CCFLAGS) -I../task -c ../task/qtail.c
-
-sched.o:	../task/sched.c
-	$(CC) $(CCFLAGS) -I../task -c ../task/sched.c
-
-sim.o:	../task/sim.c
-	$(CC) $(CCFLAGS) -I../task -c ../task/sim.c
-
-swap.o:	../task/swap.s
-	$(CC) $(CCFLAGS) -I../task -c ../task/swap.s
-
-task.o:	../task/task.c
-	$(CC) $(CCFLAGS) -I../task -c ../task/task.c
-
-timer.o:	../task/timer.c
-	$(CC) $(CCFLAGS) -I../task -c ../task/timer.c
 

@@ -1,4 +1,4 @@
-/* @(#) times.h 1.2 2/16/87 11:02:39 */
+/* @(#) times.h 1.2 1/27/86 17:47:13 */
 /*ident	"@(#)cfront:incl/sys/times.h	1.2"*/
 /*
  * Structure returned by times()

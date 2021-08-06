@@ -1,20 +1,23 @@
-/*ident	"@(#)cfront:lib/task/obj.c	1.3" */
+/* @(#) obj.c 1.2 1/27/86 17:48:06 */
+/*ident	"@(#)cfront:lib/task/obj.c	1.2"*/
 #include "task.h"
 
 object.~object()
 {
+DB(("x%x->~object()\n", this));
 	if (o_link) task_error(E_OLINK,this);
 	if (o_next) task_error(E_ONEXT,this);
 } /* delete */
 
-/*	note that a task can be on a chain in several places
+//	note that a task can be on a chain in several places
+
+void
+object.forget(register task* p)
+/*
+	remove all occurrences of task* p from this object's task list
 */
-
-/* object.remember() ... */
-
-void object.forget(register task* p)
-/* remove all occurrences of task* p from this object's task list */
 {
+DB(("x%x->object::forget( x%x )\n", this, p));
 	register olink* ll;
 	register olink* l;
 
@@ -38,9 +41,13 @@ void object.forget(register task* p)
 }
 
 
-void object.alert()
-/* prepare IDLE tasks on this object for sceduling */
+void
+object.alert()
+/*
+	prepare IDLE tasks blocked on this object for sceduling
+*/
 {
+DB(("x%x->object::alert()\n", this));
 	register olink* l;
 
 	for (l=o_link; l; l=l->l_next) {
@@ -49,8 +56,10 @@ void object.alert()
 	}
 }
 
-void object.print(int n)
+void
+object.print(int n)
 {
+DB(("x%x->object::print( %d )\n", this,n));
 	int m = n & ~CHAIN;
 
 	switch (o_type) {

@@ -1,9 +1,5 @@
-/* @(#) unistd.h 1.4 2/16/87 11:02:41 */
-/*ident	"@(#)cfront:incl/unistd.h	1.4"*/
-
-
-#ifndef UNISTDH
-#define UNISTDH
+/* @(#) unistd.h 1.3 1/27/86 17:47:23 */
+/*ident	"@(#)cfront:incl/unistd.h	1.3"*/
   
 /* Symbolic constants for the "access" routine: */
 #define	R_OK	4	/* Test for Read permission */
@@ -29,6 +25,3 @@
 extern int lockf(int, int, long),
            access (const char*, int);
 extern long lseek(int, long, int);
-
-#endif
-

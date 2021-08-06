@@ -1,14 +1,6 @@
-/*ident	"@(#)cfront:incl/generic.h	1.4" */
-
-#ifndef GENERICH
-
+/* @(#) generic.h 1.2 1/27/86 17:46:42 */
+/*ident	"@(#)cfront:incl/generic.h	1.2"*/
 #define GENERICH 1
-
-/* BSD and SystemV cpp's have different mechanisms for pasting tokens
-   together:
-*/
-
-#ifdef BSD	/*BSD way:*/
 #define name2(a,b) a\
 b
 #define name3(a,b,c) a\
@@ -18,12 +10,6 @@ c
 b\
 c\
 d
-
-#else	/*System V way:*/
-#define name2(a,b)	a/**/b
-#define name3(a,b,c)	a/**/b/**/c
-#define name4(a,b,c,d)	a/**/b/**/c/**/d
-#endif
 
 #define declare(a,t) name2(a,declare)(t)
 #define implement(a,t) name2(a,implement)(t)
@@ -36,4 +22,3 @@ typedef int (*GPT)(int,char*);
 #define set_handler(generic,type,x) name4(set_,type,generic,_handler)(x)
 #define errorhandler(generic,type) name3(type,generic,handler)
 #define callerror(generic,type,a,b) (*errorhandler(generic,type))(a,b)
-#endif
